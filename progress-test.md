@@ -69,9 +69,27 @@
 - **Tests**: 16 passed / 16 total (100% Passed)
 - **Duration**: 4.93s
 - **Status**: PASSED (100%)
+
+### Run 5: Sprint 6 Optimization & Native Modals Tests
+- **Timestamp**: 2026-08-29 18:21:46
+- **Suites**: 8 passed / 8 total (`sprint6.test.ts`, `sprint5.test.ts`, `sprint4.test.ts`, `seed-category.test.ts`, `hpp.test.ts`, `ingredient.test.ts`, `order.test.ts`, `report.test.ts`)
+- **Tests**: 18 passed / 18 total (100% Passed)
+- **Duration**: 5.02s
+- **Status**: PASSED (100%)
+
+### Run 7: Revision — CSS Modular Scoping & Badge Elimination
+- **Timestamp**: 2026-08-30 02:26:53
+- **Suites**: 9 passed / 9 total (`thermal-receipt-logo.test.ts`, `sprint6.test.ts`, `sprint5.test.ts`, `sprint4.test.ts`, `seed-category.test.ts`, `hpp.test.ts`, `ingredient.test.ts`, `order.test.ts`, `report.test.ts`)
+- **Tests**: 21 passed / 21 total (100% Passed)
+- **Duration**: 9.11s (Lightweight in-memory Dexie, Celeron N2930 + 4GB RAM optimized)
+- **Status**: PASSED (100%)
 - **Test Scenarios Covered**:
-  1. `persists and retrieves per-menu additionals on product`: Verified custom additionals saved on product definition and retrieved accurately.
-  2. `calculates order HPP and deducts ingredient stock for per-menu additionals`: Verified order snapshot HPP includes additionals, inventory is deducted with sale log, and voiding restores inventory back to 100%.
-  3. `TypeScript Build`: `tsc -b && vite build` built cleanly in 2.75s with zero errors.
-  4. `OxLint`: Code passes linting with 0 errors.
-  5. `Git status`: Clean working tree with zero unauthorized git commits.
+  1. `Complete Badge Elimination`: Verified all models, DTOs, seed data, and report maps operate with zero `codeBadge`.
+  2. `CSS Modular Isolation`: Verified scoped POS modal classes (`.pos-modal-*`), Master classes (`.master-modal-*`, `.master-btn-*`), and Dialog classes (`.dialog-modal-*`).
+  3. `POS Benchmark Preservation`: Client benchmark untouched (Variant modal, Payment modal, Receipt preview, Cart panel).
+  4. `TypeScript Production Build`: `tsc -b && vite build` built cleanly in 2.93s with zero errors.
+  5. `OxLint`: Code passes linting with 0 errors.
+  6. `Git Status`: All changes unstaged in working tree for user review.
+
+
+
