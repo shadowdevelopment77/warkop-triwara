@@ -11,6 +11,7 @@ import type {
   IInventoryLog,
   ILog,
   IShopConfig,
+  IAppNotification,
 } from '../types';
 
 export class TriwaraDatabase extends Dexie {
@@ -21,6 +22,7 @@ export class TriwaraDatabase extends Dexie {
   inventoryLogs!: EntityTable<IInventoryLog, 'id'>;
   logs!: EntityTable<ILog, 'id'>;
   shopConfig!: EntityTable<IShopConfig, 'id'>;
+  notifications!: EntityTable<IAppNotification, 'id'>;
 
   constructor() {
     super('TriwaraPOS');
@@ -33,6 +35,7 @@ export class TriwaraDatabase extends Dexie {
       inventoryLogs: '++id, ingredientId, type, createdAt',
       logs: '++id, type, createdAt',
       shopConfig: '++id',
+      notifications: '++id, type, isRead, createdAt',
     });
   }
 }
