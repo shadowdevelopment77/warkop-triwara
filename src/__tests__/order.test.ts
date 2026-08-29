@@ -57,7 +57,6 @@ describe('OrderService Transaction & Void Integrity', () => {
       id: 1,
       categoryId: 1,
       name: 'Americano Takeaway',
-      codeBadge: 'AT',
       price: 20000,
       description: 'Americano to go',
       recipe: [{ ingredientId: beansId, amount: 18, unit: 'gr' }],

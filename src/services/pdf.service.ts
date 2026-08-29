@@ -62,7 +62,7 @@ export class PdfService {
 
     const topTableBody = topProducts.map((p, idx) => [
       idx + 1,
-      `[${p.codeBadge}] ${p.productName}`,
+      `${p.productName}`,
       `${p.quantitySold} terjual`,
       formatRupiah(p.totalRevenue),
     ]);

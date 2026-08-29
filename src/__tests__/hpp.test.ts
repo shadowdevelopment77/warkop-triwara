@@ -50,7 +50,6 @@ describe('HppService Logic & Stock Availability', () => {
     const product: IProduct = {
       categoryId: 1,
       name: 'Americano',
-      codeBadge: 'AC',
       price: 20000,
       description: 'Espresso + air',
       recipe: [{ ingredientId: beansId, amount: 18, unit: 'gr' }],
@@ -110,7 +109,6 @@ describe('HppService Logic & Stock Availability', () => {
     const product: IProduct = {
       categoryId: 1,
       name: 'Americano',
-      codeBadge: 'AC',
       price: 20000,
       description: 'Espresso',
       recipe: [{ ingredientId: beansId, amount: 18, unit: 'gr' }],

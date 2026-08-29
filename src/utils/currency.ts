@@ -13,16 +13,3 @@ export function formatRupiah(amount: number): string {
   }).format(amount);
 }
 
-/**
- * Generates 2-letter badge code from product name (e.g., "Americano" -> "AC", "Caffe Latte" -> "CL")
- */
-export function generateCodeBadge(name: string): string {
-  const words = name.trim().split(/\s+/);
-  if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase();
-  }
-  if (name.length >= 2) {
-    return name.substring(0, 2).toUpperCase();
-  }
-  return name.toUpperCase() || 'TR';
-}

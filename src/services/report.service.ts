@@ -19,7 +19,6 @@ export interface ISalesSummary {
 export interface ITopProduct {
   productId: number;
   productName: string;
-  codeBadge: string;
   quantitySold: number;
   totalRevenue: number;
 }
@@ -101,7 +100,6 @@ export class ReportService {
           productMap.set(item.productId, {
             productId: item.productId,
             productName: item.productName,
-            codeBadge: item.codeBadge,
             quantitySold: item.qty,
             totalRevenue: item.subtotal,
           });

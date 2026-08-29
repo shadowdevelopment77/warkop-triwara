@@ -48,7 +48,6 @@ export interface IProduct {
   id?: number;
   categoryId: number;
   name: string;
-  codeBadge: string; // 2-letter badge e.g. "AC", "CL"
   price: number;
   description: string;
   recipe: IRecipeItem[];
@@ -70,7 +69,6 @@ export interface IOrderItemTopping {
 export interface IOrderItem {
   productId: number;
   productName: string;
-  codeBadge: string;
   price: number;
   hpp: number; // Snapshot HPP per unit
   qty: number;

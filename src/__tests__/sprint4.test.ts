@@ -29,7 +29,6 @@ describe('Sprint 4 Feature Tests', () => {
       {
         categoryId: 1,
         name: 'Americano',
-        codeBadge: 'AM',
         price: 18000,
         description: 'First copy',
         recipe: [],
@@ -41,7 +40,6 @@ describe('Sprint 4 Feature Tests', () => {
       {
         categoryId: 1,
         name: 'Americano',
-        codeBadge: 'AM',
         price: 18000,
         description: 'Duplicate copy',
         recipe: [],
@@ -53,7 +51,6 @@ describe('Sprint 4 Feature Tests', () => {
       {
         categoryId: 1,
         name: 'Caffe Latte',
-        codeBadge: 'CL',
         price: 22000,
         description: 'Latte copy',
         recipe: [],
@@ -96,7 +93,6 @@ describe('Sprint 4 Feature Tests', () => {
         {
           productId: 1,
           productName: 'Kopi Susu Aren',
-          codeBadge: 'KS',
           qty: 2,
           price: 20000,
           hpp: 8000,

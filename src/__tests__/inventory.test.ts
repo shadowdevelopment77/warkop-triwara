@@ -92,7 +92,6 @@ describe('IngredientService & Inventory Accounting', () => {
     await testDb.products.add({
       categoryId: 1,
       name: 'Espresso Single',
-      codeBadge: 'ES',
       price: 15000,
       description: 'Single shot',
       recipe: [{ ingredientId: ingId, amount: 18, unit: 'gr' }],

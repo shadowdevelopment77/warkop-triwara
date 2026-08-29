@@ -4,7 +4,6 @@
 
 import { db, TriwaraDatabase } from '../database/db';
 import type { IProduct, ICategory } from '../types';
-import { generateCodeBadge } from '../utils/currency';
 
 export class ProductService {
   private database: TriwaraDatabase;
@@ -38,6 +37,15 @@ export class ProductService {
       name: trimmed,
       sortOrder: count + 1,
     })) as number;
+  }
+
+  /** Deletes a product category if no products are assigned to it */
+  async deleteCategory(id: number): Promise<void> {
+    const assignedProducts = await this.database.products.where('categoryId').equals(id).count();
+    if (assignedProducts > 0) {
+      throw new Error(`Kategori ini tidak dapat dihapus karena masih digunakan oleh ${assignedProducts} menu produk.`);
+    }
+    await this.database.categories.delete(id);
   }
 
   /** Gets products, optionally filtered by category or search term */
@@ -82,14 +90,12 @@ export class ProductService {
   }
 
   /** Adds a new product */
-  async addProduct(data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt' | 'codeBadge'>): Promise<number> {
-    const codeBadge = generateCodeBadge(data.name);
+  async addProduct(data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     const now = new Date();
 
     return (await this.database.products.add({
       ...data,
       name: data.name.trim(),
-      codeBadge,
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -98,14 +104,10 @@ export class ProductService {
 
   /** Updates an existing product and recipe */
   async updateProduct(id: number, data: Partial<IProduct>): Promise<void> {
-    const codeBadge = data.name ? generateCodeBadge(data.name) : undefined;
     const updateData: Partial<IProduct> = {
       ...data,
       updatedAt: new Date(),
     };
-    if (codeBadge) {
-      updateData.codeBadge = codeBadge;
-    }
 
     await this.database.products.update(id, updateData);
   }

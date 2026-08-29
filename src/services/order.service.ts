@@ -88,7 +88,6 @@ export class OrderService {
       orderItems.push({
         productId: item.product.id!,
         productName: item.product.name,
-        codeBadge: item.product.codeBadge,
         price: item.itemPrice,
         hpp: itemHpp, // Accurate HPP Snapshot!
         qty: item.quantity,

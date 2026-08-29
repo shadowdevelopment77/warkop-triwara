@@ -4,7 +4,6 @@
 
 import { db, TriwaraDatabase } from './db';
 import { hashPin } from '../utils/hash';
-import { generateCodeBadge } from '../utils/currency';
 import type { IOrder, IOrderItem, IRecipeItem, IProductAdditional, PaymentMethod, TransactionStatus } from '../types';
 
 let isSeedingInProgress = false;
@@ -369,7 +368,6 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
   for (const def of productDefs) {
     const prodId = (await database.products.add({
       ...def,
-      codeBadge: generateCodeBadge(def.name),
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -378,7 +376,6 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
     createdProducts.push({
       ...def,
       id: prodId,
-      codeBadge: generateCodeBadge(def.name),
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -463,7 +460,6 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
       orderItems.push({
         productId: prod.id,
         productName: prod.name,
-        codeBadge: prod.codeBadge,
         price: prod.price,
         hpp: unitHpp,
         qty,
