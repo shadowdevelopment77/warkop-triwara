@@ -25,13 +25,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashInput, setCashInput] = useState<number>(totalAmount);
 
-  const quickDenominations = [
-    totalAmount,
-    50000,
-    100000,
-    150000,
-    200000,
-  ].filter((amt, idx, arr) => amt >= totalAmount && arr.indexOf(amt) === idx);
+  const cashHelpers = [
+    { label: '20.000', value: 20000 },
+    { label: '50.000', value: 50000 },
+    { label: '100.000', value: 100000 },
+    { label: 'Uang Pas', value: totalAmount },
+  ];
 
   const changeAmount = Math.max(0, cashInput - totalAmount);
 
@@ -56,8 +55,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <h3 className="modal-title">Pembayaran Transaksi</h3>
             <span className="modal-subtitle">Total Tagihan: {formatRupiah(totalAmount)}</span>
           </div>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            [✕]
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            ✕
           </button>
         </div>
 
@@ -107,14 +106,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <label className="form-label">Nominal Uang Diterima (Rp)</label>
 
               <div className="quick-denominations-row">
-                {quickDenominations.map((denom) => (
+                {cashHelpers.map((helper) => (
                   <button
-                    key={denom}
+                    key={helper.label}
                     type="button"
-                    className={`denom-btn ${cashInput === denom ? 'active' : ''}`}
-                    onClick={() => setCashInput(denom)}
+                    className={`denom-btn ${cashInput === helper.value ? 'active' : ''}`}
+                    onClick={() => setCashInput(helper.value)}
                   >
-                    {denom === totalAmount ? 'Uang Pas' : formatRupiah(denom)}
+                    {helper.label}
                   </button>
                 ))}
               </div>

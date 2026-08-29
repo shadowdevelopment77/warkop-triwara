@@ -30,7 +30,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   const grandTotal = subtotal - discountAmount;
 
   return (
-    <aside className="cart-panel-right">
+    <aside className="pos-right-column cart-panel-right">
       <div className="cart-panel-header">
         <h2 className="cart-panel-title">Pesanan Pelanggan</h2>
         {cartItems.length > 0 && (
@@ -96,11 +96,42 @@ export const CartPanel: React.FC<CartPanelProps> = ({
       {/* Discount & Total Summary */}
       {cartItems.length > 0 && (
         <div className="cart-panel-footer">
-          {/* Discount Selector (% only with quick helpers 25, 50, 75, 100 & manual input) */}
+          {/* Discount Section: Label + Reset, Manual Input First, Presets Second */}
           <div className="discount-section">
-            <label className="discount-label">Diskon Penjualan (%)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="discount-label" style={{ margin: 0 }}>Diskon Penjualan (%)</label>
+              {discountPercent > 0 && (
+                <button
+                  type="button"
+                  style={{ fontSize: '11px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => onChangeDiscount(0)}
+                  title="Reset diskon ke 0%"
+                >
+                  ✕ Reset Diskon
+                </button>
+              )}
+            </div>
+
+            {/* Manual % Input Immediately Below Label */}
+            <div className="discount-manual-input" style={{ width: '100%' }}>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                className="discount-input"
+                placeholder="Input diskon % manual..."
+                value={discountPercent || ''}
+                onChange={(e) => {
+                  const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                  onChangeDiscount(val);
+                }}
+              />
+              <span className="percent-symbol">%</span>
+            </div>
+
+            {/* Quick Percentage Helper Buttons */}
             <div className="discount-helpers">
-              {[25, 50, 75, 100].map((pct) => (
+              {[10, 25, 50, 75, 100].map((pct) => (
                 <button
                   key={pct}
                   type="button"
@@ -110,21 +141,6 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                   {pct}%
                 </button>
               ))}
-              <div className="discount-manual-input">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  className="discount-input"
-                  placeholder="0"
-                  value={discountPercent || ''}
-                  onChange={(e) => {
-                    const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
-                    onChangeDiscount(val);
-                  }}
-                />
-                <span className="percent-symbol">%</span>
-              </div>
             </div>
           </div>
 

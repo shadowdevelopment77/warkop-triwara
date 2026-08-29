@@ -1,105 +1,215 @@
 // ═══════════════════════════════════════════════
-// Triwara POS — Manual Print Selection Modal
+// Triwara POS — 58mm Thermal Receipt Preview & 3-Action Print Modal
 // ═══════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React from 'react';
+import type { IOrder, IShopConfig } from '../../types';
 import type { ReceiptType } from '../../services/receipt.service';
+import { formatRupiah } from '../../utils/currency';
+import { formatDateIndonesian } from '../../utils/date';
 
 interface PrintSelectModalProps {
-  orderNumber: string;
+  order: IOrder;
+  shopConfig?: IShopConfig | null;
   onClose: () => void;
   onConfirmPrint: (selectedTypes: ReceiptType[]) => void;
 }
 
 export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
-  orderNumber,
+  order,
+  shopConfig,
   onClose,
   onConfirmPrint,
 }) => {
-  const [selectedTypes, setSelectedTypes] = useState<ReceiptType[]>(['customer']);
-
-  const handleToggle = (type: ReceiptType) => {
-    if (selectedTypes.includes(type)) {
-      setSelectedTypes(selectedTypes.filter((t) => t !== type));
-    } else {
-      setSelectedTypes([...selectedTypes, type]);
-    }
+  const handlePrintSingle = (type: ReceiptType) => {
+    onConfirmPrint([type]);
   };
 
-  const handlePrint = () => {
-    if (selectedTypes.length === 0) {
-      alert('Pilih minimal 1 jenis struk untuk dicetak');
-      return;
-    }
-    onConfirmPrint(selectedTypes);
-    onClose();
-  };
+  const headerLines = shopConfig?.receiptHeaderLines || [
+    'Warkop Triwara Coffee',
+    'Jl. Sunset Road No. 88, Bali',
+    'Telp: 0812-3456-7890',
+  ];
+
+  const footerLines = shopConfig?.receiptFooterLines || [
+    'Terima Kasih Atas Kunjungan Anda!',
+    'WiFi: Triwara_Guest | Pass: kopienak',
+  ];
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card print-select-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-card print-select-card"
+        style={{ maxWidth: '420px', maxHeight: '90dvh' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">Cetak Struk Transaksi</h3>
-            <span className="modal-subtitle">Order #{orderNumber}</span>
+            <h3 className="modal-title">Cetak Struk Thermal</h3>
+            <span className="modal-subtitle">Order #{order.orderNumber}</span>
           </div>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            [✕]
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            ✕
           </button>
         </div>
 
-        <div className="modal-body">
-          <p className="print-instruction">Pilih jenis struk yang ingin dicetak ke printer thermal:</p>
+        {/* 3 Print Buttons Bar */}
+        <div className="receipt-print-actions-bar">
+          <button
+            type="button"
+            className="btn-print-choice"
+            onClick={() => handlePrintSingle('customer')}
+            title="Cetak Struk untuk Pelanggan"
+          >
+            <span style={{ fontSize: '16px' }}>🖨️</span>
+            <span>Struk Customer</span>
+          </button>
 
-          <div className="print-options-list">
-            <label
-              className={`print-option-row ${selectedTypes.includes('customer') ? 'selected' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedTypes.includes('customer')}
-                onChange={() => handleToggle('customer')}
-              />
-              <div className="option-label-group">
-                <strong>Struk Pelanggan (Customer)</strong>
-                <small>Lengkap dengan logo, header toko, harga, dan 4 baris footer (WiFi/Pass)</small>
-              </div>
-            </label>
+          <button
+            type="button"
+            className="btn-print-choice"
+            onClick={() => handlePrintSingle('bar')}
+            title="Cetak Struk untuk Bar Minuman"
+          >
+            <span style={{ fontSize: '16px' }}>🍸</span>
+            <span>Struk Bar</span>
+          </button>
 
-            <label className={`print-option-row ${selectedTypes.includes('bar') ? 'selected' : ''}`}>
-              <input
-                type="checkbox"
-                checked={selectedTypes.includes('bar')}
-                onChange={() => handleToggle('bar')}
-              />
-              <div className="option-label-group">
-                <strong>Struk Bar (Minuman)</strong>
-                <small>Khusus pembuatan minuman di bar, dengan harga total</small>
-              </div>
-            </label>
+          <button
+            type="button"
+            className="btn-print-choice"
+            onClick={() => handlePrintSingle('kitchen')}
+            title="Cetak Struk untuk Dapur Makanan"
+          >
+            <span style={{ fontSize: '16px' }}>🍳</span>
+            <span>Struk Dapur</span>
+          </button>
+        </div>
 
-            <label
-              className={`print-option-row ${selectedTypes.includes('kitchen') ? 'selected' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedTypes.includes('kitchen')}
-                onChange={() => handleToggle('kitchen')}
-              />
-              <div className="option-label-group">
-                <strong>Struk Dapur (Kitchen)</strong>
-                <small>Khusus pembuatan makanan, TANPA harga</small>
+        {/* Realistic 58mm Thermal Receipt Paper Preview */}
+        <div className="modal-body" style={{ padding: '16px', backgroundColor: '#18181b' }}>
+          <div className="thermal-receipt-paper-preview">
+            {/* Header / Store Branding */}
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <div style={{ fontWeight: 800, fontSize: '13px', textTransform: 'uppercase' }}>
+                {shopConfig?.appName || 'Warkop Triwara'}
               </div>
-            </label>
+              {headerLines.map((h, i) => (
+                <div key={i} style={{ fontSize: '9px', color: '#333333' }}>
+                  {h}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+
+            {/* Meta Rows */}
+            <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>No. Struk:</span>
+                <strong>{order.orderNumber}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Waktu:</span>
+                <span>{formatDateIndonesian(order.createdAt)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Pelanggan:</span>
+                <strong>{order.customerName || 'Umum'}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Tipe:</span>
+                <span>[{order.items[0]?.orderType === 'takeaway' ? 'TAKEAWAY' : 'DINE-IN'}]</span>
+              </div>
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+
+            {/* Items List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '10px' }}>
+              {order.items.map((item, idx) => (
+                <div key={idx}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                    <span>
+                      {item.productName} x{item.qty}
+                    </span>
+                    <span>{formatRupiah(item.subtotal)}</span>
+                  </div>
+                  {item.orderType === 'takeaway' && (
+                    <div style={{ fontSize: '9px', color: '#555555', paddingLeft: '8px' }}>
+                      • Takeaway
+                    </div>
+                  )}
+                  {item.toppings.map((t, ti) => (
+                    <div key={ti} style={{ fontSize: '9px', color: '#555555', paddingLeft: '8px' }}>
+                      • {t.name}
+                    </div>
+                  ))}
+                  {item.notes && (
+                    <div style={{ fontSize: '9px', color: '#555555', fontStyle: 'italic', paddingLeft: '8px' }}>
+                      Catatan: {item.notes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+
+            {/* Price Calculations */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Subtotal:</span>
+                <span>{formatRupiah(order.subtotal)}</span>
+              </div>
+              {order.discountPercent > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626' }}>
+                  <span>Diskon ({order.discountPercent}%):</span>
+                  <span>-{formatRupiah(order.discountAmount)}</span>
+                </div>
+              )}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  borderTop: '1px solid #000000',
+                  paddingTop: '3px',
+                  marginTop: '2px',
+                }}
+              >
+                <span>TOTAL:</span>
+                <span>{formatRupiah(order.total)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                <span>Bayar ({order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}):</span>
+                <span>{formatRupiah(order.paymentAmount)}</span>
+              </div>
+              {order.paymentMethod === 'cash' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Kembali:</span>
+                  <span>{formatRupiah(order.changeAmount)}</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+
+            {/* Footer */}
+            <div style={{ textAlign: 'center', fontSize: '9px', color: '#444444' }}>
+              {footerLines.map((f, i) => (
+                <div key={i}>{f}</div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>
-            Selesai / Tanpa Cetak
-          </button>
-          <button type="button" className="btn-primary" onClick={handlePrint}>
-            Cetak Struk Terpilih ({selectedTypes.length})
+        {/* Modal Footer */}
+        <div className="modal-footer" style={{ justifyContent: 'center' }}>
+          <button type="button" className="btn-secondary" onClick={onClose} style={{ width: '100%' }}>
+            Tutup Pratinjau
           </button>
         </div>
       </div>

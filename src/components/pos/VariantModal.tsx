@@ -15,22 +15,17 @@ interface VariantModalProps {
 export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, onAddToCart }) => {
   const [orderType, setOrderType] = useState<OrderType>('dine_in');
   const [temperature, setTemperature] = useState<TemperatureOption>('Iced');
-  const [sugarLevel, setSugarLevel] = useState<string>('Normal (100%)');
+  const [sugarLevel, setSugarLevel] = useState<string>('normal');
   const [selectedToppings, setSelectedToppings] = useState<
-    { name: string; price: number; amount?: number }[]
+    { name: string; price: number; ingredientId?: number; amount?: number }[]
   >([]);
   const [notes, setNotes] = useState<string>('');
 
   if (!product) return null;
 
-  const toppingPresets = [
-    { name: 'Extra Shot Espresso', price: 5000 },
-    { name: 'Oat Milk Sub', price: 6000 },
-    { name: 'Syrup Vanilla', price: 4000 },
-    { name: 'Syrup Caramel', price: 4000 },
-  ];
+  const availableAdditionals = product.availableAdditionals || [];
 
-  const handleToggleTopping = (topping: { name: string; price: number }) => {
+  const handleToggleTopping = (topping: { name: string; price: number; ingredientId?: number; amount?: number }) => {
     const exists = selectedToppings.find((t) => t.name === topping.name);
     if (exists) {
       setSelectedToppings(selectedToppings.filter((t) => t.name !== topping.name));
@@ -70,8 +65,8 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
             </h3>
             <span className="modal-subtitle">Atur Varian &amp; Opsi Pesanan</span>
           </div>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            [✕]
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            ✕
           </button>
         </div>
 
@@ -135,25 +130,31 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
             </div>
           </div>
 
-          {/* Extra Toppings */}
+          {/* Extra Toppings / Additionals */}
           <div className="form-group">
-            <label className="form-label">Tambahan / Extra Topping</label>
-            <div className="toppings-grid">
-              {toppingPresets.map((t) => {
-                const isSelected = selectedToppings.some((st) => st.name === t.name);
-                return (
-                  <button
-                    key={t.name}
-                    type="button"
-                    className={`topping-checkbox-btn ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleToggleTopping(t)}
-                  >
-                    <span>{t.name}</span>
-                    <small>+{formatRupiah(t.price)}</small>
-                  </button>
-                );
-              })}
-            </div>
+            <label className="form-label">Tambahan / Additional Menu</label>
+            {availableAdditionals.length === 0 ? (
+              <p className="empty-hint" style={{ fontSize: '12px', color: '#a1a1aa', margin: '6px 0' }}>
+                Menu ini tidak memiliki pilihan additional khusus.
+              </p>
+            ) : (
+              <div className="toppings-grid">
+                {availableAdditionals.map((t) => {
+                  const isSelected = selectedToppings.some((st) => st.name === t.name);
+                  return (
+                    <button
+                      key={t.name}
+                      type="button"
+                      className={`topping-checkbox-btn ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleToggleTopping(t)}
+                    >
+                      <span>{t.name}</span>
+                      <small>+{formatRupiah(t.price)}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Custom Notes */}
