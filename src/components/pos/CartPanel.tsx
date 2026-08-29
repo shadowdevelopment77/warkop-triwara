@@ -32,10 +32,10 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   return (
     <aside className="pos-right-column cart-panel-right">
       <div className="cart-panel-header">
-        <h2 className="cart-panel-title">Pesanan Pelanggan</h2>
+        <h2 className="cart-panel-title">Pesanan</h2>
         {cartItems.length > 0 && (
           <button type="button" className="btn-clear-cart" onClick={onClearCart}>
-            Kosongkan
+            Reset
           </button>
         )}
       </div>
@@ -51,7 +51,6 @@ export const CartPanel: React.FC<CartPanelProps> = ({
           cartItems.map((item) => (
             <div key={item.cartId} className="cart-item-card">
               <div className="cart-item-main">
-                <span className="cart-item-badge">[{item.product.codeBadge}]</span>
                 <div className="cart-item-details">
                   <span className="cart-item-title">{item.product.name}</span>
                   <div className="cart-item-tags">
@@ -99,15 +98,15 @@ export const CartPanel: React.FC<CartPanelProps> = ({
           {/* Discount Section: Label + Reset, Manual Input First, Presets Second */}
           <div className="discount-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="discount-label" style={{ margin: 0 }}>Diskon Penjualan (%)</label>
+              <label className="discount-label" style={{ margin: 0 }}>Discount(%)</label>
               {discountPercent > 0 && (
                 <button
                   type="button"
-                  style={{ fontSize: '11px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ fontSize: '15px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
                   onClick={() => onChangeDiscount(0)}
                   title="Reset diskon ke 0%"
                 >
-                  ✕ Reset Diskon
+                  ✕ Reset Discount
                 </button>
               )}
             </div>
@@ -131,7 +130,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
 
             {/* Quick Percentage Helper Buttons */}
             <div className="discount-helpers">
-              {[10, 25, 50, 75, 100].map((pct) => (
+              {[25, 50, 75, 100].map((pct) => (
                 <button
                   key={pct}
                   type="button"
@@ -147,12 +146,12 @@ export const CartPanel: React.FC<CartPanelProps> = ({
           {/* Pricing Calculation Rows */}
           <div className="cart-calc-rows">
             <div className="calc-row">
-              <span>Subtotal Menu</span>
+              <span>Subtotal</span>
               <span>{formatRupiah(subtotal)}</span>
             </div>
             {discountPercent > 0 && (
               <div className="calc-row discount">
-                <span>Diskon ({discountPercent}%)</span>
+                <span>Discount ({discountPercent}%)</span>
                 <span>-{formatRupiah(discountAmount)}</span>
               </div>
             )}
@@ -164,7 +163,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
 
           {/* Checkout Action Button */}
           <button type="button" className="btn-pay-now" onClick={onProceedToPayment}>
-            BAYAR — {formatRupiah(grandTotal)}
+            Process Transaction
           </button>
         </div>
       )}

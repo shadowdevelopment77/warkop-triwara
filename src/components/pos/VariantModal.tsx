@@ -57,67 +57,66 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card variant-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+      <div className="pos-modal-card variant-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="pos-modal-header">
           <div>
-            <h3 className="modal-title">
-              [{product.codeBadge}] {product.name}
+            <h3 className="pos-modal-title">
+             {product.name}
             </h3>
-            <span className="modal-subtitle">Atur Varian &amp; Opsi Pesanan</span>
           </div>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="pos-modal-body">
           {/* Order Type: Dine In vs Takeaway */}
           <div className="form-group">
-            <label className="form-label">Tipe Penyajian</label>
+            <label className="form-label">Type</label>
             <div className="btn-toggle-group">
               <button
                 type="button"
                 className={`toggle-btn ${orderType === 'dine_in' ? 'active' : ''}`}
                 onClick={() => setOrderType('dine_in')}
               >
-                Dine-In (Mug / Piring)
+                Dine-In
               </button>
               <button
                 type="button"
                 className={`toggle-btn ${orderType === 'takeaway' ? 'active' : ''}`}
                 onClick={() => setOrderType('takeaway')}
               >
-                Takeaway (Kemasan Cup/Bag)
+                Takeaway
               </button>
             </div>
           </div>
 
           {/* Temperature */}
           <div className="form-group">
-            <label className="form-label">Suhu Minuman</label>
+            <label className="form-label">Ice/Hot</label>
             <div className="btn-toggle-group">
               <button
                 type="button"
                 className={`toggle-btn ${temperature === 'Iced' ? 'active' : ''}`}
                 onClick={() => setTemperature('Iced')}
               >
-                Dingin (Iced)
+                Ice
               </button>
               <button
                 type="button"
                 className={`toggle-btn ${temperature === 'Hot' ? 'active' : ''}`}
                 onClick={() => setTemperature('Hot')}
               >
-                Panas (Hot)
+                Hot
               </button>
             </div>
           </div>
 
           {/* Sugar Level */}
           <div className="form-group">
-            <label className="form-label">Tingkat Manis (Sugar Level)</label>
+            <label className="form-label">Sugar Level</label>
             <div className="btn-toggle-group">
-              {['Normal (100%)', 'Less Sugar (50%)', 'No Sugar (0%)'].map((level) => (
+              {['Normal ', 'Less Sugar', 'No Sugar'].map((level) => (
                 <button
                   key={level}
                   type="button"
@@ -132,7 +131,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
 
           {/* Extra Toppings / Additionals */}
           <div className="form-group">
-            <label className="form-label">Tambahan / Additional Menu</label>
+            <label className="form-label">Additional</label>
             {availableAdditionals.length === 0 ? (
               <p className="empty-hint" style={{ fontSize: '12px', color: '#a1a1aa', margin: '6px 0' }}>
                 Menu ini tidak memiliki pilihan additional khusus.
@@ -159,7 +158,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
 
           {/* Custom Notes */}
           <div className="form-group">
-            <label className="form-label">Catatan Pesanan (Opsional)</label>
+            <label className="form-label">Note (Optional) </label>
             <input
               type="text"
               className="form-input"
@@ -170,11 +169,11 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>
+        <div className="pos-modal-footer">
+          <button type="button" className="pos-btn-secondary" onClick={onClose}>
             Batal
           </button>
-          <button type="button" className="btn-primary" onClick={handleConfirm}>
+          <button type="button" className="pos-btn-primary" onClick={handleConfirm}>
             Tambah ke Keranjang ({formatRupiah(itemFinalPrice)})
           </button>
         </div>

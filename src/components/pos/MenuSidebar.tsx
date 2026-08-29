@@ -5,7 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import type { IProduct } from '../../types';
 import { formatRupiah } from '../../utils/currency';
-import { hppService } from '../../services/hpp.service';
+import { hppService, type IAvailabilityInfo } from '../../services/hpp.service';
+import { DialogModal } from '../common/DialogModal';
 
 interface MenuSidebarProps {
   products: IProduct[];
@@ -18,12 +19,13 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
   onQuickAddToCart,
   onOpenVariant,
 }) => {
-  const [stockStatus, setStockStatus] = useState<Record<number, { isAvailable: boolean; missingItemName?: string }>>({});
+  const [stockStatus, setStockStatus] = useState<Record<number, IAvailabilityInfo>>({});
+  const [stockAlert, setStockAlert] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     const checkAllStocks = async () => {
-      const statusMap: Record<number, { isAvailable: boolean; missingItemName?: string }> = {};
+      const statusMap: Record<number, IAvailabilityInfo> = {};
       for (const prod of products) {
         if (prod.id) {
           const avail = await hppService.checkStockAvailability(prod, 'dine_in', 1);
@@ -44,7 +46,9 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
   const handleProductClick = (product: IProduct) => {
     const status = product.id ? stockStatus[product.id] : null;
     if (status && !status.isAvailable) {
-      alert(`Maaf, menu "${product.name}" tidak dapat dipesan karena stok ${status.missingItemName || 'bahan baku'} habis.`);
+      setStockAlert(
+        `Maaf, menu "${product.name}" tidak dapat dipesan karena stok ${status.missingItemName || 'bahan baku'} habis.`
+      );
       return;
     }
     onQuickAddToCart(product);
@@ -70,9 +74,6 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
               style={{ cursor: isAvailable ? 'pointer' : 'not-allowed' }}
               title={isAvailable ? `Klik untuk tambah langsung 1x ${product.name}` : `Stok ${missingName || 'bahan'} habis`}
             >
-              {/* 2-Letter Code Badge */}
-              <span className="code-badge">[{product.codeBadge}]</span>
-
               {/* Product Details */}
               <div className="menu-item-info">
                 <span className="menu-item-name">
@@ -109,6 +110,15 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
           );
         })
       )}
+
+      <DialogModal
+        isOpen={Boolean(stockAlert)}
+        type="alert"
+        title="Stok Tidak Cukup"
+        message={stockAlert || ''}
+        onConfirm={() => setStockAlert(null)}
+        onClose={() => setStockAlert(null)}
+      />
     </div>
   );
 };

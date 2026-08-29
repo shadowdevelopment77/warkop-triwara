@@ -2,9 +2,10 @@
 // Triwara POS — 58mm Thermal Receipt Preview & 3-Action Print Modal
 // ═══════════════════════════════════════════════
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { IOrder, IShopConfig } from '../../types';
 import type { ReceiptType } from '../../services/receipt.service';
+import { configService } from '../../services/config.service';
 import { formatRupiah } from '../../utils/currency';
 import { formatDateIndonesian } from '../../utils/date';
 
@@ -21,17 +22,23 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
   onClose,
   onConfirmPrint,
 }) => {
+  const [activeConfig, setActiveConfig] = useState<IShopConfig | null>(shopConfig || null);
+
+  useEffect(() => {
+    configService.getConfig().then(setActiveConfig);
+  }, []);
+
   const handlePrintSingle = (type: ReceiptType) => {
     onConfirmPrint([type]);
   };
 
-  const headerLines = shopConfig?.receiptHeaderLines || [
+  const headerLines = activeConfig?.receiptHeaderLines || [
     'Warkop Triwara Coffee',
     'Jl. Sunset Road No. 88, Bali',
     'Telp: 0812-3456-7890',
   ];
 
-  const footerLines = shopConfig?.receiptFooterLines || [
+  const footerLines = activeConfig?.receiptFooterLines || [
     'Terima Kasih Atas Kunjungan Anda!',
     'WiFi: Triwara_Guest | Pass: kopienak',
   ];
@@ -39,15 +46,15 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-card print-select-card"
+        className="pos-modal-card print-select-card"
         style={{ maxWidth: '420px', maxHeight: '90dvh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="modal-header">
+        <div className="pos-modal-header">
           <div>
-            <h3 className="modal-title">Cetak Struk Thermal</h3>
-            <span className="modal-subtitle">Order #{order.orderNumber}</span>
+            <h3 className="pos-modal-title">Cetak Struk Thermal</h3>
+            <span className="pos-print-order-sub">Order #{order.orderNumber}</span>
           </div>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
@@ -62,7 +69,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
             onClick={() => handlePrintSingle('customer')}
             title="Cetak Struk untuk Pelanggan"
           >
-            <span style={{ fontSize: '16px' }}>🖨️</span>
+
             <span>Struk Customer</span>
           </button>
 
@@ -72,7 +79,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
             onClick={() => handlePrintSingle('bar')}
             title="Cetak Struk untuk Bar Minuman"
           >
-            <span style={{ fontSize: '16px' }}>🍸</span>
+
             <span>Struk Bar</span>
           </button>
 
@@ -82,7 +89,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
             onClick={() => handlePrintSingle('kitchen')}
             title="Cetak Struk untuk Dapur Makanan"
           >
-            <span style={{ fontSize: '16px' }}>🍳</span>
+
             <span>Struk Dapur</span>
           </button>
         </div>
@@ -92,8 +99,23 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
           <div className="thermal-receipt-paper-preview">
             {/* Header / Store Branding */}
             <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              {activeConfig?.receiptLogoBase64 && (
+                <div style={{ marginBottom: '6px' }}>
+                  <img
+                    src={activeConfig.receiptLogoBase64}
+                    alt="Logo Struk"
+                    style={{
+                      maxHeight: '48px',
+                      maxWidth: '160px',
+                      objectFit: 'contain',
+                      filter: 'grayscale(100%) contrast(150%)',
+                      display: 'inline-block',
+                    }}
+                  />
+                </div>
+              )}
               <div style={{ fontWeight: 800, fontSize: '13px', textTransform: 'uppercase' }}>
-                {shopConfig?.appName || 'Warkop Triwara'}
+                {activeConfig?.appName || 'Warkop Triwara'}
               </div>
               {headerLines.map((h, i) => (
                 <div key={i} style={{ fontSize: '9px', color: '#333333' }}>
@@ -120,7 +142,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Tipe:</span>
-                <span>[{order.items[0]?.orderType === 'takeaway' ? 'TAKEAWAY' : 'DINE-IN'}]</span>
+                <span>{order.items[0]?.orderType === 'takeaway' ? 'TAKEAWAY' : 'DINE-IN'}</span>
               </div>
             </div>
 

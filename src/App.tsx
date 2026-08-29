@@ -12,6 +12,7 @@ import './styles/global.css';
 import './styles/layout.css';
 import './styles/pos.css';
 import './styles/master.css';
+import './styles/dialog.css';
 
 export function App() {
   const [isLocked, setIsLocked] = useState<boolean>(true);
