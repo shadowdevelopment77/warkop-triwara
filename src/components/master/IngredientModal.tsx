@@ -1,10 +1,11 @@
 // ═══════════════════════════════════════════════
-// Triwara POS — Add / Edit Ingredient Modal
+// Triwara POS — Ingredient Add / Edit Modal (Clean Placeholders)
 // ═══════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { IIngredient, IngredientCategory, UnitType } from '../../types';
 import { ingredientService } from '../../services/ingredient.service';
+import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 
 interface IngredientModalProps {
@@ -18,17 +19,24 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
   const [name, setName] = useState<string>(ingredient?.name || '');
   const [category, setCategory] = useState<IngredientCategory>(ingredient?.category || 'raw');
+  const [availableCategories, setAvailableCategories] = useState<string[]>(['raw', 'packaging']);
   const [unit, setUnit] = useState<UnitType>(ingredient?.unit || 'gr');
-  const [currentStock, setCurrentStock] = useState<number>(ingredient?.currentStock || 1000);
-  const [minStock, setMinStock] = useState<number>(ingredient?.minStock || 100);
-  const [purchasePackageName, setPurchasePackageName] = useState<string>(
-    ingredient?.purchasePackageName || 'Pouch / Carton 1 Unit'
-  );
-  const [purchasePrice, setPurchasePrice] = useState<number>(ingredient?.purchasePrice || 100000);
-  const [purchaseQuantity, setPurchaseQuantity] = useState<number>(ingredient?.purchaseQuantity || 1000);
+  const [currentStock, setCurrentStock] = useState<number | ''>(ingredient ? ingredient.currentStock : '');
+  const [minStock, setMinStock] = useState<number | ''>(ingredient ? ingredient.minStock : '');
+  const [purchasePackageName, setPurchasePackageName] = useState<string>(ingredient?.purchasePackageName || '');
+  const [purchasePrice, setPurchasePrice] = useState<number | ''>(ingredient ? ingredient.purchasePrice : '');
+  const [purchaseQuantity, setPurchaseQuantity] = useState<number | ''>(ingredient ? ingredient.purchaseQuantity : '');
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const calculatedCostPerUnit = purchaseQuantity > 0 ? Math.round((purchasePrice / purchaseQuantity) * 100) / 100 : 0;
+  useEffect(() => {
+    ingredientService.getCategories().then((cats) => {
+      setAvailableCategories(cats);
+    });
+  }, []);
+
+  const numPrice = typeof purchasePrice === 'number' ? purchasePrice : 0;
+  const numQty = typeof purchaseQuantity === 'number' ? purchaseQuantity : 0;
+  const calculatedCostPerUnit = numQty > 0 ? Math.round((numPrice / numQty) * 100) / 100 : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +46,22 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
       setErrorMsg('Nama bahan baku tidak boleh kosong');
       return;
     }
+    if (currentStock === '' || Number(currentStock) < 0) {
+      setErrorMsg('Stok saat ini harus diisi (minimal 0)');
+      return;
+    }
+    if (minStock === '' || Number(minStock) < 0) {
+      setErrorMsg('Batas minimal alert harus diisi');
+      return;
+    }
+    if (purchasePrice === '' || Number(purchasePrice) < 0) {
+      setErrorMsg('Harga pembelian harus diisi');
+      return;
+    }
+    if (purchaseQuantity === '' || Number(purchaseQuantity) <= 0) {
+      setErrorMsg('Jumlah isi per beli harus lebih dari 0');
+      return;
+    }
 
     try {
       if (isEditing && ingredient?.id) {
@@ -45,23 +69,35 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
           name: name.trim(),
           category,
           unit,
-          currentStock,
-          minStock,
-          purchasePackageName: purchasePackageName.trim(),
-          purchasePrice,
-          purchaseQuantity,
+          currentStock: Number(currentStock),
+          minStock: Number(minStock),
+          purchasePackageName: purchasePackageName.trim() || 'Paket Standar',
+          purchasePrice: Number(purchasePrice),
+          purchaseQuantity: Number(purchaseQuantity),
         });
+        await notificationService.addNotification(
+          'Stok Bahan Diperbarui',
+          `Bahan "${name.trim()}" berhasil diperbarui (Stok: ${currentStock} ${unit}).`,
+          'inventory',
+          'inventory'
+        );
       } else {
         await ingredientService.addIngredient({
           name: name.trim(),
           category,
           unit,
-          currentStock,
-          minStock,
-          purchasePackageName: purchasePackageName.trim(),
-          purchasePrice,
-          purchaseQuantity,
+          currentStock: Number(currentStock),
+          minStock: Number(minStock),
+          purchasePackageName: purchasePackageName.trim() || 'Paket Standar',
+          purchasePrice: Number(purchasePrice),
+          purchaseQuantity: Number(purchaseQuantity),
         });
+        await notificationService.addNotification(
+          'Bahan Baru Ditambahkan',
+          `Bahan "${name.trim()}" berhasil ditambahkan ke inventaris.`,
+          'inventory',
+          'inventory'
+        );
       }
       onSaved();
     } catch (err) {
@@ -74,6 +110,12 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     if (confirm(`Hapus bahan "${ingredient.name}" dari stok?`)) {
       try {
         await ingredientService.deleteIngredient(ingredient.id);
+        await notificationService.addNotification(
+          'Bahan Dihapus',
+          `Bahan "${ingredient.name}" telah dihapus dari inventaris.`,
+          'inventory',
+          'inventory'
+        );
         onSaved();
       } catch (err) {
         setErrorMsg((err as Error).message);
@@ -89,8 +131,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             <h3 className="modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
             <span className="modal-subtitle">Atur detail bahan baku, satuan, &amp; kalkulasi biaya modal</span>
           </div>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            [✕]
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            ✕
           </button>
         </div>
 
@@ -102,7 +144,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             <input
               type="text"
               className="form-input"
-              placeholder="Cth: Biji Kopi House Blend, Fresh Milk UHT, Cup 16oz..."
+              placeholder="contoh: Biji Kopi Arabica, Fresh Milk UHT, Paper Cup 8oz..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -117,8 +159,15 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 value={category}
                 onChange={(e) => setCategory(e.target.value as IngredientCategory)}
               >
-                <option value="raw">Bahan Baku (Minuman/Makanan)</option>
-                <option value="packaging">Kemasan Sekali Pakai (Takeaway)</option>
+                <option value="raw">Bahan Baku (raw)</option>
+                <option value="packaging">Kemasan Sekali Pakai (packaging)</option>
+                {availableCategories
+                  .filter((c) => c !== 'raw' && c !== 'packaging')
+                  .map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -138,8 +187,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
               <input
                 type="number"
                 className="form-input"
+                placeholder="contoh: 1000"
                 value={currentStock}
-                onChange={(e) => setCurrentStock(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setCurrentStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 required
               />
             </div>
@@ -149,8 +199,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
               <input
                 type="number"
                 className="form-input"
+                placeholder="contoh: 100"
                 value={minStock}
-                onChange={(e) => setMinStock(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setMinStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 required
               />
             </div>
@@ -165,7 +216,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
               <input
                 type="text"
                 className="form-input"
-                placeholder="Cth: Bag 1 kg, Karton 1 Liter, Sleeve 50 pcs..."
+                placeholder="contoh: Bag 1kg, Karton 1 Liter, Sleeve 50 pcs..."
                 value={purchasePackageName}
                 onChange={(e) => setPurchasePackageName(e.target.value)}
               />
@@ -177,8 +228,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 <input
                   type="number"
                   className="form-input"
+                  placeholder="contoh: 150000"
                   value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   required
                 />
               </div>
@@ -188,8 +240,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 <input
                   type="number"
                   className="form-input"
+                  placeholder="contoh: 1000"
                   value={purchaseQuantity}
-                  onChange={(e) => setPurchaseQuantity(parseFloat(e.target.value) || 1)}
+                  onChange={(e) => setPurchaseQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   required
                 />
               </div>
@@ -203,17 +256,17 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             </div>
           </div>
 
-          <div className="modal-footer">
+          <div className="modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
             {isEditing && (
-              <button type="button" className="btn-danger" onClick={handleDelete}>
-                Hapus
+              <button type="button" className="btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                Hapus Bahan
               </button>
             )}
             <button type="button" className="btn-secondary" onClick={onClose}>
               Batal
             </button>
             <button type="submit" className="btn-primary">
-              Simpan Bahan
+              {isEditing ? 'Simpan Perubahan' : 'Tambah Bahan'}
             </button>
           </div>
         </form>

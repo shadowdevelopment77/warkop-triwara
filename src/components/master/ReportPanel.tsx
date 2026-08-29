@@ -3,27 +3,40 @@
 // ═══════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { IOrder } from '../../types';
+import type { IOrder, IShopConfig } from '../../types';
 import { reportService, type ISalesSummary, type ITopProduct } from '../../services/report.service';
 import { orderService } from '../../services/order.service';
-import { pdfService } from '../../services/pdf.service';
 import { configService } from '../../services/config.service';
+import { pdfService } from '../../services/pdf.service';
+import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 import { formatDateIndonesian } from '../../utils/date';
 import { PrintSelectModal } from '../pos/PrintSelectModal';
 import type { ReceiptType } from '../../services/receipt.service';
+import { PaginationBar } from '../common/PaginationBar';
+
+const toInputDateString = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const ReportPanel: React.FC = () => {
+  const [periodPreset, setPeriodPreset] = useState<'today' | 'month' | 'custom'>('today');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [periodPreset, setPeriodPreset] = useState<'today' | 'month' | 'custom'>('today');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [summary, setSummary] = useState<ISalesSummary | null>(null);
   const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
   const [orders, setOrders] = useState<IOrder[]>([]);
-
-  // Print modal state
   const [reprintOrder, setReprintOrder] = useState<IOrder | null>(null);
+  const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
+
+  useEffect(() => {
+    configService.getConfig().then(setShopConfig).catch(console.error);
+  }, []);
 
   const loadReportData = useCallback(async () => {
     try {
@@ -43,8 +56,9 @@ export const ReportPanel: React.FC = () => {
     loadReportData();
   }, [loadReportData]);
 
-  const handleSelectPreset = (preset: 'today' | 'month' | 'custom') => {
+  const handleSelectPreset = (preset: 'today' | 'month') => {
     setPeriodPreset(preset);
+    setCurrentPage(1);
     const now = new Date();
 
     if (preset === 'today') {
@@ -73,6 +87,12 @@ export const ReportPanel: React.FC = () => {
     if (reason !== null) {
       try {
         await orderService.voidOrder(order.id!, reason);
+        await notificationService.addNotification(
+          'Transaksi Dibatalkan (Void)',
+          `Transaksi #${order.orderNumber} dibatalkan. Alasan: ${reason || '-'}. Stok bahan telah dikembalikan.`,
+          'order',
+          'reports'
+        );
         alert(`Transaksi #${order.orderNumber} telah dibatalkan. Stok bahan telah dikembalikan.`);
         loadReportData();
       } catch (err) {
@@ -99,15 +119,44 @@ export const ReportPanel: React.FC = () => {
 
   return (
     <div className="master-view-container">
-      {/* Header & Period Controls */}
+      {/* Header & Date Range Controls (Top-Left) */}
       <div className="master-view-header">
-        <div>
-          <h2 className="view-title">Laporan Penjualan &amp; Performa Toko</h2>
-          <p className="view-subtitle">Ringkasan omset, profit bersih, 5 menu terlaris, &amp; riwayat transaksi.</p>
-        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div>
+            <h2 className="view-title">Laporan Penjualan &amp; Performa Toko</h2>
+            <p className="view-subtitle">Ringkasan omset, tunai, qris, profit bersih, 5 menu terlaris &amp; riwayat.</p>
+          </div>
 
-        <div className="header-actions">
-          <div className="period-presets">
+          {/* Date Range Picker with Presets in Top-Left */}
+          <div className="report-period-filter-bar">
+            <div className="date-input-group">
+              <label>Dari:</label>
+              <input
+                type="date"
+                value={toInputDateString(startDate)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setStartDate(new Date(e.target.value));
+                    setPeriodPreset('custom');
+                  }
+                }}
+              />
+            </div>
+
+            <div className="date-input-group">
+              <label>Sampai:</label>
+              <input
+                type="date"
+                value={toInputDateString(endDate)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setEndDate(new Date(e.target.value));
+                    setPeriodPreset('custom');
+                  }
+                }}
+              />
+            </div>
+
             <button
               type="button"
               className={`preset-btn ${periodPreset === 'today' ? 'active' : ''}`}
@@ -122,46 +171,40 @@ export const ReportPanel: React.FC = () => {
             >
               Bulan Ini
             </button>
-            <button
-              type="button"
-              className={`preset-btn ${periodPreset === 'custom' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('custom')}
-            >
-              Custom Date
-            </button>
           </div>
+        </div>
 
+        <div className="header-actions">
           <button type="button" className="btn-primary" onClick={handleExportPdf}>
             Export PDF
           </button>
         </div>
       </div>
 
-      {/* Summary Cards Grid (No Icons) */}
+      {/* Summary Cards Grid (OMSET, TUNAI, QRIS, PROFIT) */}
       {summary && (
         <div className="summary-cards-grid">
           <div className="summary-card">
-            <span className="card-label">TOTAL OMSET</span>
+            <span className="card-label">OMSET</span>
             <strong className="card-val">{formatRupiah(summary.totalOmset)}</strong>
-            <small>{summary.completedCount} transaksi sukses</small>
+            <small style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
+              {summary.completedCount} transaksi sukses, {summary.voidedCount} transaksi dibatalkan
+            </small>
           </div>
 
           <div className="summary-card">
-            <span className="card-label">PEMBAYARAN TUNAI</span>
+            <span className="card-label">TUNAI</span>
             <strong className="card-val">{formatRupiah(summary.totalCash)}</strong>
-            <small>Kas tunai di laci</small>
           </div>
 
           <div className="summary-card">
-            <span className="card-label">PEMBAYARAN QRIS</span>
+            <span className="card-label">QRIS</span>
             <strong className="card-val">{formatRupiah(summary.totalQris)}</strong>
-            <small>Masuk ke e-wallet/bank</small>
           </div>
 
           <div className="summary-card profit">
-            <span className="card-label">PROFIT BERSIH</span>
+            <span className="card-label">PROFIT</span>
             <strong className="card-val">{formatRupiah(summary.totalProfit)}</strong>
-            <small>Omset dikurangi HPP snapshot</small>
           </div>
         </div>
       )}
@@ -176,7 +219,6 @@ export const ReportPanel: React.FC = () => {
             {topProducts.map((p, idx) => (
               <li key={p.productId} className="top-product-item">
                 <span className="rank-num">{idx + 1}.</span>
-                <span className="item-badge">[{p.codeBadge}]</span>
                 <span className="item-name">{p.productName}</span>
                 <strong className="item-qty">{p.quantitySold} terjual</strong>
                 <span className="item-revenue">({formatRupiah(p.totalRevenue)})</span>
@@ -212,59 +254,70 @@ export const ReportPanel: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
-                    <td>
-                      <strong>{order.sequenceNumber}</strong>
-                    </td>
-                    <td>
-                      <code>{order.orderNumber}</code>
-                    </td>
-                    <td>{order.customerName || 'Umum'}</td>
-                    <td>{formatDateIndonesian(order.createdAt)}</td>
-                    <td>
-                      <strong>{formatRupiah(order.total)}</strong>
-                    </td>
-                    <td>{order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}</td>
-                    <td>
-                      {order.status === 'completed' ? (
-                        <span className="status-badge safe">Sukses</span>
-                      ) : (
-                        <span className="status-badge critical">Batal / Void</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="table-action-btns">
-                        <button
-                          type="button"
-                          className="btn-action-small"
-                          onClick={() => setReprintOrder(order)}
-                        >
-                          Cetak Struk
-                        </button>
-                        {order.status === 'completed' && (
+                orders
+                  .slice((currentPage - 1) * 10, currentPage * 10)
+                  .map((order) => (
+                    <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
+                      <td>
+                        <strong>{order.sequenceNumber}</strong>
+                      </td>
+                      <td>
+                        <code>{order.orderNumber}</code>
+                      </td>
+                      <td>{order.customerName || 'Umum'}</td>
+                      <td>{formatDateIndonesian(order.createdAt)}</td>
+                      <td>
+                        <strong>{formatRupiah(order.total)}</strong>
+                      </td>
+                      <td>{order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}</td>
+                      <td>
+                        {order.status === 'completed' ? (
+                          <span className="status-badge safe">Sukses</span>
+                        ) : (
+                          <span className="status-badge critical">Batal / Void</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="table-action-btns">
                           <button
                             type="button"
-                            className="btn-action-small danger"
-                            onClick={() => handleVoidOrder(order)}
+                            className="btn-action-small"
+                            onClick={() => setReprintOrder(order)}
                           >
-                            Void / Batal
+                            [Cetak]
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {order.status === 'completed' && (
+                            <button
+                              type="button"
+                              className="btn-action-small danger"
+                              onClick={() => handleVoidOrder(order)}
+                            >
+                              [Void]
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
+
+          {/* Pagination Bar (Limit 10 + Panah) */}
+          <PaginationBar
+            currentPage={currentPage}
+            totalItems={orders.length}
+            pageSize={10}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
       {/* Reprint Modal */}
       {reprintOrder && (
         <PrintSelectModal
-          orderNumber={reprintOrder.orderNumber}
+          order={reprintOrder}
+          shopConfig={shopConfig}
           onClose={() => setReprintOrder(null)}
           onConfirmPrint={handleConfirmPrint}
         />

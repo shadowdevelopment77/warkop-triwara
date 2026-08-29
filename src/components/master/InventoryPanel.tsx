@@ -10,15 +10,24 @@ import { configService } from '../../services/config.service';
 import { formatRupiah } from '../../utils/currency';
 import { IngredientModal } from './IngredientModal';
 import { RestockModal } from './RestockModal';
+import { CategoryModal } from './CategoryModal';
+import { PaginationBar } from '../common/PaginationBar';
 
 export const InventoryPanel: React.FC = () => {
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
   const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'stock_asc' | 'stock_desc'>('name_asc');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
   const [editingIngredient, setEditingIngredient] = useState<IIngredient | null>(null);
   const [restockingIngredient, setRestockingIngredient] = useState<IIngredient | null>(null);
+
+  const handleSaveCategory = async (catName: string) => {
+    await ingredientService.addCategory(catName);
+    await loadIngredients();
+  };
 
   const loadIngredients = useCallback(async () => {
     try {
@@ -35,10 +44,12 @@ export const InventoryPanel: React.FC = () => {
 
   const handleToggleNameSort = () => {
     setSortBy(sortBy === 'name_asc' ? 'name_desc' : 'name_asc');
+    setCurrentPage(1);
   };
 
   const handleToggleStockSort = () => {
     setSortBy(sortBy === 'stock_asc' ? 'stock_desc' : 'stock_asc');
+    setCurrentPage(1);
   };
 
   const handleExportPdf = async () => {
@@ -73,6 +84,9 @@ export const InventoryPanel: React.FC = () => {
           <button type="button" className="btn-secondary" onClick={handleExportPdf}>
             Export PDF
           </button>
+          <button type="button" className="btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
+            + Kategori
+          </button>
           <button type="button" className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
             + Tambah Bahan Baru
           </button>
@@ -91,7 +105,6 @@ export const InventoryPanel: React.FC = () => {
               <th onClick={handleToggleStockSort} className="sortable-th">
                 Stok Saat Ini {sortBy.startsWith('stock') ? (sortBy === 'stock_asc' ? '▲' : '▼') : '↕'}
               </th>
-              <th>Minimal Alert</th>
               <th>Cost / Unit</th>
               <th>Status</th>
               <th>Aksi</th>
@@ -100,54 +113,61 @@ export const InventoryPanel: React.FC = () => {
           <tbody>
             {ingredients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="empty-table-td">
+                <td colSpan={6} className="empty-table-td">
                   Belum ada data stok bahan. Klik "+ Tambah Bahan Baru".
                 </td>
               </tr>
             ) : (
-              ingredients.map((ing) => (
-                <tr key={ing.id}>
-                  <td>
-                    <strong>{ing.name}</strong>
-                  </td>
-                  <td>
-                    <span className="type-badge">{ing.category === 'raw' ? 'Bahan Utama' : 'Kemasan'}</span>
-                  </td>
-                  <td>
-                    <strong>
-                      {ing.currentStock} {ing.unit}
-                    </strong>
-                  </td>
-                  <td>
-                    {ing.minStock} {ing.unit}
-                  </td>
-                  <td>
-                    {formatRupiah(ing.costPerUnit)} / {ing.unit}
-                  </td>
-                  <td>{getStatusBadge(ing)}</td>
-                  <td>
-                    <div className="table-action-btns">
-                      <button
-                        type="button"
-                        className="btn-action-small"
-                        onClick={() => setRestockingIngredient(ing)}
-                      >
-                        [Tambah Stock]
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-action-small secondary"
-                        onClick={() => setEditingIngredient(ing)}
-                      >
-                        [Edit Bahan]
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              ingredients
+                .slice((currentPage - 1) * 10, currentPage * 10)
+                .map((ing) => (
+                  <tr key={ing.id}>
+                    <td>
+                      <strong>{ing.name}</strong>
+                    </td>
+                    <td>
+                      <span className="type-badge">{ing.category === 'raw' ? 'Bahan Utama' : 'Kemasan'}</span>
+                    </td>
+                    <td>
+                      <strong>
+                        {ing.currentStock} {ing.unit}
+                      </strong>
+                    </td>
+                    <td>
+                      {formatRupiah(ing.costPerUnit)} / {ing.unit}
+                    </td>
+                    <td>{getStatusBadge(ing)}</td>
+                    <td>
+                      <div className="table-action-btns">
+                        <button
+                          type="button"
+                          className="btn-action-small"
+                          onClick={() => setRestockingIngredient(ing)}
+                        >
+                          [Tambah Stock]
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-action-small secondary"
+                          onClick={() => setEditingIngredient(ing)}
+                        >
+                          [Edit Bahan]
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
             )}
           </tbody>
         </table>
+
+        {/* Pagination Bar (Limit 10 + Panah) */}
+        <PaginationBar
+          currentPage={currentPage}
+          totalItems={ingredients.length}
+          pageSize={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Add Modal */}
@@ -183,6 +203,17 @@ export const InventoryPanel: React.FC = () => {
             setRestockingIngredient(null);
             loadIngredients();
           }}
+        />
+      )}
+
+      {/* Inventory Category Modal */}
+      {isCategoryModalOpen && (
+        <CategoryModal
+          title="Tambah Kategori Inventori"
+          subtitle="Kategori baru untuk mengelompokkan bahan baku & kemasan"
+          placeholder="contoh: Biji Kopi, Susu, Sirup, Powder, Kemasan..."
+          onClose={() => setIsCategoryModalOpen(false)}
+          onSave={handleSaveCategory}
         />
       )}
     </div>

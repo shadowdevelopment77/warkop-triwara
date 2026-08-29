@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import type { IIngredient } from '../../types';
 import { ingredientService } from '../../services/ingredient.service';
+import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 
 interface RestockModalProps {
@@ -37,6 +38,12 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
 
     try {
       await ingredientService.restockIngredient(ingredient.id!, addedQty, purchasePrice, purchaseQuantity);
+      await notificationService.addNotification(
+        'Restock Bahan Sukses',
+        `Restock "${ingredient.name}" sebanyak +${addedQty} ${ingredient.unit} berhasil dicatat.`,
+        'inventory',
+        'inventory'
+      );
       onRestocked();
     } catch (err) {
       setErrorMsg((err as Error).message);
@@ -51,8 +58,8 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
             <h3 className="modal-title">Tambah Stock: {ingredient.name}</h3>
             <span className="modal-subtitle">Catat kedatangan stok baru dari supplier</span>
           </div>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            [✕]
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            ✕
           </button>
         </div>
 
