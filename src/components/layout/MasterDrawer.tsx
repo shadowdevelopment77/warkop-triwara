@@ -2,7 +2,7 @@
 // Triwara POS — Master Drawer Navigation (~50% Screen Overlay)
 // ═══════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React from 'react';
 
 export type MasterTab =
   | 'pos'
@@ -15,6 +15,8 @@ export type MasterTab =
 interface MasterDrawerProps {
   isOpen: boolean;
   activeTab: MasterTab;
+  isProductFolderOpen: boolean;
+  onToggleProductFolder: () => void;
   onClose: () => void;
   onSelectTab: (tab: MasterTab) => void;
 }
@@ -22,11 +24,11 @@ interface MasterDrawerProps {
 export const MasterDrawer: React.FC<MasterDrawerProps> = ({
   isOpen,
   activeTab,
+  isProductFolderOpen,
+  onToggleProductFolder,
   onClose,
   onSelectTab,
 }) => {
-  const [isProductFolderOpen, setIsProductFolderOpen] = useState<boolean>(true);
-
   if (!isOpen) return null;
 
   const handleTabClick = (tab: MasterTab) => {
@@ -39,9 +41,9 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
       <aside className="master-drawer-panel" onClick={(e) => e.stopPropagation()}>
         {/* Drawer Header */}
         <div className="drawer-header">
-          <h3 className="drawer-title">Menu Master</h3>
-          <button type="button" className="drawer-close-btn" onClick={onClose}>
-            [Tutup]
+          <h3 className="drawer-title">Menu</h3>
+          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup Menu">
+            ✕
           </button>
         </div>
 
@@ -61,7 +63,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             <button
               type="button"
               className="nav-folder-title"
-              onClick={() => setIsProductFolderOpen(!isProductFolderOpen)}
+              onClick={onToggleProductFolder}
             >
               <span>Produk & Stok</span>
               <span>{isProductFolderOpen ? '▼' : '►'}</span>

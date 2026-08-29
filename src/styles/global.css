@@ -3,27 +3,32 @@
    ═══════════════════════════════════════════════ */
 
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
+  --primary-color: #ffffff;
+  --primary-text: #09090b;
+  --primary-hover: #e4e4e7;
+  --primary-light: #27272a;
 
-  --bg-dark: #0f172a;
-  --bg-card: #ffffff;
-  --bg-page: #f8fafc;
-  --bg-muted: #f1f5f9;
+  --bg-dark: #000000;
+  --bg-page: #09090b;
+  --bg-card: #121214;
+  --bg-surface: #18181b;
+  --bg-surface-hover: #27272a;
+  --bg-muted: #1e1e24;
 
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-main: #fafafa;
+  --text-muted: #a1a1aa;
+  --text-light: #71717a;
 
-  --border-color: #e2e8f0;
+  --border-color: #27272a;
+  --border-subtle: #1c1c20;
 
   --success-color: #10b981;
-  --success-light: #ecfdf5;
+  --success-light: rgba(16, 185, 129, 0.15);
   --warning-color: #f59e0b;
-  --warning-light: #fffbeb;
+  --warning-light: rgba(245, 158, 11, 0.15);
   --danger-color: #ef4444;
-  --danger-light: #fef2f2;
+  --danger-hover: #dc2626;
+  --danger-light: rgba(239, 68, 68, 0.15);
 
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -47,7 +52,7 @@ html, body, #root {
 
 /* Soft-Keyboard Focus Handling Fix for Android Tablets */
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid #52525b;
   outline-offset: 1px;
   scroll-margin-bottom: 250px;
 }
@@ -66,4 +71,68 @@ input, select, textarea {
 
 code {
   font-family: var(--font-mono);
+}
+
+/* Red X close button universal styling */
+.modal-close-btn-red {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.15s ease;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.modal-close-btn-red:hover {
+  background-color: var(--danger-color);
+  color: #ffffff;
+}
+
+/* Mobile Portrait Warning Overlay */
+.portrait-warning-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(9, 9, 11, 0.96);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.portrait-warning-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 32px 24px;
+  border-radius: 16px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.portrait-warning-icon {
+  font-size: 40px;
+  animation: rotateHint 2s infinite ease-in-out;
+}
+
+@keyframes rotateHint {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .portrait-warning-overlay {
+    display: flex;
+  }
 }
