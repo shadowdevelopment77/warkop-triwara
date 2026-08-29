@@ -125,7 +125,6 @@ export class PdfService {
         ing.name,
         ing.category === 'raw' ? 'Bahan Utama' : 'Kemasan',
         `${ing.currentStock} ${ing.unit}`,
-        `${ing.minStock} ${ing.unit}`,
         `${formatRupiah(ing.costPerUnit)} / ${ing.unit}`,
         status,
       ];
@@ -133,7 +132,7 @@ export class PdfService {
 
     autoTable(doc, {
       startY: 40,
-      head: [['No', 'Nama Bahan', 'Kategori', 'Stok Saat Ini', 'Batas Minimal', 'Cost/Unit', 'Status']],
+      head: [['No', 'Nama Bahan', 'Kategori', 'Stok Saat Ini', 'Cost/Unit', 'Status']],
       body: tableBody,
       theme: 'striped',
       headStyles: { fillColor: [40, 40, 40] },

@@ -4,14 +4,16 @@
 
 import { db, TriwaraDatabase } from '../database/db';
 import type { IOrder, ICartItem, IOrderItem } from '../types';
-import { hppService } from './hpp.service';
+import { hppService, HppService } from './hpp.service';
 import { startOfDay, endOfDay } from '../utils/date';
 
 export class OrderService {
   private database: TriwaraDatabase;
+  private hppService: HppService;
 
-  constructor(database: TriwaraDatabase = db) {
+  constructor(database: TriwaraDatabase = db, hppSvc: HppService = hppService) {
     this.database = database;
+    this.hppService = hppSvc;
   }
 
   /** Generates daily order sequence number and order string e.g. TRW-20260829-001 */
@@ -51,9 +53,32 @@ export class OrderService {
     let hppTotal = 0;
 
     for (const item of cartItems) {
-      // Calculate live HPP snapshot for this item
-      const hppBreakdown = await hppService.calculateProductHpp(item.product, item.orderType);
-      const itemHpp = hppBreakdown.totalHpp;
+      // Calculate live HPP snapshot for this item (base recipe + takeaway packaging)
+      const hppBreakdown = await this.hppService.calculateProductHpp(item.product, item.orderType);
+
+      // Calculate real topping HPP dynamically from ingredient costPerUnit
+      let extraToppingHppSum = 0;
+      const orderItemToppings: { name: string; price: number; hppCost: number; ingredientId?: number; amount?: number }[] = [];
+
+      for (const t of item.extraToppings) {
+        let toppingHpp = 0;
+        if (t.ingredientId && t.amount) {
+          const ing = await this.database.ingredients.get(t.ingredientId);
+          if (ing) {
+            toppingHpp = Math.round(t.amount * ing.costPerUnit);
+          }
+        }
+        extraToppingHppSum += toppingHpp;
+        orderItemToppings.push({
+          name: t.name,
+          price: t.price,
+          hppCost: toppingHpp,
+          ingredientId: t.ingredientId,
+          amount: t.amount,
+        });
+      }
+
+      const itemHpp = hppBreakdown.totalHpp + extraToppingHppSum;
       const itemSubtotal = item.itemPrice * item.quantity;
       const itemHppSubtotal = itemHpp * item.quantity;
 
@@ -65,16 +90,12 @@ export class OrderService {
         productName: item.product.name,
         codeBadge: item.product.codeBadge,
         price: item.itemPrice,
-        hpp: itemHpp, // Snapshot!
+        hpp: itemHpp, // Accurate HPP Snapshot!
         qty: item.quantity,
         orderType: item.orderType,
         subtotal: itemSubtotal,
         hppSubtotal: itemHppSubtotal,
-        toppings: item.extraToppings.map((t) => ({
-          name: t.name,
-          price: t.price,
-          hppCost: t.amount ? t.amount * 10 : 0,
-        })),
+        toppings: orderItemToppings,
         notes: item.notes,
       });
     }
@@ -107,7 +128,7 @@ export class OrderService {
     const savedOrder = { ...orderData, id: orderId };
 
     // Deduct stock and get stock alert notifications
-    const lowStockAlerts = await hppService.deductInventoryForOrder(savedOrder);
+    const lowStockAlerts = await this.hppService.deductInventoryForOrder(savedOrder);
 
     return { order: savedOrder, lowStockAlerts };
   }
@@ -126,7 +147,7 @@ export class OrderService {
     });
 
     // Restore inventory
-    await hppService.restoreInventoryForOrder(order);
+    await this.hppService.restoreInventoryForOrder(order);
 
     // Log void activity
     await this.database.logs.add({

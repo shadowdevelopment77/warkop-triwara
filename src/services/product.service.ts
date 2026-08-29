@@ -18,9 +18,51 @@ export class ProductService {
     return await this.database.categories.orderBy('sortOrder').toArray();
   }
 
+  /** Adds a new product category */
+  async addCategory(name: string): Promise<number> {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new Error('Nama kategori tidak boleh kosong');
+    }
+
+    const existing = await this.database.categories
+      .filter((c) => c.name.toLowerCase() === trimmed.toLowerCase())
+      .first();
+
+    if (existing) {
+      throw new Error(`Kategori "${trimmed}" sudah ada`);
+    }
+
+    const count = await this.database.categories.count();
+    return (await this.database.categories.add({
+      name: trimmed,
+      sortOrder: count + 1,
+    })) as number;
+  }
+
   /** Gets products, optionally filtered by category or search term */
   async getProducts(categoryId?: number, searchTerm?: string): Promise<IProduct[]> {
     let products = await this.database.products.toArray();
+
+    // Auto-clean duplicates by name if any exist in DB
+    const seenNames = new Set<string>();
+    const duplicateIdsToDelete: number[] = [];
+    const uniqueProducts: IProduct[] = [];
+
+    for (const p of products) {
+      const key = p.name.trim().toLowerCase();
+      if (seenNames.has(key)) {
+        if (p.id) duplicateIdsToDelete.push(p.id);
+      } else {
+        seenNames.add(key);
+        uniqueProducts.push(p);
+      }
+    }
+
+    if (duplicateIdsToDelete.length > 0) {
+      this.database.products.bulkDelete(duplicateIdsToDelete).catch(console.error);
+    }
+    products = uniqueProducts;
 
     if (categoryId && categoryId > 0) {
       products = products.filter((p) => p.categoryId === categoryId);

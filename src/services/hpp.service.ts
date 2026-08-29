@@ -24,11 +24,64 @@ export interface IHppBreakdown {
   items: IHppBreakdownItem[];
 }
 
+export interface IAvailabilityInfo {
+  isAvailable: boolean;
+  missingItemName?: string;
+  maxPossibleQty?: number;
+}
+
 export class HppService {
   private database: TriwaraDatabase;
 
   constructor(database: TriwaraDatabase = db) {
     this.database = database;
+  }
+
+  /**
+   * Checks if required ingredients and packaging are available in current stock
+   */
+  async checkStockAvailability(
+    product: IProduct,
+    orderType: OrderType = 'dine_in',
+    requestedQty: number = 1
+  ): Promise<IAvailabilityInfo> {
+    const ingredients = await this.database.ingredients.toArray();
+    const ingMap = new Map<number, IIngredient>();
+    ingredients.forEach((ing) => {
+      if (ing.id) ingMap.set(ing.id, ing);
+    });
+
+    // 1. Check base recipe ingredients
+    if (product.recipe && Array.isArray(product.recipe)) {
+      for (const item of product.recipe) {
+        const ing = ingMap.get(item.ingredientId);
+        const needed = item.amount * requestedQty;
+        if (!ing || ing.currentStock < needed) {
+          return {
+            isAvailable: false,
+            missingItemName: ing ? ing.name : 'Bahan Baku',
+            maxPossibleQty: ing && item.amount > 0 ? Math.floor(Math.max(0, ing.currentStock) / item.amount) : 0,
+          };
+        }
+      }
+    }
+
+    // 2. Check takeaway packaging if takeaway
+    if (orderType === 'takeaway' && product.takeawayPackaging && Array.isArray(product.takeawayPackaging)) {
+      for (const item of product.takeawayPackaging) {
+        const ing = ingMap.get(item.ingredientId);
+        const needed = item.amount * requestedQty;
+        if (!ing || ing.currentStock < needed) {
+          return {
+            isAvailable: false,
+            missingItemName: ing ? `${ing.name} (Kemasan)` : 'Kemasan Takeaway',
+            maxPossibleQty: ing && item.amount > 0 ? Math.floor(Math.max(0, ing.currentStock) / item.amount) : 0,
+          };
+        }
+      }
+    }
+
+    return { isAvailable: true };
   }
 
   /** Calculates detailed HPP breakdown for a product based on current ingredient costs */
@@ -108,7 +161,7 @@ export class HppService {
       const product = await this.database.products.get(item.productId);
       if (!product) continue;
 
-      // Deduct main recipe ingredients × item.qty
+      // 1. Deduct main recipe ingredients × item.qty
       if (product.recipe) {
         for (const rec of product.recipe) {
           const ing = await this.database.ingredients.get(rec.ingredientId);
@@ -134,7 +187,7 @@ export class HppService {
         }
       }
 
-      // Deduct takeaway packaging × item.qty if takeaway
+      // 2. Deduct takeaway packaging × item.qty if takeaway
       if (item.orderType === 'takeaway' && product.takeawayPackaging) {
         for (const pkg of product.takeawayPackaging) {
           const ing = await this.database.ingredients.get(pkg.ingredientId);
@@ -159,6 +212,34 @@ export class HppService {
           }
         }
       }
+
+      // 3. Deduct extra toppings × item.qty
+      if (item.toppings && Array.isArray(item.toppings)) {
+        for (const top of item.toppings) {
+          if (top.ingredientId && top.amount) {
+            const ing = await this.database.ingredients.get(top.ingredientId);
+            if (ing && ing.id) {
+              const deductedQty = top.amount * item.qty;
+              const newStock = ing.currentStock - deductedQty;
+
+              await this.database.ingredients.update(ing.id, {
+                currentStock: newStock,
+                updatedAt: new Date(),
+              });
+
+              await this.database.inventoryLogs.add({
+                ingredientId: ing.id,
+                ingredientName: ing.name,
+                type: 'sale',
+                quantity: -deductedQty,
+                note: `Topping ${top.name} (${order.orderNumber})`,
+                referenceOrderNumber: order.orderNumber,
+                createdAt: new Date(),
+              });
+            }
+          }
+        }
+      }
     }
 
     // Check low stock alerts
@@ -178,6 +259,7 @@ export class HppService {
       const product = await this.database.products.get(item.productId);
       if (!product) continue;
 
+      // 1. Restore recipe ingredients
       if (product.recipe) {
         for (const rec of product.recipe) {
           const ing = await this.database.ingredients.get(rec.ingredientId);
@@ -193,7 +275,7 @@ export class HppService {
               ingredientName: ing.name,
               type: 'void_return',
               quantity: restoredQty,
-              note: `Pengembalian VOID ${order.orderNumber}`,
+              note: `Pengembalian VOID ${order.orderNumber} (${item.productName})`,
               referenceOrderNumber: order.orderNumber,
               createdAt: new Date(),
             });
@@ -201,6 +283,7 @@ export class HppService {
         }
       }
 
+      // 2. Restore takeaway packaging
       if (item.orderType === 'takeaway' && product.takeawayPackaging) {
         for (const pkg of product.takeawayPackaging) {
           const ing = await this.database.ingredients.get(pkg.ingredientId);
@@ -210,6 +293,42 @@ export class HppService {
               currentStock: ing.currentStock + restoredQty,
               updatedAt: new Date(),
             });
+
+            await this.database.inventoryLogs.add({
+              ingredientId: ing.id,
+              ingredientName: ing.name,
+              type: 'void_return',
+              quantity: restoredQty,
+              note: `Pengembalian Kemasan VOID ${order.orderNumber}`,
+              referenceOrderNumber: order.orderNumber,
+              createdAt: new Date(),
+            });
+          }
+        }
+      }
+
+      // 3. Restore extra toppings
+      if (item.toppings && Array.isArray(item.toppings)) {
+        for (const top of item.toppings) {
+          if (top.ingredientId && top.amount) {
+            const ing = await this.database.ingredients.get(top.ingredientId);
+            if (ing && ing.id) {
+              const restoredQty = top.amount * item.qty;
+              await this.database.ingredients.update(ing.id, {
+                currentStock: ing.currentStock + restoredQty,
+                updatedAt: new Date(),
+              });
+
+              await this.database.inventoryLogs.add({
+                ingredientId: ing.id,
+                ingredientName: ing.name,
+                type: 'void_return',
+                quantity: restoredQty,
+                note: `Pengembalian Topping VOID ${order.orderNumber} (${top.name})`,
+                referenceOrderNumber: order.orderNumber,
+                createdAt: new Date(),
+              });
+            }
           }
         }
       }

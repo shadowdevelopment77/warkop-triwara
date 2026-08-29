@@ -25,6 +25,11 @@ export class IngredientService {
     });
   }
 
+  /** Gets a single ingredient by ID */
+  async getById(id: number): Promise<IIngredient | undefined> {
+    return this.database.ingredients.get(id);
+  }
+
   /** Adds a new ingredient with duplicate name validation (case-insensitive) */
   async addIngredient(data: Omit<IIngredient, 'id' | 'createdAt' | 'updatedAt' | 'costPerUnit'>): Promise<number> {
     const normalizedName = data.name.trim().toLowerCase();
@@ -140,6 +145,30 @@ export class IngredientService {
     }
 
     await this.database.ingredients.delete(id);
+  }
+
+  /** Gets all ingredient categories (default + custom) */
+  async getCategories(): Promise<string[]> {
+    const config = await this.database.shopConfig.toCollection().first();
+    const custom = config?.customIngredientCategories || [];
+    const fromIngs = (await this.database.ingredients.toArray()).map((i) => i.category);
+    const set = new Set<string>(['raw', 'packaging', ...custom, ...fromIngs]);
+    return Array.from(set);
+  }
+
+  /** Adds a new custom category for ingredients */
+  async addCategory(categoryName: string): Promise<void> {
+    const trimmed = categoryName.trim();
+    if (!trimmed) return;
+    const config = await this.database.shopConfig.toCollection().first();
+    if (config && config.id) {
+      const current = config.customIngredientCategories || [];
+      if (!current.includes(trimmed)) {
+        await this.database.shopConfig.update(config.id, {
+          customIngredientCategories: [...current, trimmed],
+        });
+      }
+    }
   }
 }
 

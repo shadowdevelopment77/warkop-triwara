@@ -2,7 +2,7 @@
 // Triwara POS — Shared TypeScript Interfaces & Types
 // ═══════════════════════════════════════════════
 
-export type IngredientCategory = 'raw' | 'packaging';
+export type IngredientCategory = 'raw' | 'packaging' | string;
 export type UnitType = 'gr' | 'ml' | 'pcs';
 export type OrderType = 'dine_in' | 'takeaway';
 export type PaymentMethod = 'cash' | 'qris';
@@ -37,6 +37,13 @@ export interface ICategory {
   sortOrder: number;
 }
 
+export interface IProductAdditional {
+  name: string;
+  price: number;
+  ingredientId?: number;
+  amount?: number;
+}
+
 export interface IProduct {
   id?: number;
   categoryId: number;
@@ -46,6 +53,7 @@ export interface IProduct {
   description: string;
   recipe: IRecipeItem[];
   takeawayPackaging: IRecipeItem[];
+  availableAdditionals?: IProductAdditional[];
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -55,6 +63,8 @@ export interface IOrderItemTopping {
   name: string;
   price: number;
   hppCost: number;
+  ingredientId?: number;
+  amount?: number;
 }
 
 export interface IOrderItem {
@@ -121,6 +131,7 @@ export interface IShopConfig {
   pinHash: string; // SHA-256
   printerMacAddress?: string;
   printerName?: string;
+  customIngredientCategories?: string[];
 }
 
 export interface ICartItem {
@@ -140,3 +151,16 @@ export interface ICartItem {
   itemPrice: number;
   itemHpp: number;
 }
+
+export type NotificationType = 'inventory' | 'order' | 'product' | 'alert';
+
+export interface IAppNotification {
+  id?: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  targetTab?: 'pos' | 'inventory' | 'products' | 'reports';
+  createdAt: Date;
+  isRead: boolean;
+}
+
