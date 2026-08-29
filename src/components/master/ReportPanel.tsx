@@ -14,6 +14,8 @@ import { formatDateIndonesian } from '../../utils/date';
 import { PrintSelectModal } from '../pos/PrintSelectModal';
 import type { ReceiptType } from '../../services/receipt.service';
 import { PaginationBar } from '../common/PaginationBar';
+import { DialogModal } from '../common/DialogModal';
+import { VoidModal } from './VoidModal';
 
 const toInputDateString = (d: Date) => {
   const year = d.getFullYear();
@@ -32,6 +34,20 @@ export const ReportPanel: React.FC = () => {
   const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [reprintOrder, setReprintOrder] = useState<IOrder | null>(null);
+  const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    type?: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
 
   useEffect(() => {
@@ -77,27 +93,49 @@ export const ReportPanel: React.FC = () => {
       const config = await configService.getConfig();
       await pdfService.exportSalesReport(startDate, endDate, summary, topProducts, orders, config);
     } catch (err) {
-      alert('Gagal mengeksport PDF: ' + (err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Export PDF Gagal',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
     }
   };
 
-  const handleVoidOrder = async (order: IOrder) => {
+  const handleVoidOrder = (order: IOrder) => {
     if (order.status === 'voided') return;
-    const reason = prompt(`Masukkan alasan membatalkan/void transaksi #${order.orderNumber}:`);
-    if (reason !== null) {
-      try {
-        await orderService.voidOrder(order.id!, reason);
-        await notificationService.addNotification(
-          'Transaksi Dibatalkan (Void)',
-          `Transaksi #${order.orderNumber} dibatalkan. Alasan: ${reason || '-'}. Stok bahan telah dikembalikan.`,
-          'order',
-          'reports'
-        );
-        alert(`Transaksi #${order.orderNumber} telah dibatalkan. Stok bahan telah dikembalikan.`);
-        loadReportData();
-      } catch (err) {
-        alert((err as Error).message);
-      }
+    setVoidingOrder(order);
+  };
+
+  const handleConfirmVoid = async (reason: string) => {
+    if (!voidingOrder) return;
+    const orderNumber = voidingOrder.orderNumber;
+    try {
+      await orderService.voidOrder(voidingOrder.id!, reason);
+      await notificationService.addNotification(
+        'Transaksi Dibatalkan (Void)',
+        `Transaksi #${orderNumber} dibatalkan. Alasan: ${reason}. Stok bahan telah dikembalikan.`,
+        'order',
+        'reports'
+      );
+      setVoidingOrder(null);
+      loadReportData();
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Transaksi Dibatalkan',
+        message: `Transaksi #${orderNumber} berhasil dibatalkan (void).\nSeluruh stok bahan telah dikembalikan ke inventori.`,
+        onConfirm: () => {},
+      });
+    } catch (err) {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Void Transaksi',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
     }
   };
 
@@ -111,9 +149,21 @@ export const ReportPanel: React.FC = () => {
         const text = receiptService.generateReceiptText(reprintOrder, config, type);
         console.log(`[PRINT ${type.toUpperCase()}]\n` + text);
       }
-      alert(`Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Pencetakan Terkirim',
+        message: `Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`,
+        onConfirm: () => {},
+      });
     } catch (err) {
-      alert('Gagal mencetak struk: ' + (err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Cetak Struk',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
     }
   };
 
@@ -175,7 +225,7 @@ export const ReportPanel: React.FC = () => {
         </div>
 
         <div className="header-actions">
-          <button type="button" className="btn-primary" onClick={handleExportPdf}>
+          <button type="button" className="master-btn-primary" onClick={handleExportPdf}>
             Export PDF
           </button>
         </div>
@@ -215,16 +265,32 @@ export const ReportPanel: React.FC = () => {
         {topProducts.length === 0 ? (
           <p className="empty-hint">Belum ada data penjualan pada periode ini.</p>
         ) : (
-          <ol className="top-products-list">
+          <div className="top-products-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {topProducts.map((p, idx) => (
-              <li key={p.productId} className="top-product-item">
-                <span className="rank-num">{idx + 1}.</span>
-                <span className="item-name">{p.productName}</span>
-                <strong className="item-qty">{p.quantitySold} terjual</strong>
-                <span className="item-revenue">({formatRupiah(p.totalRevenue)})</span>
-              </li>
+              <div
+                key={p.productId}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 14px',
+                  backgroundColor: '#18181b',
+                  borderRadius: '6px',
+                  border: '1px solid #27272a',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#a1a1aa', fontWeight: 700, minWidth: '22px' }}>#{idx + 1}</span>
+                  <strong style={{ color: '#fafafa', fontSize: '14px' }}>{p.productName}</strong>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                  <span style={{ color: '#34d399', fontWeight: 600 }}>{p.quantitySold} terjual</span>
+                  <span style={{ color: '#52525b' }}>•</span>
+                  <strong style={{ color: '#fafafa' }}>{formatRupiah(p.totalRevenue)}</strong>
+                </div>
+              </div>
             ))}
-          </ol>
+          </div>
         )}
       </div>
 
@@ -281,18 +347,18 @@ export const ReportPanel: React.FC = () => {
                         <div className="table-action-btns">
                           <button
                             type="button"
-                            className="btn-action-small"
+                            className="btn-table-action btn-table-print"
                             onClick={() => setReprintOrder(order)}
                           >
-                            [Cetak]
+                            🖨️ Cetak
                           </button>
                           {order.status === 'completed' && (
                             <button
                               type="button"
-                              className="btn-action-small danger"
+                              className="btn-table-action btn-table-void"
                               onClick={() => handleVoidOrder(order)}
                             >
-                              [Void]
+                              🚫 Void
                             </button>
                           )}
                         </div>
@@ -322,6 +388,26 @@ export const ReportPanel: React.FC = () => {
           onConfirmPrint={handleConfirmPrint}
         />
       )}
+
+      {/* Dedicated Void Modal Dialog */}
+      {voidingOrder && (
+        <VoidModal
+          order={voidingOrder}
+          onClose={() => setVoidingOrder(null)}
+          onConfirmVoid={handleConfirmVoid}
+        />
+      )}
+
+      {/* Reusable Dialog Modal for Messages */}
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type={dialogConfig.type}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={dialogConfig.onConfirm}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

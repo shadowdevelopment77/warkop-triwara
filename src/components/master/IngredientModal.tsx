@@ -7,6 +7,7 @@ import type { IIngredient, IngredientCategory, UnitType } from '../../types';
 import { ingredientService } from '../../services/ingredient.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
+import { DialogModal } from '../common/DialogModal';
 
 interface IngredientModalProps {
   ingredient: IIngredient | null;
@@ -27,6 +28,20 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
   const [purchasePrice, setPurchasePrice] = useState<number | ''>(ingredient ? ingredient.purchasePrice : '');
   const [purchaseQuantity, setPurchaseQuantity] = useState<number | ''>(ingredient ? ingredient.purchaseQuantity : '');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    type?: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    isDanger?: boolean;
+    confirmText?: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     ingredientService.getCategories().then((cats) => {
@@ -105,38 +120,47 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!ingredient?.id) return;
-    if (confirm(`Hapus bahan "${ingredient.name}" dari stok?`)) {
-      try {
-        await ingredientService.deleteIngredient(ingredient.id);
-        await notificationService.addNotification(
-          'Bahan Dihapus',
-          `Bahan "${ingredient.name}" telah dihapus dari inventaris.`,
-          'inventory',
-          'inventory'
-        );
-        onSaved();
-      } catch (err) {
-        setErrorMsg((err as Error).message);
-      }
-    }
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Hapus Bahan Inventaris?',
+      message: `Hapus bahan "${ingredient.name}" dari stok? Pastikan bahan ini tidak sedang digunakan pada resep menu manapun.`,
+      isDanger: true,
+      confirmText: 'Ya, Hapus',
+      onConfirm: async () => {
+        try {
+          await ingredientService.deleteIngredient(ingredient.id!);
+          await notificationService.addNotification(
+            'Bahan Dihapus',
+            `Bahan "${ingredient.name}" telah dihapus dari inventaris.`,
+            'inventory',
+            'inventory'
+          );
+          onSaved();
+        } catch (err) {
+          setErrorMsg((err as Error).message);
+        }
+      },
+    });
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <h3 className="modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
-            <span className="modal-subtitle">Atur detail bahan baku, satuan, &amp; kalkulasi biaya modal</span>
+    <>
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="master-modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="master-modal-header">
+            <div>
+              <h3 className="master-modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
+              <span className="master-modal-subtitle">Atur detail bahan baku, satuan, &amp; kalkulasi biaya modal</span>
+            </div>
+            <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+              ✕
+            </button>
           </div>
-          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
-            ✕
-          </button>
-        </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
+          <form onSubmit={handleSubmit} className="master-modal-body">
           {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           <div className="form-group">
@@ -256,21 +280,33 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             </div>
           </div>
 
-          <div className="modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
-            {isEditing && (
-              <button type="button" className="btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
-                Hapus Bahan
+            <div className="master-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
+              {isEditing && (
+                <button type="button" className="master-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                  Hapus Bahan
+                </button>
+              )}
+              <button type="button" className="master-btn-secondary" onClick={onClose}>
+                Batal
               </button>
-            )}
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Batal
-            </button>
-            <button type="submit" className="btn-primary">
-              {isEditing ? 'Simpan Perubahan' : 'Tambah Bahan'}
-            </button>
-          </div>
-        </form>
+              <button type="submit" className="master-btn-primary">
+                {isEditing ? 'Simpan Perubahan' : 'Tambah Bahan'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type={dialogConfig.type}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={dialogConfig.onConfirm}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 };

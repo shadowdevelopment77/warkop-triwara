@@ -12,6 +12,7 @@ import { IngredientModal } from './IngredientModal';
 import { RestockModal } from './RestockModal';
 import { CategoryModal } from './CategoryModal';
 import { PaginationBar } from '../common/PaginationBar';
+import { DialogModal } from '../common/DialogModal';
 
 export const InventoryPanel: React.FC = () => {
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
@@ -23,6 +24,15 @@ export const InventoryPanel: React.FC = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
   const [editingIngredient, setEditingIngredient] = useState<IIngredient | null>(null);
   const [restockingIngredient, setRestockingIngredient] = useState<IIngredient | null>(null);
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
 
   const handleSaveCategory = async (catName: string) => {
     await ingredientService.addCategory(catName);
@@ -57,7 +67,11 @@ export const InventoryPanel: React.FC = () => {
       const config = await configService.getConfig();
       await pdfService.exportInventoryReport(ingredients, config);
     } catch (err) {
-      alert('Gagal mengeksport PDF: ' + (err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        title: 'Export PDF Gagal',
+        message: (err as Error).message,
+      });
     }
   };
 
@@ -81,13 +95,13 @@ export const InventoryPanel: React.FC = () => {
         </div>
 
         <div className="header-actions">
-          <button type="button" className="btn-secondary" onClick={handleExportPdf}>
+          <button type="button" className="master-btn-secondary" onClick={handleExportPdf}>
             Export PDF
           </button>
-          <button type="button" className="btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
+          <button type="button" className="master-btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
             + Kategori
           </button>
-          <button type="button" className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
+          <button type="button" className="master-btn-primary" onClick={() => setIsAddModalOpen(true)}>
             + Tambah Bahan Baru
           </button>
         </div>
@@ -141,17 +155,17 @@ export const InventoryPanel: React.FC = () => {
                       <div className="table-action-btns">
                         <button
                           type="button"
-                          className="btn-action-small"
+                          className="btn-table-action btn-table-restock"
                           onClick={() => setRestockingIngredient(ing)}
                         >
-                          [Tambah Stock]
+                          + Restock
                         </button>
                         <button
                           type="button"
-                          className="btn-action-small secondary"
+                          className="btn-table-action btn-table-edit"
                           onClick={() => setEditingIngredient(ing)}
                         >
-                          [Edit Bahan]
+                          Edit
                         </button>
                       </div>
                     </td>
@@ -216,6 +230,15 @@ export const InventoryPanel: React.FC = () => {
           onSave={handleSaveCategory}
         />
       )}
+
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type="alert"
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

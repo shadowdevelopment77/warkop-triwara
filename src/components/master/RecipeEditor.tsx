@@ -8,7 +8,7 @@ import { productService } from '../../services/product.service';
 import { ingredientService } from '../../services/ingredient.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
-import { CategoryModal } from './CategoryModal';
+import { DialogModal } from '../common/DialogModal';
 
 interface RecipeEditorProps {
   product: IProduct | null;
@@ -20,7 +20,6 @@ interface RecipeEditorProps {
 export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories, onClose, onSaved }) => {
   const isEditing = Boolean(product);
 
-  const [localCategories, setLocalCategories] = useState<ICategory[]>(categories);
   const [name, setName] = useState<string>(product?.name || '');
   const [categoryId, setCategoryId] = useState<number>(
     product?.categoryId || (categories.length > 0 ? categories[0].id! : 1)
@@ -35,7 +34,20 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
   const [errorMsg, setErrorMsg] = useState<string>('');
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    type?: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    isDanger?: boolean;
+    confirmText?: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     ingredientService.getAll().then((data) => {
@@ -43,25 +55,17 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
     });
   }, []);
 
-  // Quick Add Category via Modal
-  const handleSaveNewCategory = async (catName: string) => {
-    const newCatId = await productService.addCategory(catName);
-    const updatedCats = await productService.getCategories();
-    setLocalCategories(updatedCats);
-    setCategoryId(newCatId);
-    await notificationService.addNotification(
-      'Kategori Baru Ditambahkan',
-      `Kategori "${catName}" siap digunakan.`,
-      'product',
-      'products'
-    );
-  };
-
   // Recipe row actions
   const handleAddRecipeRow = () => {
     const defaultIng = ingredients.find((i) => i.category === 'raw') || ingredients[0];
     if (!defaultIng) {
-      alert('Tambahkan bahan baku di tab Inventaris terlebih dahulu');
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Bahan Baku Kosong',
+        message: 'Tambahkan bahan baku di tab Inventaris terlebih dahulu sebelum membuat resep.',
+        onConfirm: () => {},
+      });
       return;
     }
     setRecipe([...recipe, { ingredientId: defaultIng.id!, amount: 10, unit: defaultIng.unit }]);
@@ -89,7 +93,13 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
   const handleAddPackagingRow = () => {
     const defaultPkg = ingredients.find((i) => i.category === 'packaging') || ingredients[0];
     if (!defaultPkg) {
-      alert('Tambahkan bahan kemasan di tab Inventaris terlebih dahulu');
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Bahan Kemasan Kosong',
+        message: 'Tambahkan bahan kemasan di tab Inventaris terlebih dahulu.',
+        onConfirm: () => {},
+      });
       return;
     }
     setTakeawayPackaging([...takeawayPackaging, { ingredientId: defaultPkg.id!, amount: 1, unit: defaultPkg.unit }]);
@@ -205,39 +215,47 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!product?.id) return;
-    if (confirm(`Hapus menu "${product.name}"?`)) {
-      try {
-        await productService.deleteProduct(product.id);
-        await notificationService.addNotification(
-          'Menu Dihapus',
-          `Menu "${product.name}" telah dihapus dari katalog kasir.`,
-          'product',
-          'products'
-        );
-        onSaved();
-      } catch (err) {
-        setErrorMsg((err as Error).message);
-      }
-    }
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Hapus Menu Produk?',
+      message: `Apakah Anda yakin ingin menghapus menu "${product.name}" dari katalog kasir?`,
+      isDanger: true,
+      confirmText: 'Ya, Hapus',
+      onConfirm: async () => {
+        try {
+          await productService.deleteProduct(product.id!);
+          await notificationService.addNotification(
+            'Menu Dihapus',
+            `Menu "${product.name}" telah dihapus dari katalog kasir.`,
+            'product',
+            'products'
+          );
+          onSaved();
+        } catch (err) {
+          setErrorMsg((err as Error).message);
+        }
+      },
+    });
   };
 
   return (
     <>
       <div className="modal-backdrop" onClick={onClose}>
-        <div className="modal-card recipe-editor-card" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header">
+        <div className="master-modal-card recipe-editor-card" onClick={(e) => e.stopPropagation()}>
+          <div className="master-modal-header">
             <div>
-              <h3 className="modal-title">{isEditing ? `Edit Menu: ${product?.name}` : 'Tambah Menu Baru'}</h3>
-              <span className="modal-subtitle">Atur detail produk, resep bahan baku, &amp; kemasan takeaway</span>
+              <h3 className="master-modal-title">{isEditing ? `Edit Menu: ${product?.name}` : 'Tambah Menu Baru'}</h3>
+              <span className="master-modal-subtitle">Atur detail produk, resep bahan baku, &amp; kemasan takeaway</span>
             </div>
             <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
               ✕
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="modal-body">
+          <form onSubmit={handleSubmit} className="master-modal-body">
             {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
             <div className="form-group">
@@ -254,22 +272,13 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
             <div className="form-row two-cols">
               <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <label className="form-label" style={{ margin: 0 }}>Kategori Menu</label>
-                  <button
-                    type="button"
-                    onClick={() => setIsCategoryModalOpen(true)}
-                    style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'underline', cursor: 'pointer' }}
-                  >
-                    + Kategori Baru
-                  </button>
-                </div>
+                <label className="form-label">Kategori Menu</label>
                 <select
                   className="form-select"
                   value={categoryId}
                   onChange={(e) => setCategoryId(parseInt(e.target.value))}
                 >
-                  {localCategories.map((c) => (
+                  {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
@@ -509,16 +518,16 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
               )}
             </div>
 
-            <div className="modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
+            <div className="master-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
               {isEditing && (
-                <button type="button" className="btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                <button type="button" className="master-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
                   Hapus Menu
                 </button>
               )}
-              <button type="button" className="btn-secondary" onClick={onClose}>
+              <button type="button" className="master-btn-secondary" onClick={onClose}>
                 Batal
               </button>
-              <button type="submit" className="btn-primary">
+              <button type="submit" className="master-btn-primary">
                 {isEditing ? 'Simpan Perubahan' : 'Tambah Menu'}
               </button>
             </div>
@@ -526,15 +535,16 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
         </div>
       </div>
 
-      {isCategoryModalOpen && (
-        <CategoryModal
-          title="Tambah Kategori Menu Baru"
-          subtitle="Kategori akan langsung tersedia untuk menu produk"
-          placeholder="contoh: Pastry & Croissant, Jus Buah Segar..."
-          onClose={() => setIsCategoryModalOpen(false)}
-          onSave={handleSaveNewCategory}
-        />
-      )}
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type={dialogConfig.type}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={dialogConfig.onConfirm}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </>
   );
 };

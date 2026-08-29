@@ -9,7 +9,7 @@ import { ingredientService } from '../../services/ingredient.service';
 import { hppService, type IHppBreakdown } from '../../services/hpp.service';
 import { formatRupiah } from '../../utils/currency';
 import { RecipeEditor } from './RecipeEditor';
-import { CategoryModal } from './CategoryModal';
+import { CategoryManagerModal } from './CategoryManagerModal';
 
 export const MenuPanel: React.FC = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -62,12 +62,7 @@ export const MenuPanel: React.FC = () => {
     }
   }, [selectedProduct]);
 
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
-
-  const handleSaveCategory = async (catName: string) => {
-    await productService.addCategory(catName);
-    await loadData();
-  };
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState<boolean>(false);
 
   return (
     <div className="menu-panel-layout">
@@ -84,7 +79,7 @@ export const MenuPanel: React.FC = () => {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
-              className="btn-primary"
+              className="master-btn-primary"
               style={{ flex: 1 }}
               onClick={() => {
                 setSelectedProduct(null);
@@ -95,11 +90,11 @@ export const MenuPanel: React.FC = () => {
             </button>
             <button
               type="button"
-              className="btn-secondary"
-              onClick={() => setIsCategoryModalOpen(true)}
-              title="Tambah Kategori Baru"
+              className="master-btn-secondary"
+              onClick={() => setIsCategoryManagerOpen(true)}
+              title="Kelola Kategori Menu (Tambah / Hapus)"
             >
-              + Kategori
+              Kelola Kategori
             </button>
           </div>
         </div>
@@ -115,7 +110,6 @@ export const MenuPanel: React.FC = () => {
                 className={`menu-row-btn ${selectedProduct?.id === p.id ? 'active' : ''}`}
                 onClick={() => setSelectedProduct(p)}
               >
-                <span className="code-badge">[{p.codeBadge}]</span>
                 <span className="menu-name">{p.name}</span>
                 <span className="menu-price">{formatRupiah(p.price)}</span>
               </button>
@@ -130,27 +124,27 @@ export const MenuPanel: React.FC = () => {
         {selectedProduct && dineHpp && takeHpp ? (
 
           <div className="product-detail-card">
-
-            <div className="detail-card-header">
-              <div><button
+            {/* Top-Right Action Row */}
+            <div className="detail-card-top-actions">
+              <button
                 type="button"
-                className="btn-primary"
+                className="master-btn-primary"
                 onClick={() => setIsEditorOpen(true)}
               >
-                Edit Resep &amp; Menu
-              </button></div>
+                ✏️ Edit Resep &amp; Menu
+              </button>
+            </div>
 
-              <div>
-
-                <h3 className="detail-title">{selectedProduct.name}</h3>
-                <span className="detail-price">Price: {formatRupiah(selectedProduct.price)}</span>
-              </div>
+            {/* Centered Hero Header */}
+            <div className="detail-card-hero-center">
+              <h3 className="detail-title-center">{selectedProduct.name}</h3>
+              <span className="detail-price-center">Harga Jual: {formatRupiah(selectedProduct.price)}</span>
             </div>
 
             {/* HPP Cards */}
             <div className="hpp-summary-grid">
               <div className="hpp-info-box dine-in">
-                <span className="box-title">🍽️ Dine-In (Tanpa Kemasan)</span>
+                <span className="box-title">Dine-In</span>
                 <strong style={{ fontSize: '18px', color: '#fafafa' }}>
                   HPP: {formatRupiah(dineHpp.totalHpp)}
                 </strong>
@@ -160,7 +154,7 @@ export const MenuPanel: React.FC = () => {
               </div>
 
               <div className="hpp-info-box takeaway">
-                <span className="box-title">📦 Takeaway (+Kemasan Cup/Lid)</span>
+                <span className="box-title">Takeaway</span>
                 <strong style={{ fontSize: '18px', color: '#fafafa' }}>
                   HPP: {formatRupiah(takeHpp.totalHpp)}
                 </strong>
@@ -173,7 +167,7 @@ export const MenuPanel: React.FC = () => {
             {/* Ingredients Recipe Breakdown */}
             <div className="recipe-breakdown-section" style={{ marginTop: '16px' }}>
               <h4 style={{ color: '#fafafa', fontSize: '14px', marginBottom: '8px' }}>
-                1. Rincian Biaya Bahan Baku Utama (Dine-In &amp; Takeaway):
+                Rincian Biaya Bahan Baku Utama:
               </h4>
               {selectedProduct.recipe.length === 0 ? (
                 <p className="empty-hint">Belum ada bahan baku utama.</p>
@@ -212,7 +206,7 @@ export const MenuPanel: React.FC = () => {
               )}
 
               <h4 style={{ color: '#fafafa', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
-                2. Rincian Biaya Kemasan Sekali Pakai (Khusus Takeaway):
+                Rincian Biaya Kemasan:
               </h4>
               {selectedProduct.takeawayPackaging.length === 0 ? (
                 <p className="empty-hint">Menu ini tidak menggunakan kemasan takeaway sekali pakai.</p>
@@ -251,7 +245,7 @@ export const MenuPanel: React.FC = () => {
               )}
 
               <h4 style={{ color: '#fafafa', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
-                3. Pilihan Additional / Kustomisasi Khusus Menu Ini:
+                Additional:
               </h4>
               {!selectedProduct.availableAdditionals || selectedProduct.availableAdditionals.length === 0 ? (
                 <p className="empty-hint">Menu ini belum memiliki additional khusus.</p>
@@ -310,14 +304,11 @@ export const MenuPanel: React.FC = () => {
         />
       )}
 
-      {/* Category Modal Dialog */}
-      {isCategoryModalOpen && (
-        <CategoryModal
-          title="Tambah Kategori Menu Baru"
-          subtitle="Kategori akan langsung tersedia di katalog produk & kasir"
-          placeholder="contoh: Makanan Ringan, Signature Mocktail..."
-          onClose={() => setIsCategoryModalOpen(false)}
-          onSave={handleSaveCategory}
+      {/* Category Manager Modal Dialog */}
+      {isCategoryManagerOpen && (
+        <CategoryManagerModal
+          onClose={() => setIsCategoryManagerOpen(false)}
+          onChanged={loadData}
         />
       )}
     </div>

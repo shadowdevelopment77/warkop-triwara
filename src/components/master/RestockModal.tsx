@@ -52,18 +52,18 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card restock-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+      <div className="master-modal-card restock-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="master-modal-header">
           <div>
-            <h3 className="modal-title">Tambah Stock: {ingredient.name}</h3>
-            <span className="modal-subtitle">Catat kedatangan stok baru dari supplier</span>
+            <h3 className="master-modal-title">Tambah Stock: {ingredient.name}</h3>
+            <span className="master-modal-subtitle">Catat kedatangan stok baru dari supplier</span>
           </div>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
+        <form onSubmit={handleSubmit} className="master-modal-body">
           {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           <div className="info-summary-card">
@@ -116,11 +116,11 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+          <div className="master-modal-footer">
+            <button type="button" className="master-btn-secondary" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="master-btn-primary">
               Simpan Restock (+{addedQty} {ingredient.unit})
             </button>
           </div>

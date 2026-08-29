@@ -36,6 +36,7 @@ import { receiptService, type ReceiptType } from '../../services/receipt.service
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 import type { IAppNotification } from '../../types';
+import { DialogModal } from '../common/DialogModal';
 
 interface AppShellProps {
   onLockApp: () => void;
@@ -46,6 +47,17 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
   const [activeTab, setActiveTab] = useState<MasterTab>('pos');
   const [isMasterOpen, setIsMasterOpen] = useState<boolean>(false);
   const [isProductFolderOpen, setIsProductFolderOpen] = useState<boolean>(false);
+
+  // Dialog Modal state
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
 
   // Notifications State (Dropdown Flyout)
   const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
@@ -183,10 +195,18 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
       refreshNotifications();
 
       if (lowStockAlerts.length > 0) {
-        alert(lowStockAlerts.join('\n'));
+        setDialogConfig({
+          isOpen: true,
+          title: 'Peringatan Stok Menipis',
+          message: lowStockAlerts.join('\n'),
+        });
       }
     } catch (err) {
-      alert('Gagal memproses pembayaran: ' + (err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        title: 'Pembayaran Gagal',
+        message: 'Gagal memproses pembayaran: ' + (err as Error).message,
+      });
     }
   };
 
@@ -197,9 +217,17 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
         const text = receiptService.generateReceiptText(completedOrder, shopConfig, type);
         console.log(`[PRINTING ${type.toUpperCase()}]\n` + text);
       }
-      alert(`Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`);
+      setDialogConfig({
+        isOpen: true,
+        title: 'Pencetakan Terkirim',
+        message: `Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`,
+      });
     } catch (err) {
-      alert('Gagal mencetak struk: ' + (err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        title: 'Gagal Cetak Struk',
+        message: 'Gagal mencetak struk: ' + (err as Error).message,
+      });
     }
   };
 
@@ -350,6 +378,16 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
           onConfirmPrint={handleConfirmPrint}
         />
       )}
+
+      {/* Reusable Dialog Modal for POS Alerts */}
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type="alert"
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -2,17 +2,35 @@
 // Triwara POS — Modular Settings Panel (4 Modals)
 // ═══════════════════════════════════════════════
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { IShopConfig } from '../../types';
 import { configService } from '../../services/config.service';
 import { notificationService } from '../../services/notification.service';
 import { compressImage } from '../../utils/image';
-
-type SettingModalType = 'pin' | 'printer' | 'receipt' | 'branding' | null;
+import { DialogModal } from '../common/DialogModal';
+type SettingModalType = 'pin' | 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
 export const SettingsPanel: React.FC = () => {
   const [config, setConfig] = useState<IShopConfig | null>(null);
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<string>('');
+
+  const receiptFileInputRef = useRef<HTMLInputElement>(null);
+  const appFileInputRef = useRef<HTMLInputElement>(null);
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    type?: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    isDanger?: boolean;
+    confirmText?: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Security PIN states
   const [oldPin, setOldPin] = useState<string>('');
@@ -30,7 +48,6 @@ export const SettingsPanel: React.FC = () => {
 
   // Branding
   const [appName, setAppName] = useState<string>('');
-  const [feedbackMsg, setFeedbackMsg] = useState<string>('');
 
   const loadConfig = async () => {
     const cfg = await configService.getConfig();
@@ -86,7 +103,13 @@ export const SettingsPanel: React.FC = () => {
       setFeedbackMsg('Pengaturan struk berhasil disimpan');
       loadConfig();
     } catch (err) {
-      alert((err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Menyimpan',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
     }
   };
 
@@ -104,7 +127,13 @@ export const SettingsPanel: React.FC = () => {
       setFeedbackMsg('Nama aplikasi berhasil diperbarui');
       loadConfig();
     } catch (err) {
-      alert((err as Error).message);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Menyimpan',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
     }
   };
 
@@ -114,9 +143,21 @@ export const SettingsPanel: React.FC = () => {
         const compressed = await compressImage(e.target.files[0], 120, 120, 0.7);
         await configService.updateConfig({ appLogoBase64: compressed });
         setConfig((prev) => (prev ? { ...prev, appLogoBase64: compressed } : null));
-        alert('Logo aplikasi berhasil diupload & dikompres');
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Upload Sukses',
+          message: 'Logo aplikasi berhasil diupload & dikompres.',
+          onConfirm: () => {},
+        });
       } catch (err) {
-        alert('Gagal mengupload logo: ' + (err as Error).message);
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Gagal Upload',
+          message: 'Gagal mengupload logo: ' + (err as Error).message,
+          onConfirm: () => {},
+        });
       }
     }
   };
@@ -127,11 +168,87 @@ export const SettingsPanel: React.FC = () => {
         const compressed = await compressImage(e.target.files[0], 200, 100, 0.7);
         await configService.updateConfig({ receiptLogoBase64: compressed });
         setConfig((prev) => (prev ? { ...prev, receiptLogoBase64: compressed } : null));
-        alert('Logo struk berhasil diupload & dikompres');
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Upload Sukses',
+          message: 'Logo struk kasir berhasil diupload & dikompres.',
+          onConfirm: () => {},
+        });
       } catch (err) {
-        alert('Gagal mengupload logo: ' + (err as Error).message);
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Gagal Upload',
+          message: 'Gagal mengupload logo: ' + (err as Error).message,
+          onConfirm: () => {},
+        });
       }
     }
+  };
+
+  const handleDeleteReceiptLogo = () => {
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Hapus Logo Struk?',
+      message: 'Apakah Anda yakin ingin menghapus logo struk thermal kasir? Struk selanjutnya akan dicetak tanpa gambar logo.',
+      isDanger: true,
+      confirmText: 'Ya, Hapus Logo',
+      onConfirm: async () => {
+        try {
+          await configService.updateConfig({ receiptLogoBase64: undefined });
+          setConfig((prev) => (prev ? { ...prev, receiptLogoBase64: undefined } : null));
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Logo Dihapus',
+            message: 'Logo struk kasir berhasil dihapus.',
+            onConfirm: () => {},
+          });
+        } catch (err) {
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Gagal Menghapus',
+            message: (err as Error).message,
+            onConfirm: () => {},
+          });
+        }
+      },
+    });
+  };
+
+  const handleDeleteAppLogo = () => {
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Hapus Logo Aplikasi?',
+      message: 'Apakah Anda yakin ingin menghapus logo header aplikasi?',
+      isDanger: true,
+      confirmText: 'Ya, Hapus Logo',
+      onConfirm: async () => {
+        try {
+          await configService.updateConfig({ appLogoBase64: undefined });
+          setConfig((prev) => (prev ? { ...prev, appLogoBase64: undefined } : null));
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Logo Dihapus',
+            message: 'Logo header aplikasi berhasil dihapus.',
+            onConfirm: () => {},
+          });
+        } catch (err) {
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Gagal Menghapus',
+            message: (err as Error).message,
+            onConfirm: () => {},
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -202,22 +319,30 @@ export const SettingsPanel: React.FC = () => {
           type="button"
           className="setting-trigger-card"
           style={{ borderColor: 'rgba(239, 68, 68, 0.4)' }}
-          onClick={async () => {
-            if (
-              confirm(
-                'Reset seluruh database dan isi ulang dengan 8 menu siap jual, bahan baku lengkap, serta 400 transaksi demo dalam 1 bulan terakhir?'
-              )
-            ) {
-              try {
-                const { resetAndSeedDatabase } = await import('../../database/seed');
-                await resetAndSeedDatabase();
-                await loadConfig();
-                alert('Database berhasil direset dan diisi dengan 400 transaksi demo!');
-                window.location.reload();
-              } catch (err) {
-                alert('Gagal mereset database: ' + (err as Error).message);
-              }
-            }
+          onClick={() => {
+            setDialogConfig({
+              isOpen: true,
+              type: 'confirm',
+              title: 'Reset Seluruh Database?',
+              message: 'PERINGATAN: Semua data transaksi, menu, dan inventori akan direset dan diisi ulang dengan 8 menu siap jual serta 400 transaksi demo dalam 1 bulan terakhir.\n\nApakah Anda yakin ingin melanjutkan?',
+              isDanger: true,
+              confirmText: 'Ya, Reset Database',
+              onConfirm: async () => {
+                try {
+                  const { resetAndSeedDatabase } = await import('../../database/seed');
+                  await resetAndSeedDatabase();
+                  window.location.reload();
+                } catch (err) {
+                  setDialogConfig({
+                    isOpen: true,
+                    type: 'alert',
+                    title: 'Gagal Reset',
+                    message: 'Gagal mereset database: ' + (err as Error).message,
+                    onConfirm: () => {},
+                  });
+                }
+              },
+            });
           }}
         >
           <div className="setting-card-info">
@@ -237,18 +362,18 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 1: Ganti PIN */}
       {activeModal === 'pin' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="master-modal-header">
               <div>
-                <h3 className="modal-title">Ganti PIN Keamanan</h3>
-                <span className="modal-subtitle">Gunakan 4 digit angka rahasia</span>
+                <h3 className="master-modal-title">Ganti PIN Keamanan</h3>
+                <span className="master-modal-subtitle">Gunakan 4 digit angka rahasia</span>
               </div>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleUpdatePin} className="modal-body">
+            <form onSubmit={handleUpdatePin} className="master-modal-body">
               {pinMsg && <div className="form-error-alert">{pinMsg}</div>}
 
               <div className="form-group">
@@ -265,7 +390,7 @@ export const SettingsPanel: React.FC = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">PIN Baru (4 Digit)</label>
+                <label className="form-label">PIN Baru (4 Digit Angka)</label>
                 <input
                   type="password"
                   maxLength={4}
@@ -277,11 +402,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="master-btn-primary">
                   Simpan PIN Baru
                 </button>
               </div>
@@ -293,18 +418,18 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="master-modal-header">
               <div>
-                <h3 className="modal-title">Koneksi Printer Thermal</h3>
-                <span className="modal-subtitle">Protokol Bluetooth Classic (SPP) 58mm</span>
+                <h3 className="master-modal-title">Koneksi Printer Thermal</h3>
+                <span className="master-modal-subtitle">Protokol Bluetooth Classic (SPP) 58mm</span>
               </div>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="master-modal-body">
               <div style={{ backgroundColor: 'var(--bg-surface)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status Koneksi:</p>
                 <strong style={{ fontSize: '15px', color: '#fafafa' }}>
@@ -317,21 +442,29 @@ export const SettingsPanel: React.FC = () => {
                 )}
               </div>
 
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                Printer thermal 58mm (Xantri BT-58D) menggunakan protokol Serial Bluetooth Classic (SPP). Fitur pairing otomatis dan scan aktif langsung pada aplikasi native Android APK.
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                Triwara POS mendukung printer kasir thermal Bluetooth 58mm dengan command set ESC/POS.
               </p>
 
               <button
                 type="button"
-                className="btn-secondary"
-                onClick={() => alert('Pencarian Bluetooth Classic aktif pada environment native Capacitor Android.')}
+                className="master-btn-primary"
+                onClick={() =>
+                  setDialogConfig({
+                    isOpen: true,
+                    type: 'alert',
+                    title: 'Pencarian Bluetooth',
+                    message: 'Pastikan Bluetooth perangkat menyala dan printer thermal BT-58D dalam mode pairing.',
+                    onConfirm: () => {},
+                  })
+                }
               >
                 Scan &amp; Pasangkan Printer
               </button>
             </div>
 
-            <div className="modal-footer">
-              <button type="button" className="btn-primary" onClick={() => setActiveModal(null)}>
+            <div className="master-modal-footer">
+              <button type="button" className="master-btn-primary" onClick={() => setActiveModal(null)}>
                 Selesai
               </button>
             </div>
@@ -342,28 +475,108 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 3: Konfigurasi Struk Pelanggan */}
       {activeModal === 'receipt' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
+          <div className="master-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="master-modal-header">
               <div>
-                <h3 className="modal-title">Konfigurasi Struk Pelanggan</h3>
-                <span className="modal-subtitle">Header, footer, logo &amp; info WiFi warkop</span>
+                <h3 className="master-modal-title">Konfigurasi Struk Pelanggan</h3>
+                <span className="master-modal-subtitle">Header, footer, logo &amp; info WiFi warkop</span>
               </div>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveReceiptConfig} className="modal-body">
+            <form onSubmit={handleSaveReceiptConfig} className="master-modal-body">
               <div className="form-group">
                 <label className="form-label">Logo Struk Thermal (Header)</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  {config?.receiptLogoBase64 ? (
-                    <img src={config.receiptLogoBase64} alt="Receipt Logo" style={{ height: '40px', objectFit: 'contain' }} />
-                  ) : (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Belum ada logo struk</span>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleUploadReceiptLogo} />
-                </div>
+                <input
+                  type="file"
+                  ref={receiptFileInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleUploadReceiptLogo}
+                />
+
+                {config?.receiptLogoBase64 ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      backgroundColor: '#18181b',
+                      border: '1px solid #27272a',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img
+                        src={config.receiptLogoBase64}
+                        alt="Receipt Logo"
+                        style={{
+                          height: '42px',
+                          maxWidth: '120px',
+                          objectFit: 'contain',
+                          backgroundColor: '#ffffff',
+                          borderRadius: '4px',
+                          padding: '4px',
+                        }}
+                      />
+                      <div>
+                        <strong style={{ color: '#fafafa', fontSize: '13px', display: 'block' }}>
+                          Logo Struk Aktif
+                        </strong>
+                        <span style={{ color: '#34d399', fontSize: '11px' }}>✓ Siap dicetak di struk 58mm</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn-table-action btn-table-edit"
+                        onClick={() => receiptFileInputRef.current?.click()}
+                      >
+                        ✏️ Ganti Foto
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-table-action btn-table-void"
+                        onClick={handleDeleteReceiptLogo}
+                      >
+                        🗑️ Hapus
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      border: '1px dashed #3f3f46',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(24, 24, 27, 0.5)',
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: '#a1a1aa', fontSize: '13px', display: 'block' }}>
+                        Belum ada logo struk
+                      </span>
+                      <small style={{ color: '#71717a', fontSize: '11px' }}>
+                        Format PNG/JPG, otomatis dioptimasi untuk printer thermal 58mm
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ fontSize: '12px', padding: '6px 14px' }}
+                      onClick={() => receiptFileInputRef.current?.click()}
+                    >
+                      📷 Pilih Foto
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -428,11 +641,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="master-btn-primary">
                   Simpan Konfigurasi Struk
                 </button>
               </div>
@@ -444,28 +657,108 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 4: Branding Identitas Aplikasi */}
       {activeModal === 'branding' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="master-modal-header">
               <div>
-                <h3 className="modal-title">Branding Identitas Aplikasi</h3>
-                <span className="modal-subtitle">Nama aplikasi dan logo header kasir</span>
+                <h3 className="master-modal-title">Branding Identitas Aplikasi</h3>
+                <span className="master-modal-subtitle">Nama aplikasi dan logo header kasir</span>
               </div>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveBranding} className="modal-body">
+            <form onSubmit={handleSaveBranding} className="master-modal-body">
               <div className="form-group">
                 <label className="form-label">Logo Utama Aplikasi (Top Bar Header)</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  {config?.appLogoBase64 ? (
-                    <img src={config.appLogoBase64} alt="App Logo" style={{ width: '40px', height: '40px', borderRadius: '6px' }} />
-                  ) : (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Belum ada logo aplikasi</span>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleUploadAppLogo} />
-                </div>
+                <input
+                  type="file"
+                  ref={appFileInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleUploadAppLogo}
+                />
+
+                {config?.appLogoBase64 ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      backgroundColor: '#18181b',
+                      border: '1px solid #27272a',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img
+                        src={config.appLogoBase64}
+                        alt="App Logo"
+                        style={{
+                          width: '42px',
+                          height: '42px',
+                          borderRadius: '6px',
+                          objectFit: 'contain',
+                          backgroundColor: '#27272a',
+                          padding: '2px',
+                        }}
+                      />
+                      <div>
+                        <strong style={{ color: '#fafafa', fontSize: '13px', display: 'block' }}>
+                          Logo Header Aktif
+                        </strong>
+                        <span style={{ color: '#34d399', fontSize: '11px' }}>✓ Tampil di bar navigasi kasir</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn-table-action btn-table-edit"
+                        onClick={() => appFileInputRef.current?.click()}
+                      >
+                        ✏️ Ganti Foto
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-table-action btn-table-void"
+                        onClick={handleDeleteAppLogo}
+                      >
+                        🗑️ Hapus
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      border: '1px dashed #3f3f46',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(24, 24, 27, 0.5)',
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: '#a1a1aa', fontSize: '13px', display: 'block' }}>
+                        Belum ada logo aplikasi
+                      </span>
+                      <small style={{ color: '#71717a', fontSize: '11px' }}>
+                        Format PNG/JPG persegi (disarankan 120x120 px)
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ fontSize: '12px', padding: '6px 14px' }}
+                      onClick={() => appFileInputRef.current?.click()}
+                    >
+                      📷 Pilih Foto
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -479,11 +772,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="master-btn-primary">
                   Simpan Branding
                 </button>
               </div>
@@ -491,6 +784,18 @@ export const SettingsPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Reusable Dialog Modal */}
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type={dialogConfig.type}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={dialogConfig.onConfirm}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

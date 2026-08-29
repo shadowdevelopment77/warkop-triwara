@@ -46,21 +46,21 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-card"
+        className="master-modal-card"
         style={{ maxWidth: '400px' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className="master-modal-header">
           <div>
-            <h3 className="modal-title">{title}</h3>
-            <span className="modal-subtitle">{subtitle}</span>
+            <h3 className="master-modal-title">{title}</h3>
+            <span className="master-modal-subtitle">{subtitle}</span>
           </div>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
+        <form onSubmit={handleSubmit} className="master-modal-body">
           {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           <div className="form-group">
@@ -76,11 +76,11 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             />
           </div>
 
-          <div className="modal-footer" style={{ margin: '16px -20px -20px -20px' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>
+          <div className="master-modal-footer" style={{ margin: '16px -20px -20px -20px' }}>
+            <button type="button" className="master-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>
-            <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            <button type="submit" className="master-btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'Menyimpan...' : 'Simpan Kategori'}
             </button>
           </div>
