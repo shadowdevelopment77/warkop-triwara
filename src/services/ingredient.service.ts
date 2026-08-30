@@ -167,7 +167,42 @@ export class IngredientService {
         await this.database.shopConfig.update(config.id, {
           customIngredientCategories: [...current, trimmed],
         });
+        await this.database.logs.add({
+          type: 'inventory',
+          description: `TAMBAH KATEGORI INVENTORI: ${trimmed}`,
+          createdAt: new Date(),
+        });
       }
+    }
+  }
+
+  /** Deletes a custom category if not used by any ingredients */
+  async deleteCategory(categoryName: string): Promise<void> {
+    const trimmed = categoryName.trim();
+    if (!trimmed) return;
+
+    if (trimmed === 'raw' || trimmed === 'packaging') {
+      throw new Error(`Kategori sistem "${trimmed === 'raw' ? 'Bahan Baku' : 'Kemasan'}" tidak dapat dihapus.`);
+    }
+
+    const ingredients = await this.database.ingredients.toArray();
+    const usedCount = ingredients.filter((i) => i.category === trimmed).length;
+    if (usedCount > 0) {
+      throw new Error(`Kategori "${trimmed}" tidak dapat dihapus karena masih digunakan oleh ${usedCount} bahan baku.`);
+    }
+
+    const config = await this.database.shopConfig.toCollection().first();
+    if (config && config.id) {
+      const current = config.customIngredientCategories || [];
+      const updated = current.filter((c) => c !== trimmed);
+      await this.database.shopConfig.update(config.id, {
+        customIngredientCategories: updated,
+      });
+      await this.database.logs.add({
+        type: 'inventory',
+        description: `HAPUS KATEGORI INVENTORI: ${trimmed}`,
+        createdAt: new Date(),
+      });
     }
   }
 }

@@ -17,27 +17,30 @@ interface RestockModalProps {
 export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose, onRestocked }) => {
   const [addedQty, setAddedQty] = useState<number>(ingredient.purchaseQuantity || 1000);
   const [purchasePrice, setPurchasePrice] = useState<number>(ingredient.purchasePrice || 100000);
-  const [purchaseQuantity, setPurchaseQuantity] = useState<number>(ingredient.purchaseQuantity || 1000);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const batchCostPerUnit = purchaseQuantity > 0 ? purchasePrice / purchaseQuantity : 0;
+  const batchCostPerUnit = addedQty > 0 ? purchasePrice / addedQty : 0;
   const currentTotalVal = ingredient.currentStock * ingredient.costPerUnit;
-  const addedTotalVal = addedQty * batchCostPerUnit;
   const newTotalStock = ingredient.currentStock + addedQty;
   const projectedWeightedCost =
-    newTotalStock > 0 ? (currentTotalVal + addedTotalVal) / newTotalStock : batchCostPerUnit;
+    newTotalStock > 0 ? (currentTotalVal + purchasePrice) / newTotalStock : batchCostPerUnit;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (addedQty <= 0) {
-      setErrorMsg('Jumlah stok restock harus lebih dari 0');
+      setErrorMsg('Jumlah stok barang masuk harus lebih dari 0');
+      return;
+    }
+    if (purchasePrice < 0) {
+      setErrorMsg('Total harga beli tidak boleh negatif');
       return;
     }
 
     try {
-      await ingredientService.restockIngredient(ingredient.id!, addedQty, purchasePrice, purchaseQuantity);
+      // Pass addedQty as both added quantity and purchase quantity
+      await ingredientService.restockIngredient(ingredient.id!, addedQty, purchasePrice, addedQty);
       await notificationService.addNotification(
         'Restock Bahan Sukses',
         `Restock "${ingredient.name}" sebanyak +${addedQty} ${ingredient.unit} berhasil dicatat.`,
@@ -52,75 +55,84 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="master-modal-card restock-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="master-modal-header">
-          <div>
-            <h3 className="master-modal-title">Tambah Stock: {ingredient.name}</h3>
-            <span className="master-modal-subtitle">Catat kedatangan stok baru dari supplier</span>
-          </div>
+      <div className="inv-modal-card restock-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="inv-modal-header">
+          <h3 className="inv-modal-title">Restock Bahan: {ingredient.name}</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="master-modal-body">
+        <form onSubmit={handleSubmit} className="inv-modal-body">
           {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           <div className="info-summary-card">
-            <span>Stok Saat Ini:</span>
-            <strong>
-              {ingredient.currentStock} {ingredient.unit}
-            </strong>
-            <small>Cost Saat Ini: {formatRupiah(ingredient.costPerUnit)} / {ingredient.unit}</small>
+            <div>
+              <span>Stok Saat Ini: </span>
+              <strong>{ingredient.currentStock} {ingredient.unit}</strong>
+            </div>
+            <div>
+              <span>HPP Lama: </span>
+              <strong>{formatRupiah(ingredient.costPerUnit)} / {ingredient.unit}</strong>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Kuantitas Masuk (+ {ingredient.unit})</label>
+          <div className="inv-form-group">
+            <label className="inv-form-label">Jumlah Barang Masuk (+ {ingredient.unit})</label>
             <input
               type="number"
-              className="form-input price-input-lg"
+              className="form-input"
+              style={{ fontSize: '16px', fontWeight: 600 }}
+              placeholder={`contoh: 1000 ${ingredient.unit}`}
               value={addedQty || ''}
               onChange={(e) => setAddedQty(parseFloat(e.target.value) || 0)}
               required
+              min="0.01"
+              step="any"
             />
           </div>
 
+          <div className="inv-form-group">
+            <label className="inv-form-label">Total Uang Belanja yang Dibayar (Rp)</label>
+            <input
+              type="number"
+              className="form-input"
+              style={{ fontSize: '16px', fontWeight: 600 }}
+              placeholder="contoh: 150000"
+              value={purchasePrice || ''}
+              onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || 0)}
+              required
+              min="0"
+            />
+            <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
+              Masukkan total nominal uang yang dikeluarkan dari kas kecil untuk belanja ini.
+            </span>
+          </div>
+
           <div className="calc-section-box">
-            <h4 className="calc-section-title">Detail Pembelian Batch Ini (Opsional / Weighted Average)</h4>
-
-            <div className="form-row two-cols">
-              <div className="form-group">
-                <label className="form-label">Total Harga Beli Batch (Rp)</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || 0)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Isi per Beli ({ingredient.unit})</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={purchaseQuantity}
-                  onChange={(e) => setPurchaseQuantity(parseFloat(e.target.value) || 1)}
-                />
-              </div>
+            <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
+              <span>Harga Beli Batch Ini:</span>
+              <strong>{formatRupiah(batchCostPerUnit)} / {ingredient.unit}</strong>
             </div>
 
-            <div className="calc-result-badge">
-              <span>Estimasi Cost Baru (Weighted Avg):</span>
-              <strong>{formatRupiah(projectedWeightedCost)} / {ingredient.unit}</strong>
+            <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
+              <span>Total Stok Menjadi:</span>
+              <strong style={{ color: '#22c55e' }}>{newTotalStock} {ingredient.unit}</strong>
+            </div>
+
+            <div className="inv-calc-badge" style={{ border: '1px solid #3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+              <span>Estimasi HPP Baru (Weighted Avg):</span>
+              <strong style={{ color: '#60a5fa', fontSize: '15px' }}>
+                {formatRupiah(projectedWeightedCost)} / {ingredient.unit}
+              </strong>
             </div>
           </div>
 
-          <div className="master-modal-footer">
-            <button type="button" className="master-btn-secondary" onClick={onClose}>
+          <div className="inv-modal-footer" style={{ margin: '8px -20px -20px -20px' }}>
+            <button type="button" className="inv-btn-secondary" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="master-btn-primary">
+            <button type="submit" className="inv-btn-primary">
               Simpan Restock (+{addedQty} {ingredient.unit})
             </button>
           </div>

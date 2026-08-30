@@ -10,7 +10,7 @@ import { configService } from '../../services/config.service';
 import { formatRupiah } from '../../utils/currency';
 import { IngredientModal } from './IngredientModal';
 import { RestockModal } from './RestockModal';
-import { CategoryModal } from './CategoryModal';
+import { InventoryCategoryManagerModal } from './InventoryCategoryManagerModal';
 import { PaginationBar } from '../common/PaginationBar';
 import { DialogModal } from '../common/DialogModal';
 
@@ -33,11 +33,6 @@ export const InventoryPanel: React.FC = () => {
     title: '',
     message: '',
   });
-
-  const handleSaveCategory = async (catName: string) => {
-    await ingredientService.addCategory(catName);
-    await loadIngredients();
-  };
 
   const loadIngredients = useCallback(async () => {
     try {
@@ -77,47 +72,46 @@ export const InventoryPanel: React.FC = () => {
 
   const getStatusBadge = (ing: IIngredient) => {
     if (ing.currentStock <= ing.minStock * 0.1) {
-      return <span className="status-badge critical">Kritis</span>;
+      return <span className="inv-status-badge critical">Kritis</span>;
     }
     if (ing.currentStock <= ing.minStock) {
-      return <span className="status-badge low">Low</span>;
+      return <span className="inv-status-badge low">Low</span>;
     }
-    return <span className="status-badge safe">Aman</span>;
+    return <span className="inv-status-badge safe">Aman</span>;
   };
 
   return (
-    <div className="master-view-container">
+    <div className="inv-view-container">
       {/* Header Title & Actions */}
-      <div className="master-view-header">
+      <div className="inv-view-header">
         <div>
-          <h2 className="view-title">Inventaris Stok Bahan Baku &amp; Kemasan</h2>
-          <p className="view-subtitle">Kelola stok biji kopi, susu, syrup, dan kemasan sekali pakai.</p>
+          <h2 className="inv-view-title">Inventori Manajemen</h2>
         </div>
 
-        <div className="header-actions">
-          <button type="button" className="master-btn-secondary" onClick={handleExportPdf}>
+        <div className="inv-header-actions">
+          <button type="button" className="inv-btn-secondary" onClick={handleExportPdf}>
             Export PDF
           </button>
-          <button type="button" className="master-btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
-            + Kategori
+          <button type="button" className="inv-btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
+            🏷️ Kelola Kategori
           </button>
-          <button type="button" className="master-btn-primary" onClick={() => setIsAddModalOpen(true)}>
+          <button type="button" className="inv-btn-primary" onClick={() => setIsAddModalOpen(true)}>
             + Tambah Bahan Baru
           </button>
         </div>
       </div>
 
       {/* Ingredients Table */}
-      <div className="table-card-wrapper">
-        <table className="pos-data-table">
+      <div className="inv-table-wrapper">
+        <table className="inv-data-table">
           <thead>
             <tr>
-              <th onClick={handleToggleNameSort} className="sortable-th">
-                Bahan / Kemasan {sortBy.startsWith('name') ? (sortBy === 'name_asc' ? '▲' : '▼') : '↕'}
+              <th onClick={handleToggleNameSort} className="inv-sortable-th">
+                Item {sortBy.startsWith('name') ? (sortBy === 'name_asc' ? '▲' : '▼') : '↕'}
               </th>
               <th>Kategori</th>
-              <th onClick={handleToggleStockSort} className="sortable-th">
-                Stok Saat Ini {sortBy.startsWith('stock') ? (sortBy === 'stock_asc' ? '▲' : '▼') : '↕'}
+              <th onClick={handleToggleStockSort} className="inv-sortable-th">
+                Stok  {sortBy.startsWith('stock') ? (sortBy === 'stock_asc' ? '▲' : '▼') : '↕'}
               </th>
               <th>Cost / Unit</th>
               <th>Status</th>
@@ -140,7 +134,7 @@ export const InventoryPanel: React.FC = () => {
                       <strong>{ing.name}</strong>
                     </td>
                     <td>
-                      <span className="type-badge">{ing.category === 'raw' ? 'Bahan Utama' : 'Kemasan'}</span>
+                      <span className="type-badge">{ing.category}</span>
                     </td>
                     <td>
                       <strong>
@@ -152,17 +146,17 @@ export const InventoryPanel: React.FC = () => {
                     </td>
                     <td>{getStatusBadge(ing)}</td>
                     <td>
-                      <div className="table-action-btns">
+                      <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           type="button"
-                          className="btn-table-action btn-table-restock"
+                          className="inv-btn-restock"
                           onClick={() => setRestockingIngredient(ing)}
                         >
                           + Restock
                         </button>
                         <button
                           type="button"
-                          className="btn-table-action btn-table-edit"
+                          className="inv-btn-edit"
                           onClick={() => setEditingIngredient(ing)}
                         >
                           Edit
@@ -220,14 +214,11 @@ export const InventoryPanel: React.FC = () => {
         />
       )}
 
-      {/* Inventory Category Modal */}
+      {/* Inventory Category Manager Modal */}
       {isCategoryModalOpen && (
-        <CategoryModal
-          title="Tambah Kategori Inventori"
-          subtitle="Kategori baru untuk mengelompokkan bahan baku & kemasan"
-          placeholder="contoh: Biji Kopi, Susu, Sirup, Powder, Kemasan..."
+        <InventoryCategoryManagerModal
           onClose={() => setIsCategoryModalOpen(false)}
-          onSave={handleSaveCategory}
+          onChanged={loadIngredients}
         />
       )}
 
