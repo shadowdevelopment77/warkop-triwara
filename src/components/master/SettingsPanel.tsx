@@ -266,7 +266,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           onClick={() => setActiveModal('printer')}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title">🖨️ 1. Koneksi Printer Thermal</h3>
+            <h3 className="settings-card-title">Koneksi Printer Thermal</h3>
             <p className="settings-card-desc">Atur sambungan Bluetooth printer kasir (BT-58D)</p>
           </div>
           <span className="settings-card-arrow">➔</span>
@@ -280,7 +280,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title">
-              {isOwner ? '👥 2. Kelola Karyawan & Hak Akses PIN' : '🔒 2. Kelola Karyawan & Hak Akses PIN (Owner)'}
+              {isOwner ? 'Kelola Karyawan & Hak Akses PIN' : 'Kelola Karyawan & Hak Akses PIN (Owner)'}
             </h3>
             <p className="settings-card-desc">Tambah kasir baru, update nama staf, dan ganti PIN</p>
           </div>
@@ -295,7 +295,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title">
-              {isOwner ? '🧾 3. Konfigurasi Struk Pelanggan' : '🔒 3. Konfigurasi Struk Pelanggan (Owner)'}
+              {isOwner ? 'Konfigurasi Struk Pelanggan' : 'Konfigurasi Struk Pelanggan (Owner)'}
             </h3>
             <p className="settings-card-desc">Atur 3 baris header &amp; 4 baris footer (WiFi/Password)</p>
           </div>
@@ -310,7 +310,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title">
-              {isOwner ? '🏷️ 4. Branding Identitas Aplikasi' : '🔒 4. Branding Identitas Aplikasi (Owner)'}
+              {isOwner ? 'Branding Identitas Aplikasi' : 'Branding Identitas Aplikasi (Owner)'}
             </h3>
             <p className="settings-card-desc">Ubah nama kedai warkop &amp; upload logo aplikasi</p>
           </div>
@@ -353,7 +353,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title" style={{ color: '#f87171' }}>
-              {isOwner ? '⚡ 5. Reset & Muat Data Demo' : '🔒 5. Reset & Muat Data Demo (Owner)'}
+              {isOwner ? 'Reset & Muat Data Demo' : 'Reset & Muat Data Demo (Owner)'}
             </h3>
             <p className="settings-card-desc">
               Reset database bersih + 8 menu + inventori stok aman + 400 order 1 bulan

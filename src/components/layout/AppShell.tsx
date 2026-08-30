@@ -417,7 +417,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
               >
                 {activeShift ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span>🟢 <strong>Toko Buka: Shift #{activeShift.shiftNumber}</strong> ({activeShift.cashierName})</span>
+                    <span><strong>Toko Buka: Shift #{activeShift.shiftNumber}</strong> ({activeShift.cashierName})</span>
                     <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
                       Kas Awal: {formatRupiah(activeShift.startingCash)} | Tunai: {formatRupiah(activeShift.totalCashSales)}
                     </span>
@@ -436,7 +436,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
                       onClick={() => setIsOpenShiftModalOpen(true)}
                     >
-                      🟢 Buka Toko
+                      Buka Toko
                     </button>
                   ) : (
                     <button
@@ -445,7 +445,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
                       onClick={() => setIsCloseShiftModalOpen(true)}
                     >
-                      🔴 Tutup Toko
+                      Tutup Toko
                     </button>
                   )}
                 </div>
@@ -619,4 +619,3 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
     </div>
   );
 };
-

@@ -59,7 +59,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
       <aside className="master-drawer-panel" onClick={(e) => e.stopPropagation()}>
         {/* Drawer Header */}
         <div className="drawer-header">
-          <h3 className="drawer-title">Menu Utama</h3>
+          <h3 className="drawer-title">Menu</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup Menu">
             ✕
           </button>
