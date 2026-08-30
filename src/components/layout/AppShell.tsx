@@ -424,7 +424,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                   </div>
                 ) : (
                   <div>
-                    <span>⚪ <strong>Toko Sedang Tutup</strong></span>
+                    <span><strong>Toko Sedang Tutup</strong></span>
                   </div>
                 )}
 

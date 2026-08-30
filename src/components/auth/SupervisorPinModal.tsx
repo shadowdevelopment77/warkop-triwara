@@ -91,8 +91,7 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
         style={{ maxWidth: '380px' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <span style={{ fontSize: '18px' }}>🔒</span>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
