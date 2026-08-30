@@ -270,7 +270,7 @@ export const MenuPanel: React.FC = () => {
                           <strong style={{ color: '#fafafa' }}>{add.name}</strong>
                           {ing && add.amount && (
                             <span style={{ color: '#a1a1aa', marginLeft: '8px', fontSize: '12px' }}>
-                              (Potong {add.amount} {ing.unit} {ing.name})
+                              ({add.amount} {ing.unit} {ing.name})
                             </span>
                           )}
                         </div>

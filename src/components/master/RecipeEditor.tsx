@@ -350,7 +350,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                           .filter((i) => i.category === 'raw')
                           .map((ing) => (
                             <option key={ing.id} value={ing.id}>
-                              {ing.name} ({formatRupiah(ing.costPerUnit)}/{ing.unit})
+                              {ing.name}
                             </option>
                           ))}
                       </select>
@@ -407,7 +407,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                           .filter((i) => i.category === 'packaging')
                           .map((ing) => (
                             <option key={ing.id} value={ing.id}>
-                              {ing.name} ({formatRupiah(ing.costPerUnit)}/{ing.unit})
+                              {ing.name}
                             </option>
                           ))}
                       </select>
@@ -499,12 +499,12 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                           }}
                           required
                         >
-                          <option value="" disabled>-- Pilih Bahan Baku yang Dipotong --</option>
+                          <option value="" disabled>-- Pilih Bahan Baku --</option>
                           {ingredients
                             .filter((i) => i.category === 'raw')
                             .map((ing) => (
                               <option key={ing.id} value={ing.id}>
-                                Potong: {ing.name} ({ing.unit})
+                                {ing.name} ({ing.unit})
                               </option>
                             ))}
                         </select>
