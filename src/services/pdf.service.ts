@@ -56,12 +56,12 @@ export class PdfService {
     doc.setFontSize(12);
     doc.text(formatRupiah(summary.totalProfit), 160, 56);
 
-    // 3. Top 5 Best Sellers Table
+    // 3. All Product Sales Ranking Table
     doc.setFontSize(12);
-    doc.text('5 Produk Terlaris Periode Ini', 14, 80);
+    doc.text(`Penjualan Produk`, 14, 80);
 
     const topTableBody = topProducts.map((p, idx) => [
-      idx + 1,
+      `#${idx + 1}`,
       `${p.productName}`,
       `${p.quantitySold} terjual`,
       formatRupiah(p.totalRevenue),
@@ -69,7 +69,7 @@ export class PdfService {
 
     autoTable(doc, {
       startY: 84,
-      head: [['No', 'Produk', 'Jumlah Terjual', 'Total Omset']],
+      head: [['Ranking', 'Nama Menu Produk', 'Jumlah Terjual', 'Total Omset']],
       body: topTableBody,
       theme: 'striped',
       headStyles: { fillColor: [40, 40, 40] },
@@ -132,7 +132,7 @@ export class PdfService {
 
     autoTable(doc, {
       startY: 40,
-      head: [['No', 'Nama Bahan', 'Kategori', 'Stok Saat Ini', 'Cost/Unit', 'Status']],
+      head: [['No', 'Nama Bahan', 'Kategori', 'Stok', 'Cost/Unit', 'Status']],
       body: tableBody,
       theme: 'striped',
       headStyles: { fillColor: [40, 40, 40] },

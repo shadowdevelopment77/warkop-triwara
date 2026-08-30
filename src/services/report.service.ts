@@ -107,9 +107,8 @@ export class ReportService {
       }
     }
 
-    return Array.from(productMap.values())
-      .sort((a, b) => b.quantitySold - a.quantitySold)
-      .slice(0, limit);
+    const sorted = Array.from(productMap.values()).sort((a, b) => b.quantitySold - a.quantitySold);
+    return limit > 0 ? sorted.slice(0, limit) : sorted;
   }
 
   /** Gets system activity logs (void & restock logs) */

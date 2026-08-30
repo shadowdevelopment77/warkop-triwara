@@ -10,7 +10,7 @@ import { configService } from '../../services/config.service';
 import { pdfService } from '../../services/pdf.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
-import { formatDateIndonesian } from '../../utils/date';
+import { formatDateIndonesian, formatShortDate } from '../../utils/date';
 import { PrintSelectModal } from '../pos/PrintSelectModal';
 import type { ReceiptType } from '../../services/receipt.service';
 import { PaginationBar } from '../common/PaginationBar';
@@ -57,7 +57,7 @@ export const ReportPanel: React.FC = () => {
   const loadReportData = useCallback(async () => {
     try {
       const summaryData = await reportService.getSalesSummary(startDate, endDate);
-      const topData = await reportService.getTopSellingProducts(startDate, endDate, 5);
+      const topData = await reportService.getTopSellingProducts(startDate, endDate, 0);
       const ordersData = await orderService.getOrders(startDate, endDate);
 
       setSummary(summaryData);
@@ -168,119 +168,102 @@ export const ReportPanel: React.FC = () => {
   };
 
   return (
-    <div className="master-view-container">
-      {/* Header & Date Range Controls (Top-Left) */}
-      <div className="master-view-header">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div>
-            <h2 className="view-title">Laporan Penjualan &amp; Performa Toko</h2>
-            <p className="view-subtitle">Ringkasan omset, tunai, qris, profit bersih, 5 menu terlaris &amp; riwayat.</p>
-          </div>
+    <div className="report-view-container">
+      {/* Header: Title on Left, Export PDF on Far Right */}
+      <div className="report-view-header">
+        <h2 className="report-view-title">Laporan Penjualan &amp; Performa Toko</h2>
+        <button type="button" className="report-btn-primary report-btn-export" onClick={handleExportPdf}>
+          📄 Export PDF
+        </button>
+      </div>
 
-          {/* Date Range Picker with Presets in Top-Left */}
-          <div className="report-period-filter-bar">
-            <div className="date-input-group">
-              <label>Dari:</label>
-              <input
-                type="date"
-                value={toInputDateString(startDate)}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setStartDate(new Date(e.target.value));
-                    setPeriodPreset('custom');
-                  }
-                }}
-              />
-            </div>
-
-            <div className="date-input-group">
-              <label>Sampai:</label>
-              <input
-                type="date"
-                value={toInputDateString(endDate)}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setEndDate(new Date(e.target.value));
-                    setPeriodPreset('custom');
-                  }
-                }}
-              />
-            </div>
-
-            <button
-              type="button"
-              className={`preset-btn ${periodPreset === 'today' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('today')}
-            >
-              Hari Ini
-            </button>
-            <button
-              type="button"
-              className={`preset-btn ${periodPreset === 'month' ? 'active' : ''}`}
-              onClick={() => handleSelectPreset('month')}
-            >
-              Bulan Ini
-            </button>
-          </div>
+      {/* Date Range Picker with Presets below header */}
+      <div className="report-period-filter-bar">
+        <div className="report-date-input-group">
+          <label>Dari:</label>
+          <input
+            type="date"
+            value={toInputDateString(startDate)}
+            onChange={(e) => {
+              if (e.target.value) {
+                setStartDate(new Date(e.target.value));
+                setPeriodPreset('custom');
+              }
+            }}
+          />
         </div>
 
-        <div className="header-actions">
-          <button type="button" className="master-btn-primary" onClick={handleExportPdf}>
-            Export PDF
-          </button>
+        <div className="report-date-input-group">
+          <label>Sampai:</label>
+          <input
+            type="date"
+            value={toInputDateString(endDate)}
+            onChange={(e) => {
+              if (e.target.value) {
+                setEndDate(new Date(e.target.value));
+                setPeriodPreset('custom');
+              }
+            }}
+          />
         </div>
+
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'today' ? 'active' : ''}`}
+          onClick={() => handleSelectPreset('today')}
+        >
+          Hari Ini
+        </button>
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'month' ? 'active' : ''}`}
+          onClick={() => handleSelectPreset('month')}
+        >
+          Bulan Ini
+        </button>
       </div>
 
       {/* Summary Cards Grid (OMSET, TUNAI, QRIS, PROFIT) */}
       {summary && (
-        <div className="summary-cards-grid">
-          <div className="summary-card">
-            <span className="card-label">OMSET</span>
-            <strong className="card-val">{formatRupiah(summary.totalOmset)}</strong>
+        <div className="report-summary-cards-grid">
+          <div className="report-summary-card">
+            <span className="report-card-label">OMSET</span>
+            <strong className="report-card-val">{formatRupiah(summary.totalOmset)}</strong>
             <small style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
               {summary.completedCount} transaksi sukses, {summary.voidedCount} transaksi dibatalkan
             </small>
           </div>
 
-          <div className="summary-card">
-            <span className="card-label">TUNAI</span>
-            <strong className="card-val">{formatRupiah(summary.totalCash)}</strong>
+          <div className="report-summary-card">
+            <span className="report-card-label">TUNAI</span>
+            <strong className="report-card-val">{formatRupiah(summary.totalCash)}</strong>
           </div>
 
-          <div className="summary-card">
-            <span className="card-label">QRIS</span>
-            <strong className="card-val">{formatRupiah(summary.totalQris)}</strong>
+          <div className="report-summary-card">
+            <span className="report-card-label">QRIS</span>
+            <strong className="report-card-val">{formatRupiah(summary.totalQris)}</strong>
           </div>
 
-          <div className="summary-card profit">
-            <span className="card-label">PROFIT</span>
-            <strong className="card-val">{formatRupiah(summary.totalProfit)}</strong>
+          <div className="report-summary-card profit">
+            <span className="report-card-label">PROFIT</span>
+            <strong className="report-card-val">{formatRupiah(summary.totalProfit)}</strong>
           </div>
         </div>
       )}
 
-      {/* Top 5 Best Sellers Section (Clean Text) */}
+      {/* Product Sales Section (Scrollable box ~5 items visible, responsive) */}
       <div className="report-section-card">
-        <h3 className="section-card-title">5 MENU TERLARIS PERIODE INI</h3>
+        <h3 className="report-section-title">
+          Penjualan Produk pada Periode {formatShortDate(startDate)} - {formatShortDate(endDate)}
+        </h3>
         {topProducts.length === 0 ? (
           <p className="empty-hint">Belum ada data penjualan pada periode ini.</p>
         ) : (
-          <div className="top-products-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="report-products-scroll-container">
             {topProducts.map((p, idx) => (
-              <div
-                key={p.productId}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 14px',
-                  backgroundColor: '#18181b',
-                  borderRadius: '6px',
-                  border: '1px solid #27272a',
-                }}
-              >
+              <div key={p.productId} className="report-product-item">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ color: '#a1a1aa', fontWeight: 700, minWidth: '22px' }}>#{idx + 1}</span>
+                  <span className="report-product-rank">#{idx + 1}</span>
                   <strong style={{ color: '#fafafa', fontSize: '14px' }}>{p.productName}</strong>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
@@ -296,10 +279,10 @@ export const ReportPanel: React.FC = () => {
 
       {/* Transactions History Table */}
       <div className="report-section-card">
-        <h3 className="section-card-title">RIWAYAT TRANSAKSI</h3>
+        <h3 className="report-section-title">RIWAYAT TRANSAKSI</h3>
 
-        <div className="table-responsive-wrapper">
-          <table className="pos-data-table">
+        <div className="report-table-wrapper">
+          <table className="report-data-table">
             <thead>
               <tr>
                 <th>No</th>
@@ -344,22 +327,26 @@ export const ReportPanel: React.FC = () => {
                         )}
                       </td>
                       <td>
-                        <div className="table-action-btns">
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <button
                             type="button"
-                            className="btn-table-action btn-table-print"
+                            className="report-btn-print"
                             onClick={() => setReprintOrder(order)}
                           >
                             🖨️ Cetak
                           </button>
-                          {order.status === 'completed' && (
+                          {order.status === 'completed' ? (
                             <button
                               type="button"
-                              className="btn-table-action btn-table-void"
+                              className="report-btn-void"
                               onClick={() => handleVoidOrder(order)}
                             >
                               🚫 Void
                             </button>
+                          ) : (
+                            <span className="report-voided-label" title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}>
+                              Dibatalkan
+                            </span>
                           )}
                         </div>
                       </td>
