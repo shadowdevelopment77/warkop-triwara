@@ -54,7 +54,8 @@ html, body, #root {
 input:focus, textarea:focus, select:focus {
   outline: 2px solid #52525b;
   outline-offset: 1px;
-  scroll-margin-bottom: 250px;
+  scroll-margin-top: 40px;
+  scroll-margin-bottom: 280px;
 }
 
 button {
