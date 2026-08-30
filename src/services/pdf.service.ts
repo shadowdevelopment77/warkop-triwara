@@ -108,34 +108,44 @@ export class PdfService {
         );
       }
 
-      // Draw Bars
+      // Draw Vector Line Chart
       const chartBaseY = currentY + 36;
       const chartDrawH = 24;
       const chartLeftX = 22;
       const chartAvailW = 166;
       const pts = chartData.points;
       const maxVal = Math.max(1, ...pts.map((p) => p.omset));
-      const slotW = chartAvailW / pts.length;
-      const barW = Math.max(2, Math.min(10, slotW * 0.65));
+      const stepX = pts.length > 1 ? chartAvailW / (pts.length - 1) : chartAvailW / 2;
 
       // Baseline
       doc.setDrawColor(200, 200, 205);
       doc.setLineWidth(0.3);
       doc.line(chartLeftX, chartBaseY, chartLeftX + chartAvailW, chartBaseY);
 
-      pts.forEach((pt, i) => {
-        const barH = pt.omset > 0 ? (pt.omset / maxVal) * chartDrawH : 0.5;
-        const barX = chartLeftX + i * slotW + (slotW - barW) / 2;
-        const barY = chartBaseY - barH;
+      // Compute coordinate points
+      const coords = pts.map((pt, i) => {
+        const x = chartLeftX + (pts.length > 1 ? i * stepX : chartAvailW / 2);
+        const y = chartBaseY - (pt.omset / maxVal) * chartDrawH;
+        return { x, y, pt, i };
+      });
 
+      // Draw line segments connecting points
+      doc.setDrawColor(59, 130, 246);
+      doc.setLineWidth(0.8);
+      for (let i = 0; i < coords.length - 1; i++) {
+        doc.line(coords[i].x, coords[i].y, coords[i + 1].x, coords[i + 1].y);
+      }
+
+      // Draw data point circles & X-axis labels
+      coords.forEach(({ x, y, pt, i }) => {
         if (pt.isPeak) {
           doc.setFillColor(34, 197, 94);
-        } else {
+          doc.circle(x, y, 1.4, 'F');
+        } else if (pt.omset > 0) {
           doc.setFillColor(59, 130, 246);
+          doc.circle(x, y, 0.9, 'F');
         }
-        doc.rect(barX, barY, barW, barH, 'F');
 
-        // Draw label for some ticks
         const showLabel =
           chartData.mode === 'hourly'
             ? i % 4 === 0 || i === 23
@@ -145,7 +155,7 @@ export class PdfService {
           doc.setFontSize(6);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(120, 120, 120);
-          doc.text(pt.label, barX + barW / 2, chartBaseY + 4, { align: 'center' });
+          doc.text(pt.label, x, chartBaseY + 4, { align: 'center' });
         }
       });
 
