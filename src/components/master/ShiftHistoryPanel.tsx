@@ -5,7 +5,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { shiftService } from '../../services/shift.service';
-import { pdfService } from '../../services/pdf.service';
 import { configService } from '../../services/config.service';
 import { formatDateIndonesian } from '../../utils/date';
 import { formatRupiah } from '../../utils/currency';
@@ -36,15 +35,6 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const handleExportPdf = async (shift: IShift) => {
-    if (!shopConfig) return;
-    await pdfService.exportShiftReportPdf(shift, shopConfig);
-  };
-
-  const handlePrintReceipt = (shift: IShift) => {
-    setPreviewReceiptShift(shift);
-  };
 
   // Filter based on single opening date (Waktu Buka)
   const filteredShifts = shifts.filter((s) => {
@@ -195,24 +185,15 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'inline-flex', gap: '4px' }}>
-                            <button
-                              type="button"
-                              className="shift-btn-action"
-                              onClick={() => handleExportPdf(shift)}
-                              title="Unduh PDF Rekap Shift"
-                            >
-                              📄 PDF
-                            </button>
-                            <button
-                              type="button"
-                              className="shift-btn-action"
-                              onClick={() => handlePrintReceipt(shift)}
-                              title="Cetak Ulang Struk Shift"
-                            >
-                              🖨️ Struk
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="shift-btn-primary"
+                            style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
+                            onClick={() => setPreviewReceiptShift(shift)}
+                            title="Lihat & Cetak Rekap Shift"
+                          >
+                            🖨️ Rekap
+                          </button>
                         </td>
                       </tr>
                     );
