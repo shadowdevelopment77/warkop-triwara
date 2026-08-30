@@ -73,7 +73,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'pos' ? 'active' : ''}`}
             onClick={() => handleTabClick('pos')}
           >
-            🛒 Kasir / POS
+            Kasir / POS
           </button>
 
           {/* Direct Item: Riwayat Transaksi */}
@@ -82,7 +82,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
             onClick={() => handleTabClick('transactions')}
           >
-            🧾 Riwayat Transaksi
+            Riwayat Transaksi
           </button>
 
           {/* Direct Item: Shift */}
@@ -91,7 +91,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'shifts' ? 'active' : ''}`}
             onClick={() => handleTabClick('shifts')}
           >
-            💼 Shift
+            Shift
           </button>
 
           {/* Folder Produk & Stok */}
@@ -101,7 +101,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
               className="nav-folder-title"
               onClick={onToggleProductFolder}
             >
-              <span>📦 Produk &amp; Stok</span>
+              <span>Produk &amp; Stok</span>
               <span>{isProductFolderOpen ? '▼' : '►'}</span>
             </button>
 
@@ -131,7 +131,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => handleRestrictedTabClick('reports')}
           >
-            {isOwner ? '📊 Laporan Penjualan' : '🔒 Laporan Penjualan (Owner)'}
+            {isOwner ? 'Laporan Penjualan' : '🔒 Laporan Penjualan (Owner)'}
           </button>
 
           {/* Free for all: Log Aktivitas */}
@@ -140,7 +140,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'logs' ? 'active' : ''}`}
             onClick={() => handleTabClick('logs')}
           >
-            📋 Log Aktivitas Sistem
+            Log Aktivitas Sistem
           </button>
 
           {/* Pengaturan Toko (Accessible to all, internal sensitive items locked) */}
@@ -149,7 +149,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => handleTabClick('settings')}
           >
-            ⚙️ Pengaturan Toko
+            Pengaturan Toko
           </button>
         </nav>
       </aside>

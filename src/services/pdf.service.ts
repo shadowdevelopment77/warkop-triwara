@@ -166,7 +166,7 @@ export class PdfService {
     doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(20, 20, 20);
-    doc.text('Daftar Penjualan Produk Terlaris', 14, currentY + 4);
+    doc.text('Penjualan Produk', 14, currentY + 4);
 
     const topTableBody = topProducts.map((p, idx) => [
       `#${idx + 1}`,
