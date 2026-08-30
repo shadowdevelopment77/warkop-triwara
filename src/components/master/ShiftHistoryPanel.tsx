@@ -16,7 +16,7 @@ interface ShiftHistoryPanelProps {
   onOpenNewShift?: () => void;
 }
 
-export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewShift }) => {
+export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
   const [shifts, setShifts] = useState<IShift[]>([]);
   const [activeShift, setActiveShift] = useState<IShift | null>(null);
   const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
@@ -64,21 +64,13 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
         <div>
           <h2 className="shift-view-title">Shift</h2>
         </div>
-
-        <div>
-          {!activeShift && onOpenNewShift && (
-            <button type="button" className="shift-btn-primary" onClick={onOpenNewShift}>
-              🟢 Buka Toko
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Active Shift Card or Banner */}
       {activeShift ? (
         <div className="shift-pos-banner active">
           <div>
-            <span>🟢 Shift Toko Berjalan: </span>
+            <span>Shift Toko Berjalan: </span>
             <strong>{activeShift.cashierName}</strong>
             <span style={{ marginLeft: '12px', fontSize: '12px' }}>
               (Dibuka: {formatDateIndonesian(activeShift.openedAt)} | Kas Awal: {formatRupiah(activeShift.startingCash)})
@@ -90,14 +82,14 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
         </div>
       ) : (
         <div className="shift-pos-banner closed">
-          <span>⚪ Toko Sedang Tutup. Buka toko untuk memulai shift kasir dan mencatat transaksi.</span>
+          <span>Toko Sedang Tutup. Buka toko untuk memulai shift kasir dan mencatat transaksi.</span>
         </div>
       )}
 
       {/* Filter Toolbar: Single Date Picker (Waktu Buka) */}
-      <div className="log-filter-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="log-filter-toolbar" style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent:'flex-end' }}>
         <div className="log-date-filter-box">
-          <span style={{ fontSize: '12px', color: '#a1a1aa' }}>Waktu Buka:</span>
+          <span style={{ fontSize: '15px', color: '#a1a1aa' }}>Opening: </span>
           <input
             type="date"
             className="log-date-input"
@@ -117,7 +109,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
               }}
               title="Reset Tanggal"
             >
-              ✕ Semua Tanggal
+              Reset
             </button>
           )}
         </div>
@@ -131,8 +123,8 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
               <tr>
                 <th>No</th>
                 <th>Kasir</th>
-                <th>Waktu Buka</th>
-                <th>Waktu Tutup</th>
+                <th>Opening</th>
+                <th>Closing</th>
                 <th>Kas Awal</th>
                 <th>Transaksi Tunai</th>
                 <th>Transaksi QRIS</th>

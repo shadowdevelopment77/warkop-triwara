@@ -129,9 +129,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
               required
               min="0"
             />
-            <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
-              Hitung uang kertas dan koin di laci kasir, lalu ketik jumlahnya di sini.
-            </span>
+
           </div>
 
           {/* Live Difference Badge */}
@@ -139,9 +137,9 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
             className={`shift-diff-badge ${diff === 0 ? 'even' : diff > 0 ? 'over' : 'under'}`}
             style={{ padding: '10px 14px', borderRadius: '6px', textAlign: 'center', fontSize: '14px' }}
           >
-            {diff === 0 && `✅ Selisih Kas: Rp 0 (PAS / Sesuai Sistem)`}
-            {diff > 0 && `🔵 Selisih Kas: +${formatRupiah(diff)} (Uang Fisik Lebih)`}
-            {diff < 0 && `⚠️ Selisih Kas: -${formatRupiah(Math.abs(diff))} (Uang Fisik Kurang)`}
+            {diff === 0 && `Selisih Kas: Rp 0 (PAS / Sesuai Sistem)`}
+            {diff > 0 && ` Selisih Kas: +${formatRupiah(diff)} (Uang Fisik Lebih)`}
+            {diff < 0 && ` Selisih Kas: -${formatRupiah(Math.abs(diff))} (Uang Fisik Kurang)`}
           </div>
 
           {/* Notes */}

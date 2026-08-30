@@ -117,9 +117,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '4px' }}>
-              Uang tunai fisik yang diletakkan di laci kasir saat buka toko untuk uang kembalian.
-            </span>
+
           </div>
 
           <div className="inv-form-group">
