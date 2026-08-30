@@ -14,6 +14,8 @@ interface CartPanelProps {
   onClearCart: () => void;
   onChangeDiscount: (percent: number) => void;
   onProceedToPayment: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const CartPanel: React.FC<CartPanelProps> = ({
@@ -24,15 +26,29 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   onClearCart,
   onChangeDiscount,
   onProceedToPayment,
+  isMobileOpen,
+  onCloseMobile,
 }) => {
   const subtotal = cartItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const grandTotal = subtotal - discountAmount;
 
   return (
-    <aside className="pos-right-column cart-panel-right">
+    <aside className={`pos-right-column cart-panel-right ${isMobileOpen ? 'mobile-show' : ''}`}>
       <div className="cart-panel-header">
-        <h2 className="cart-panel-title">Pesanan</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {onCloseMobile && (
+            <button
+              type="button"
+              className="btn-mobile-back-menu"
+              onClick={onCloseMobile}
+              title="Kembali ke Daftar Menu"
+            >
+              ← Menu
+            </button>
+          )}
+          <h2 className="cart-panel-title">Pesanan</h2>
+        </div>
         {cartItems.length > 0 && (
           <button type="button" className="btn-clear-cart" onClick={onClearCart}>
             Reset

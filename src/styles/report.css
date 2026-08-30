@@ -345,9 +345,10 @@
 
 .report-data-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .report-data-table th {

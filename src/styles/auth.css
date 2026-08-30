@@ -4,11 +4,14 @@
 
 .pin-lock-overlay {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   z-index: 9999;
 }
 
@@ -16,13 +19,14 @@
   background-color: #121214;
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 36px 28px;
+  padding: 28px 24px;
   width: 100%;
-  max-width: 360px;
+  max-width: 350px;
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
 
@@ -135,3 +139,35 @@
   font-size: 16px;
   color: var(--text-muted);
 }
+
+@media (max-height: 640px), (max-width: 480px) {
+  .pin-lock-card {
+    padding: 16px;
+    gap: 10px;
+    max-width: 320px;
+  }
+  .pin-brand-avatar, .pin-brand-logo {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 2px;
+  }
+  .pin-brand-title {
+    font-size: 17px;
+  }
+  .pin-dots-container {
+    margin: 4px 0;
+    gap: 10px;
+  }
+  .pin-dot {
+    width: 12px;
+    height: 12px;
+  }
+  .pin-numpad {
+    gap: 8px;
+  }
+  .numpad-btn {
+    height: 44px;
+    font-size: 17px;
+  }
+}
+

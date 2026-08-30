@@ -165,46 +165,6 @@ code {
   color: #ffffff;
 }
 
-/* Mobile Portrait Warning Overlay */
 .portrait-warning-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(9, 9, 11, 0.96);
-  z-index: 99999;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  text-align: center;
-}
-
-.portrait-warning-content {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 32px 24px;
-  border-radius: 16px;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.portrait-warning-icon {
-  font-size: 40px;
-  animation: rotateHint 2s infinite ease-in-out;
-}
-
-@keyframes rotateHint {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(90deg); }
-}
-
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .portrait-warning-overlay {
-    display: flex;
-  }
+  display: none !important;
 }

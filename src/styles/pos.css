@@ -162,14 +162,14 @@
 
 .menu-item-name {
   font-weight: 700;
-  font-size: 25px;
+  font-size: 17px;
   color: var(--text-main);
   display: flex;
   align-items: center;
 }
 
 .menu-item-desc {
-  font-size: 15px;
+  font-size: 13px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -178,7 +178,7 @@
 
 .menu-item-price {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 15px;
   color: #fafafa;
 }
 
@@ -186,7 +186,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -196,7 +196,7 @@
   border: 1px solid #3f3f46;
   border-radius: 4px;
   color: #fafafa;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -285,18 +285,18 @@
 
 .cart-item-title {
   font-weight: 700;
-  font-size: 25px;
+  font-size: 15px;
   color: #fafafa;
 }
 
 .cart-item-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tag-type, .tag-variant, .tag-topping {
-  font-size: 15px;
+  font-size: 11px;
   padding: 2px 6px;
   border-radius: 4px;
   background-color: var(--bg-muted);
@@ -315,7 +315,7 @@
 
 .cart-item-delete-btn {
   color: var(--text-light);
-  font-size: 15px;
+  font-size: 13px;
 }
 .cart-item-delete-btn:hover {
   color: var(--danger-color);
@@ -331,14 +331,14 @@
 
 .cart-item-total {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 14px;
   color: #fafafa;
 }
 
 .cart-qty-stepper {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   background-color: var(--bg-muted);
   border-radius: 6px;
   padding: 2px 6px;
@@ -347,54 +347,54 @@
 
 .qty-btn {
   font-weight: 800;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: #fafafa;
 }
 
 .qty-val {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 14px;
   color: #fafafa;
 }
 
 /* Discount & Checkout Footer */
 .cart-panel-footer {
   flex-shrink: 0;
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border-color);
   background-color: #09090b;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .discount-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .discount-label {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
 }
 
 .discount-helpers {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
 }
 
 .discount-helper-btn {
   flex: 1;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-surface);
   color: var(--text-muted);
-  border-radius: 6px;
-  font-size: 15px;
+  border-radius: 5px;
+  font-size: 12px;
   font-weight: 700;
   transition: all 0.15s ease;
 }
@@ -415,22 +415,22 @@
 
 .discount-input {
   width: 100%;
-  height: 36px;
-  padding: 0 28px 0 12px;
+  height: 32px;
+  padding: 0 26px 0 10px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-surface);
   color: var(--text-main);
   border-radius: 6px;
   text-align: left;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .percent-symbol {
   position: absolute;
   right: 10px;
-  top: 8px;
-  font-size: 20px;
+  top: 7px;
+  font-size: 14px;
   color: var(--text-muted);
   font-weight: 700;
 }
@@ -438,13 +438,13 @@
 .cart-calc-rows {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .calc-row {
   display: flex;
   justify-content: space-between;
-  font-size: 20px;
+  font-size: 13px;
   color: var(--text-muted);
 }
 
@@ -453,20 +453,20 @@
 }
 
 .calc-row.grand-total {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
   color: #fafafa;
   border-top: 1px solid var(--border-color);
-  padding-top: 8px;
-  margin-top: 4px;
+  padding-top: 6px;
+  margin-top: 2px;
 }
 
 .btn-pay-now {
   width: 100%;
-  height: 48px;
+  height: 44px;
   background-color: #fafafa;
   color: #09090b;
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 800;
   border-radius: 8px;
   letter-spacing: 0.5px;
@@ -718,4 +718,111 @@
 
 .pos-btn-secondary:hover {
   background-color: #3f3f46;
+}
+
+/* ═══════════════════════════════════════════════
+   Mobile Responsive POS Layout & Floating Cart
+   ═══════════════════════════════════════════════ */
+.mobile-floating-cart-bar {
+  display: none;
+}
+
+.mobile-cart-top-bar {
+  display: none;
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  .pos-view-split {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .pos-left-column {
+    width: 100%;
+    padding: 8px;
+    gap: 8px;
+    height: 100%;
+    border-right: none;
+  }
+
+  .pos-right-column {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 60;
+    border-left: none;
+    background-color: var(--bg-page);
+  }
+
+  .pos-right-column.mobile-show {
+    display: flex;
+  }
+
+  .mobile-cart-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background-color: #121214;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .btn-mobile-back-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background-color: #27272a;
+    border: 1px solid #3f3f46;
+    color: #fafafa;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .mobile-floating-cart-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 10px;
+    background-color: #18181b;
+    border-top: 1px solid #3f3f46;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.6);
+    z-index: 50;
+  }
+
+  .mobile-floating-cart-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background-color: #2563eb;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  }
+
+  .mobile-floating-cart-badge {
+    background-color: #ffffff;
+    color: #1d4ed8;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-right: 6px;
+  }
 }
