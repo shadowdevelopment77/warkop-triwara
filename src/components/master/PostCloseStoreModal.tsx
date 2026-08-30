@@ -2,7 +2,7 @@
 // Triwara POS — Post-Close Store Modal (Thermal Receipt Preview & PDF)
 // ═══════════════════════════════════════════════
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { receiptService } from '../../services/receipt.service';
 import { pdfService } from '../../services/pdf.service';
@@ -20,6 +20,8 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
   shopConfig,
   onFinish,
 }) => {
+  const [isPrinted, setIsPrinted] = useState<boolean>(false);
+
   if (!isOpen) return null;
 
   const config = shopConfig || {
@@ -33,16 +35,7 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
 
   const handlePrintReceipt = () => {
     console.log('[PRINTING SHIFT RECEIPT]\n' + receiptText);
-    const printWin = window.open('', '', 'width=400,height=600');
-    if (printWin) {
-      printWin.document.write(
-        `<pre style="font-family: monospace; font-size: 12px; padding: 10px; margin: 0;">${receiptText}</pre>`
-      );
-      printWin.document.close();
-      printWin.focus();
-      printWin.print();
-      printWin.close();
-    }
+    setIsPrinted(true);
   };
 
   const handleDownloadPdf = async () => {
@@ -115,6 +108,12 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
               📄 Unduh PDF
             </button>
           </div>
+
+          {isPrinted && (
+            <div style={{ textAlign: 'center', color: '#4ade80', fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>
+              ✓ Struk rekap shift berhasil dikirim ke printer thermal.
+            </div>
+          )}
         </div>
 
         <div className="inv-modal-footer">

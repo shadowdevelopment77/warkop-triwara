@@ -6,11 +6,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { shiftService } from '../../services/shift.service';
 import { pdfService } from '../../services/pdf.service';
-import { receiptService } from '../../services/receipt.service';
 import { configService } from '../../services/config.service';
 import { formatDateIndonesian } from '../../utils/date';
 import { formatRupiah } from '../../utils/currency';
 import { PaginationBar } from '../common/PaginationBar';
+import { ShiftReceiptModal } from './ShiftReceiptModal';
 
 interface ShiftHistoryPanelProps {
   onOpenNewShift?: () => void;
@@ -22,6 +22,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
   const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [previewReceiptShift, setPreviewReceiptShift] = useState<IShift | null>(null);
 
   const loadData = useCallback(async () => {
     const list = await shiftService.getShiftHistory(100);
@@ -42,18 +43,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
   };
 
   const handlePrintReceipt = (shift: IShift) => {
-    if (!shopConfig) return;
-    const text = receiptService.generateShiftReceiptText(shift, shopConfig);
-    const printWin = window.open('', '', 'width=400,height=600');
-    if (printWin) {
-      printWin.document.write(
-        `<pre style="font-family: monospace; font-size: 12px; padding: 10px; margin: 0;">${text}</pre>`
-      );
-      printWin.document.close();
-      printWin.focus();
-      printWin.print();
-      printWin.close();
-    }
+    setPreviewReceiptShift(shift);
   };
 
   // Filter based on single opening date (Waktu Buka)
@@ -135,7 +125,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
 
       {/* Shift Table Card */}
       <div className="shift-table-wrapper">
-        <div style={{ overflowX: 'auto', width: '100%' }}>
+        <div className="shift-table-scroll">
           <table className="shift-data-table">
             <thead>
               <tr>
@@ -247,6 +237,15 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Shift 58mm Thermal Receipt Preview Modal */}
+      {previewReceiptShift && (
+        <ShiftReceiptModal
+          shift={previewReceiptShift}
+          shopConfig={shopConfig}
+          onClose={() => setPreviewReceiptShift(null)}
+        />
+      )}
     </div>
   );
 };
