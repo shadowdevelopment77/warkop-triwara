@@ -110,6 +110,13 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
     loadPosData();
   }, [loadPosData]);
 
+  // Auto-close drawers, notifications, and reset folder expansion on tab switch
+  useEffect(() => {
+    setIsNotificationOpen(false);
+    setIsMasterOpen(false);
+    setIsProductFolderOpen(false);
+  }, [activeTab]);
+
   // Cart Operations
   const handleAddToCart = (item: ICartItem) => {
     // If identical variant exists, increment qty
