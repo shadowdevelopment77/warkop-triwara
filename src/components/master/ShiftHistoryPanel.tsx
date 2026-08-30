@@ -21,7 +21,6 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
   const [activeShift, setActiveShift] = useState<IShift | null>(null);
   const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
 
   const loadData = useCallback(async () => {
@@ -57,14 +56,8 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
     }
   };
 
-  // Filter based on cashier name and single opening date (Waktu Buka)
+  // Filter based on single opening date (Waktu Buka)
   const filteredShifts = shifts.filter((s) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      if (!s.cashierName.toLowerCase().includes(q) && !s.shiftNumber.toLowerCase().includes(q)) {
-        return false;
-      }
-    }
     if (selectedDate) {
       const openDate = new Date(s.openedAt).toISOString().split('T')[0];
       if (openDate !== selectedDate) {
@@ -111,22 +104,8 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = ({ onOpenNewS
         </div>
       )}
 
-      {/* Filter Toolbar: Search Kasir + Single Date Picker (Waktu Buka) */}
+      {/* Filter Toolbar: Single Date Picker (Waktu Buka) */}
       <div className="log-filter-toolbar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ minWidth: '220px', flex: 1 }}>
-          <input
-            type="text"
-            className="form-input"
-            style={{ height: '34px', fontSize: '12px' }}
-            placeholder="Cari nama kasir / no shift..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
-
         <div className="log-date-filter-box">
           <span style={{ fontSize: '12px', color: '#a1a1aa' }}>Waktu Buka:</span>
           <input
