@@ -14,6 +14,15 @@ interface TransactionHistoryPanelProps {
   onReprintOrder: (order: IOrder) => void;
 }
 
+type PeriodPreset = 'today' | 'month' | 'custom';
+
+const toInputDateString = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = ({
   onReprintOrder,
 }) => {
@@ -22,15 +31,17 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
 
   // Date filters (defaults to today)
-  const todayStr = new Date().toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState<string>(todayStr);
-  const [endDate, setEndDate] = useState<string>(todayStr);
+  const now = new Date();
+  const initialStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const initialEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  const [startDate, setStartDate] = useState<Date>(initialStart);
+  const [endDate, setEndDate] = useState<Date>(initialEnd);
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('today');
 
   const loadOrders = useCallback(async () => {
     try {
-      const start = startDate ? new Date(`${startDate}T00:00:00`) : undefined;
-      const end = endDate ? new Date(`${endDate}T23:59:59`) : undefined;
-      const list = await orderService.getOrders(start, end);
+      const list = await orderService.getOrders(startDate, endDate);
       setOrders(list);
     } catch (err) {
       console.error('Failed to load transaction history:', err);
@@ -41,20 +52,21 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     loadOrders();
   }, [loadOrders]);
 
-  const handleSetToday = () => {
-    const today = new Date().toISOString().split('T')[0];
-    setStartDate(today);
-    setEndDate(today);
+  const handleSelectPreset = (preset: 'today' | 'month') => {
+    setPeriodPreset(preset);
     setCurrentPage(1);
-  };
-
-  const handleSetThisMonth = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const today = now.toISOString().split('T')[0];
-    setStartDate(firstDay);
-    setEndDate(today);
-    setCurrentPage(1);
+    const cur = new Date();
+    if (preset === 'today') {
+      const start = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0);
+      const end = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 23, 59, 59);
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'month') {
+      const start = new Date(cur.getFullYear(), cur.getMonth(), 1, 0, 0, 0);
+      const end = new Date(cur.getFullYear(), cur.getMonth() + 1, 0, 23, 59, 59);
+      setStartDate(start);
+      setEndDate(end);
+    }
   };
 
   const handleConfirmVoid = async (reason: string) => {
@@ -83,10 +95,14 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           <label>Mulai:</label>
           <input
             type="date"
-            value={startDate}
+            value={toInputDateString(startDate)}
             onChange={(e) => {
-              setStartDate(e.target.value);
-              setCurrentPage(1);
+              if (e.target.value) {
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                setStartDate(new Date(y, m - 1, d, 0, 0, 0));
+                setPeriodPreset('custom');
+                setCurrentPage(1);
+              }
             }}
           />
         </div>
@@ -95,30 +111,32 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           <label>Sampai:</label>
           <input
             type="date"
-            value={endDate}
+            value={toInputDateString(endDate)}
             onChange={(e) => {
-              setEndDate(e.target.value);
-              setCurrentPage(1);
+              if (e.target.value) {
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                setEndDate(new Date(y, m - 1, d, 23, 59, 59));
+                setPeriodPreset('custom');
+                setCurrentPage(1);
+              }
             }}
           />
         </div>
 
-        <div className="report-preset-buttons">
-          <button
-            type="button"
-            className={`report-filter-pill ${startDate === todayStr && endDate === todayStr ? 'active' : ''}`}
-            onClick={handleSetToday}
-          >
-            Hari Ini
-          </button>
-          <button
-            type="button"
-            className="report-filter-pill"
-            onClick={handleSetThisMonth}
-          >
-            Bulan Ini
-          </button>
-        </div>
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'today' ? 'active' : ''}`}
+          onClick={() => handleSelectPreset('today')}
+        >
+          Hari Ini
+        </button>
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'month' ? 'active' : ''}`}
+          onClick={() => handleSelectPreset('month')}
+        >
+          Bulan Ini
+        </button>
       </div>
 
       {/* Transaction Table Card */}
