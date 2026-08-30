@@ -97,7 +97,37 @@ export interface IOrder {
   status: TransactionStatus;
   voidedAt?: Date;
   voidReason?: string;
+  shiftId?: number; // Linked active shift
+  processedBy?: string; // Cashier / staff name
   createdAt: Date;
+}
+
+export interface IStaff {
+  id?: number;
+  name: string;
+  pin: string; // 4-digit numeric string (e.g. '0000', '1234')
+  role: 'owner' | 'cashier';
+  active: boolean;
+  createdAt: Date;
+}
+
+export interface IShift {
+  id?: number;
+  shiftNumber: string; // e.g. SHF-20260830-001
+  cashierId: number;
+  cashierName: string;
+  openedAt: Date;
+  closedAt?: Date;
+  startingCash: number; // Kas awal modal kembalian
+  totalCashSales: number; // Penjualan tunai
+  totalQrisSales: number; // Penjualan QRIS
+  totalTransactions: number; // Jumlah order
+  totalVoided: number; // Jumlah void
+  expectedEndingCash?: number; // startingCash + totalCashSales
+  actualEndingCash?: number; // Dihitung fisik oleh kasir
+  cashDifference?: number; // actualEndingCash - expectedEndingCash
+  notes?: string;
+  status: 'open' | 'closed';
 }
 
 export interface IInventoryLog {

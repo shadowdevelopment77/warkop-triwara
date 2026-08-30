@@ -22,6 +22,26 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
     await database.ingredients.clear();
     await database.categories.clear();
     await database.shopConfig.clear();
+    await database.staff.clear();
+    await database.shifts.clear();
+
+    // Seed default staff (Owner + sample Cashier)
+    await database.staff.bulkAdd([
+      {
+        name: 'Owner Toko',
+        pin: '0000',
+        role: 'owner',
+        active: true,
+        createdAt: new Date(),
+      },
+      {
+        name: 'Budi (Kasir)',
+        pin: '1234',
+        role: 'cashier',
+        active: true,
+        createdAt: new Date(),
+      },
+    ]);
 
   // 2. Shop Configuration
   const defaultPinHash = await hashPin('0000');
@@ -530,5 +550,27 @@ export async function seedDatabaseIfEmpty(): Promise<void> {
   const count = await db.products.count();
   if (count === 0) {
     await resetAndSeedDatabase(db, 400);
+    return;
+  }
+
+  // Ensure default staff exists for existing databases upgrading to v2
+  const staffCount = await db.staff.count();
+  if (staffCount === 0) {
+    await db.staff.bulkAdd([
+      {
+        name: 'Owner Toko',
+        pin: '0000',
+        role: 'owner',
+        active: true,
+        createdAt: new Date(),
+      },
+      {
+        name: 'Budi (Kasir)',
+        pin: '1234',
+        role: 'cashier',
+        active: true,
+        createdAt: new Date(),
+      },
+    ]);
   }
 }

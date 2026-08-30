@@ -134,6 +134,47 @@ export class ReceiptService {
     lines.push('\n\n\n');
     return lines.join('\n');
   }
+
+  /**
+   * Generates formatted text receipt for Cashier Shift Summary (58mm thermal)
+   */
+  generateShiftReceiptText(shift: import('../types').IShift, config: IShopConfig): string {
+    const lines: string[] = [];
+    const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales);
+    const actual = shift.actualEndingCash ?? expected;
+    const diff = shift.cashDifference ?? (actual - expected);
+
+    lines.push(this.lineDivider('='));
+    lines.push(this.centerLine(config.appName || 'WARKOP TRIWARA'));
+    lines.push(this.centerLine('REKAP SHIFT KASIR'));
+    lines.push(this.lineDivider('='));
+    lines.push(`No Shift : #${shift.shiftNumber}`);
+    lines.push(`Kasir    : ${shift.cashierName}`);
+    lines.push(`Buka     : ${formatDateIndonesian(shift.openedAt)}`);
+    if (shift.closedAt) {
+      lines.push(`Tutup    : ${formatDateIndonesian(shift.closedAt)}`);
+    }
+    lines.push(this.lineDivider('-'));
+    lines.push(this.formatKeyValue('Kas Awal Modal', formatRupiah(shift.startingCash)));
+    lines.push(this.formatKeyValue('+ Total Tunai', formatRupiah(shift.totalCashSales)));
+    lines.push(this.lineDivider('-'));
+    lines.push(this.formatKeyValue('Uang Tunai Laci', formatRupiah(expected)));
+    lines.push(this.formatKeyValue('Fisik Dihitung', formatRupiah(actual)));
+    lines.push(this.formatKeyValue('Selisih Kas', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(+)' : '(-)'}`));
+    lines.push(this.lineDivider('-'));
+    lines.push(this.formatKeyValue('Penjualan QRIS', formatRupiah(shift.totalQrisSales)));
+    lines.push(this.formatKeyValue('Total Omset', formatRupiah(shift.totalCashSales + shift.totalQrisSales)));
+    lines.push(this.formatKeyValue('Pesanan Sukses', `${shift.totalTransactions} Order`));
+    lines.push(this.formatKeyValue('Pesanan Void', `${shift.totalVoided} Order`));
+    lines.push(this.lineDivider('='));
+    lines.push(this.centerLine('Tanda Tangan Kasir,'));
+    lines.push('\n\n');
+    lines.push(this.centerLine(`( ${shift.cashierName} )`));
+    lines.push(this.lineDivider('='));
+    lines.push('\n\n\n');
+
+    return lines.join('\n');
+  }
 }
 
 export const receiptService = new ReceiptService();

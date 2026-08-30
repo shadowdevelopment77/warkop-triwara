@@ -3,12 +3,14 @@
 // ═══════════════════════════════════════════════
 
 import React, { useState } from 'react';
+import type { IStaff } from '../../types';
 import { configService } from '../../services/config.service';
+import { staffService } from '../../services/staff.service';
 
 interface PinLockProps {
   appName: string;
   appLogo?: string;
-  onUnlocked: () => void;
+  onUnlocked: (staff: IStaff) => void;
 }
 
 export const PinLock: React.FC<PinLockProps> = ({ appName, appLogo, onUnlocked }) => {
@@ -24,11 +26,25 @@ export const PinLock: React.FC<PinLockProps> = ({ appName, appLogo, onUnlocked }
 
       if (newPin.length === 4) {
         try {
+          const staff = await staffService.authenticate(newPin);
+          if (staff) {
+            onUnlocked(staff);
+            return;
+          }
+
+          // Fallback to configService master PIN
           const isValid = await configService.verifyPin(newPin);
           if (isValid) {
-            onUnlocked();
+            const fallbackOwner: IStaff = {
+              name: 'Owner Toko',
+              pin: newPin,
+              role: 'owner',
+              active: true,
+              createdAt: new Date(),
+            };
+            onUnlocked(fallbackOwner);
           } else {
-            triggerError('PIN Salah. Coba lagi (default: 0000)');
+            triggerError('PIN Salah. Coba lagi (Owner: 0000 | Kasir: 1234)');
           }
         } catch {
           triggerError('Gagal memverifikasi PIN');

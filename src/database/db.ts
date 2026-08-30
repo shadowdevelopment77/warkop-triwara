@@ -12,6 +12,8 @@ import type {
   ILog,
   IShopConfig,
   IAppNotification,
+  IStaff,
+  IShift,
 } from '../types';
 
 export class TriwaraDatabase extends Dexie {
@@ -23,6 +25,8 @@ export class TriwaraDatabase extends Dexie {
   logs!: EntityTable<ILog, 'id'>;
   shopConfig!: EntityTable<IShopConfig, 'id'>;
   notifications!: EntityTable<IAppNotification, 'id'>;
+  staff!: EntityTable<IStaff, 'id'>;
+  shifts!: EntityTable<IShift, 'id'>;
 
   constructor() {
     super('TriwaraPOS');
@@ -36,6 +40,12 @@ export class TriwaraDatabase extends Dexie {
       logs: '++id, type, createdAt',
       shopConfig: '++id',
       notifications: '++id, type, isRead, createdAt',
+    });
+
+    this.version(2).stores({
+      orders: '++id, orderNumber, sequenceNumber, status, paymentMethod, shiftId, createdAt',
+      staff: '++id, pin, role, active',
+      shifts: '++id, shiftNumber, cashierName, status, openedAt, closedAt',
     });
   }
 }

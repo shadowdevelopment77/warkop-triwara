@@ -7,7 +7,7 @@ import { PinLock } from './components/auth/PinLock';
 import { AppShell } from './components/layout/AppShell';
 import { configService } from './services/config.service';
 import { seedDatabaseIfEmpty } from './database/seed';
-import type { IShopConfig } from './types';
+import type { IShopConfig, IStaff } from './types';
 import './styles/global.css';
 import './styles/layout.css';
 import './styles/pos.css';
@@ -18,27 +18,28 @@ import './styles/settings.css';
 import './styles/logs.css';
 import './styles/auth.css';
 import './styles/dialog.css';
+import './styles/shifts.css';
 
 export function App() {
-  const [isLocked, setIsLocked] = useState<boolean>(true);
+  const [currentUser, setCurrentUser] = useState<IStaff | null>(null);
   const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
 
   useEffect(() => {
     seedDatabaseIfEmpty().finally(() => {
       configService.getConfig().then(setShopConfig).catch(console.error);
     });
-  }, [isLocked]);
+  }, [currentUser]);
 
   return (
     <div className="triwara-pos-app">
-      {isLocked ? (
+      {!currentUser ? (
         <PinLock
           appName={shopConfig?.appName || 'Triwara POS'}
           appLogo={shopConfig?.appLogoBase64}
-          onUnlocked={() => setIsLocked(false)}
+          onUnlocked={(staff) => setCurrentUser(staff)}
         />
       ) : (
-        <AppShell onLockApp={() => setIsLocked(true)} />
+        <AppShell currentUser={currentUser} onLockApp={() => setCurrentUser(null)} />
       )}
     </div>
   );

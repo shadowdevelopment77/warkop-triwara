@@ -35,24 +35,61 @@ import { orderService } from '../../services/order.service';
 import { receiptService, type ReceiptType } from '../../services/receipt.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
-import type { IAppNotification } from '../../types';
+import type { IAppNotification, IStaff, IShift } from '../../types';
 import { DialogModal } from '../common/DialogModal';
+import { shiftService } from '../../services/shift.service';
+import { OpenShiftModal } from '../master/OpenShiftModal';
+import { CloseShiftModal } from '../master/CloseShiftModal';
+import { ShiftHistoryPanel } from '../master/ShiftHistoryPanel';
 
 interface AppShellProps {
+  currentUser: IStaff;
   onLockApp: () => void;
 }
 
-export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
+export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) => {
   // Navigation & Drawer
   const [activeTab, setActiveTab] = useState<MasterTab>('pos');
   const [isMasterOpen, setIsMasterOpen] = useState<boolean>(false);
   const [isProductFolderOpen, setIsProductFolderOpen] = useState<boolean>(false);
 
+  // Shift State
+  const [activeShift, setActiveShift] = useState<IShift | null>(null);
+  const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState<boolean>(false);
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState<boolean>(false);
+
+  const loadActiveShift = useCallback(async () => {
+    try {
+      const shift = await shiftService.getActiveShift();
+      setActiveShift(shift);
+    } catch (err) {
+      console.error('Failed to load active shift:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadActiveShift();
+  }, [loadActiveShift]);
+
+  // RBAC Guard: Restrict non-owners from reports, products recipe editor, and settings
+  useEffect(() => {
+    if (
+      currentUser.role !== 'owner' &&
+      (activeTab === 'reports' || activeTab === 'products' || activeTab === 'settings')
+    ) {
+      setActiveTab('pos');
+    }
+  }, [activeTab, currentUser]);
+
   // Dialog Modal state
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
+    type?: 'alert' | 'confirm';
     title: string;
     message: string;
+    isDanger?: boolean;
+    confirmText?: string;
+    onConfirm?: () => void;
   }>({
     isOpen: false,
     title: '',
@@ -169,14 +206,30 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
     paymentMethod: PaymentMethod,
     paymentAmount: number
   ) => {
+    if (!activeShift) {
+      setDialogConfig({
+        isOpen: true,
+        type: 'confirm',
+        title: 'Shift Kasir Belum Dibuka',
+        message: 'Shift kasir belum dibuka. Buka shift kasir sekarang agar transaksi tercatat ke laci uang petugas?',
+        confirmText: 'Buka Shift',
+        onConfirm: () => {
+          setIsOpenShiftModalOpen(true);
+        },
+      });
+      return;
+    }
+
     try {
       const { order, lowStockAlerts } = await orderService.createOrder(
         cartItems,
         customerName,
         discountPercent,
         paymentMethod,
-        paymentAmount
+        paymentAmount,
+        currentUser.name
       );
+      loadActiveShift();
 
       // Record 24h notification
       await notificationService.addNotification(
@@ -305,6 +358,7 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
       <MasterDrawer
         isOpen={isMasterOpen}
         activeTab={activeTab}
+        currentUser={currentUser}
         isProductFolderOpen={isProductFolderOpen}
         onToggleProductFolder={() => setIsProductFolderOpen((prev) => !prev)}
         onClose={() => setIsMasterOpen(false)}
@@ -320,6 +374,47 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
           <div className="pos-view-split">
             {/* Left Column: Search + Horizontal Category Filter + Vertical Menu Sidebar */}
             <div className="pos-left-column">
+              {/* POS Active Shift Action Banner */}
+              <div
+                className={`shift-pos-banner ${activeShift ? 'active' : 'closed'}`}
+                style={{ marginBottom: '8px' }}
+              >
+                {activeShift ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span>🟢 <strong>Shift #{activeShift.shiftNumber}</strong> ({activeShift.cashierName})</span>
+                    <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
+                      Kas Awal: {formatRupiah(activeShift.startingCash)} | Tunai: {formatRupiah(activeShift.totalCashSales)}
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <span>⚪ <strong>Shift Kasir Belum Dibuka</strong></span>
+                  </div>
+                )}
+
+                <div>
+                  {!activeShift ? (
+                    <button
+                      type="button"
+                      className="shift-btn-primary"
+                      style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
+                      onClick={() => setIsOpenShiftModalOpen(true)}
+                    >
+                      🟢 Buka Shift
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="shift-btn-danger"
+                      style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
+                      onClick={() => setIsCloseShiftModalOpen(true)}
+                    >
+                      🔴 Tutup Shift
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <SearchBar value={searchTerm} onChange={setSearchTerm} />
 
               <CategoryFilter
@@ -346,6 +441,12 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
               onProceedToPayment={() => setIsPaymentModalOpen(true)}
             />
           </div>
+        )}
+
+        {activeTab === 'shifts' && (
+          <ShiftHistoryPanel
+            onOpenNewShift={() => setIsOpenShiftModalOpen(true)}
+          />
         )}
 
         {activeTab === 'inventory' && <InventoryPanel />}
@@ -386,13 +487,42 @@ export const AppShell: React.FC<AppShellProps> = ({ onLockApp }) => {
         />
       )}
 
-      {/* Reusable Dialog Modal for POS Alerts */}
+      {/* Open Shift Modal */}
+      {isOpenShiftModalOpen && (
+        <OpenShiftModal
+          isOpen={isOpenShiftModalOpen}
+          staff={currentUser}
+          onClose={() => setIsOpenShiftModalOpen(false)}
+          onOpened={(newShift) => {
+            setActiveShift(newShift);
+            setIsOpenShiftModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Close Shift Modal */}
+      {isCloseShiftModalOpen && activeShift && (
+        <CloseShiftModal
+          isOpen={isCloseShiftModalOpen}
+          shift={activeShift}
+          onClose={() => setIsCloseShiftModalOpen(false)}
+          onClosed={() => {
+            setActiveShift(null);
+            setIsCloseShiftModalOpen(false);
+            loadActiveShift();
+          }}
+        />
+      )}
+
+      {/* Reusable Dialog Modal for Alerts & Confirmations */}
       <DialogModal
         isOpen={dialogConfig.isOpen}
-        type="alert"
+        type={dialogConfig.type || 'alert'}
         title={dialogConfig.title}
         message={dialogConfig.message}
-        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        confirmText={dialogConfig.confirmText}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={dialogConfig.onConfirm || (() => setDialogConfig((prev) => ({ ...prev, isOpen: false })))}
         onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>

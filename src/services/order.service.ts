@@ -41,7 +41,8 @@ export class OrderService {
     customerName: string,
     discountPercent: number,
     paymentMethod: 'cash' | 'qris',
-    paymentAmount: number
+    paymentAmount: number,
+    processedBy?: string
   ): Promise<{ order: IOrder; lowStockAlerts: string[] }> {
     if (cartItems.length === 0) {
       throw new Error('Keranjang belanja masih kosong');
@@ -104,6 +105,12 @@ export class OrderService {
     const changeAmount = paymentMethod === 'cash' ? Math.max(0, paymentAmount - total) : 0;
     const profit = total - hppTotal;
 
+    // Check active shift
+    const activeShift = await this.database.shifts
+      .where('status')
+      .equals('open')
+      .first();
+
     const orderData: IOrder = {
       orderNumber,
       sequenceNumber,
@@ -119,12 +126,30 @@ export class OrderService {
       paymentAmount: paymentMethod === 'cash' ? paymentAmount : total,
       changeAmount,
       status: 'completed',
+      shiftId: activeShift?.id,
+      processedBy: processedBy || activeShift?.cashierName || 'Kasir',
       createdAt: new Date(),
     };
 
     // Save order & deduct stock in Dexie transaction
     const orderId = await this.database.orders.add(orderData);
     const savedOrder = { ...orderData, id: orderId };
+
+    // Record to active shift in DB
+    if (activeShift && activeShift.id) {
+      const isCash = paymentMethod === 'cash';
+      const newCash = activeShift.totalCashSales + (isCash ? total : 0);
+      const newQris = activeShift.totalQrisSales + (!isCash ? total : 0);
+      const newCount = activeShift.totalTransactions + 1;
+      const newExpected = activeShift.startingCash + newCash;
+
+      await this.database.shifts.update(activeShift.id, {
+        totalCashSales: newCash,
+        totalQrisSales: newQris,
+        totalTransactions: newCount,
+        expectedEndingCash: newExpected,
+      });
+    }
 
     // Deduct stock and get stock alert notifications
     const lowStockAlerts = await this.hppService.deductInventoryForOrder(savedOrder);
@@ -144,6 +169,25 @@ export class OrderService {
       voidedAt: now,
       voidReason: reason.trim() || 'Void oleh kasir',
     });
+
+    // Adjust shift figures if linked to a shift
+    if (order.shiftId) {
+      const shift = await this.database.shifts.get(order.shiftId);
+      if (shift && shift.id) {
+        const isCash = order.paymentMethod === 'cash';
+        const newCash = Math.max(0, shift.totalCashSales - (isCash ? order.total : 0));
+        const newQris = Math.max(0, shift.totalQrisSales - (!isCash ? order.total : 0));
+        const newVoided = shift.totalVoided + 1;
+        const newExpected = shift.startingCash + newCash;
+
+        await this.database.shifts.update(shift.id, {
+          totalCashSales: newCash,
+          totalQrisSales: newQris,
+          totalVoided: newVoided,
+          expectedEndingCash: newExpected,
+        });
+      }
+    }
 
     // Restore inventory
     await this.hppService.restoreInventoryForOrder(order);

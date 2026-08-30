@@ -8,11 +8,13 @@ import { configService } from '../../services/config.service';
 import { notificationService } from '../../services/notification.service';
 import { compressImage } from '../../utils/image';
 import { DialogModal } from '../common/DialogModal';
+import { StaffManagerModal } from './StaffManagerModal';
 type SettingModalType = 'pin' | 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
 export const SettingsPanel: React.FC = () => {
   const [config, setConfig] = useState<IShopConfig | null>(null);
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
 
   const receiptFileInputRef = useRef<HTMLInputElement>(null);
@@ -281,10 +283,22 @@ export const SettingsPanel: React.FC = () => {
         <button
           type="button"
           className="settings-trigger-card"
+          onClick={() => setIsStaffModalOpen(true)}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">2. Kelola Karyawan &amp; Hak Akses PIN</h3>
+            <p className="settings-card-desc">Tambah kasir baru, update nama staf, dan ganti PIN</p>
+          </div>
+          <span className="settings-card-arrow">➔</span>
+        </button>
+
+        <button
+          type="button"
+          className="settings-trigger-card"
           onClick={() => setActiveModal('printer')}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title">2. Koneksi Printer Thermal</h3>
+            <h3 className="settings-card-title">3. Koneksi Printer Thermal</h3>
             <p className="settings-card-desc">Atur sambungan Bluetooth printer kasir (BT-58D)</p>
           </div>
           <span className="settings-card-arrow">➔</span>
@@ -771,6 +785,12 @@ export const SettingsPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Staff Management Modal (Owner Only) */}
+      <StaffManagerModal
+        isOpen={isStaffModalOpen}
+        onClose={() => setIsStaffModalOpen(false)}
+      />
 
       {/* Reusable Dialog Modal */}
       <DialogModal
