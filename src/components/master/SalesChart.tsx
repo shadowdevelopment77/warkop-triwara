@@ -1,39 +1,60 @@
 // ═══════════════════════════════════════════════
-// Triwara POS — Pure SVG Responsive Sales Chart Component
+// Triwara POS — Pure SVG Smooth Line & Area Chart Component
 // ═══════════════════════════════════════════════
 
 import React, { useState } from 'react';
-import type { ISalesChartResult, IChartDataPoint } from '../../services/report.service';
+import type { ISalesChartResult } from '../../services/report.service';
 import { formatRupiah } from '../../utils/currency';
 
 interface SalesChartProps {
   data: ISalesChartResult;
 }
 
+/**
+ * Calculates a clean rounded ceiling number for the Y-axis.
+ * Handles numbers dynamically:
+ * e.g. 350,000 -> 400,000 | 4,800,000 -> 5,000,000 | 18,000,000 -> 20,000,000
+ */
+function getNiceCeiling(val: number): number {
+  if (val <= 0) return 50000;
+  const exponent = Math.floor(Math.log10(val));
+  const fraction = val / Math.pow(10, exponent);
+  let niceFraction = 1;
+  if (fraction <= 1) niceFraction = 1;
+  else if (fraction <= 2) niceFraction = 2;
+  else if (fraction <= 2.5) niceFraction = 2.5;
+  else if (fraction <= 5) niceFraction = 5;
+  else niceFraction = 10;
+  return niceFraction * Math.pow(10, exponent);
+}
+
 export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
-  const [hoveredPoint, setHoveredPoint] = useState<IChartDataPoint | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const { points, peakPoint, mode, modeLabel, totalOmset } = data;
 
-  // Compute maximum omset for Y scale (minimum 10,000 to prevent divide by zero)
-  const maxOmset = Math.max(
-    10000,
-    ...points.map((p) => p.omset)
-  );
+  // Compute maximum omset and clean ceiling for dynamic Y-axis auto-rescaling
+  const maxDataVal = Math.max(0, ...points.map((p) => p.omset));
+  const ceilingOmset = getNiceCeiling(maxDataVal || 50000);
 
   // SVG Chart Dimensions
   const svgWidth = 800;
   const svgHeight = 220;
   const paddingLeft = 70;
-  const paddingRight = 20;
+  const paddingRight = 25;
   const paddingTop = 25;
   const paddingBottom = 40;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
+  const baselineY = paddingTop + chartHeight;
 
   // Format compact Rupiah for Y-axis ticks
   const formatCompactRp = (val: number): string => {
+    if (val >= 1000000000) {
+      const m = (val / 1000000000).toFixed(1).replace(/\.0$/, '');
+      return `Rp ${m}M`;
+    }
     if (val >= 1000000) {
       const jt = (val / 1000000).toFixed(1).replace(/\.0$/, '');
       return `Rp ${jt}jt`;
@@ -45,29 +66,72 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
     return `Rp ${val}`;
   };
 
-  // Y-axis grid ticks (4 levels: 0, 33%, 66%, 100%)
-  const yTicks = [0, maxOmset * 0.33, maxOmset * 0.66, maxOmset];
+  // Dynamic Y-axis grid ticks (5 levels: 0%, 25%, 50%, 75%, 100%)
+  const yTicks = [
+    0,
+    ceilingOmset * 0.25,
+    ceilingOmset * 0.5,
+    ceilingOmset * 0.75,
+    ceilingOmset,
+  ];
 
-  // Bar sizing calculation
-  const totalSlots = points.length;
-  const slotWidth = chartWidth / totalSlots;
-  const barWidth = Math.max(8, Math.min(32, slotWidth * 0.65));
+  // Map data points to SVG coordinates (X, Y)
+  const totalPoints = points.length;
+  const stepX = totalPoints > 1 ? chartWidth / (totalPoints - 1) : chartWidth / 2;
 
-  // Determine which X-axis labels to display to avoid overlapping
+  const coordinates = points.map((pt, idx) => {
+    const x = paddingLeft + (totalPoints > 1 ? idx * stepX : chartWidth / 2);
+    const yRatio = ceilingOmset > 0 && totalOmset > 0 ? pt.omset / ceilingOmset : 0;
+    const y = baselineY - yRatio * chartHeight;
+    return { x, y, pt, idx };
+  });
+
+  // Build smooth cubic bezier curve path through coordinates
+  const buildSmoothPath = (coords: Array<{ x: number; y: number }>): string => {
+    if (coords.length === 0) return '';
+    if (coords.length === 1) return `M ${coords[0].x} ${coords[0].y}`;
+
+    let path = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      const p0 = i > 0 ? coords[i - 1] : coords[i];
+      const p1 = coords[i];
+      const p2 = coords[i + 1];
+      const p3 = i < coords.length - 2 ? coords[i + 2] : p2;
+
+      // Catmull-Rom to Cubic Bezier conversion
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return path;
+  };
+
+  const linePathD = buildSmoothPath(coordinates);
+  const firstX = coordinates[0]?.x || paddingLeft;
+  const lastX = coordinates[coordinates.length - 1]?.x || paddingLeft + chartWidth;
+  const areaPathD = `${linePathD} L ${lastX} ${baselineY} L ${firstX} ${baselineY} Z`;
+
+  // Determine which X-axis labels to display to prevent crowding
   const shouldShowLabel = (idx: number): boolean => {
     if (mode === 'hourly') {
       // Show every 3 hours: 00, 03, 06, 09, 12, 15, 18, 21, and last (23)
       return idx % 3 === 0 || idx === 23;
     }
-    return true; // For daily (<= 7) and weekly (4), show all labels
+    return true;
   };
+
+  const activePoint = hoveredIndex !== null ? coordinates[hoveredIndex] : null;
 
   return (
     <div className="sales-chart-card">
       {/* Chart Header Bar */}
       <div className="sales-chart-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <h3 className="sales-chart-title">📊 Grafik Omset Penjualan</h3>
+          <h3 className="sales-chart-title">📈 Tren Omset Penjualan</h3>
           <span className="sales-chart-mode-tag">{modeLabel}</span>
         </div>
 
@@ -80,17 +144,19 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
 
       {/* Active Hover Tooltip Banner */}
       <div className="sales-chart-tooltip-bar">
-        {hoveredPoint ? (
+        {activePoint ? (
           <span>
-            <strong style={{ color: hoveredPoint.isPeak ? '#4ade80' : '#60a5fa' }}>
-              {hoveredPoint.fullLabel}
+            <strong style={{ color: activePoint.pt.isPeak ? '#4ade80' : '#60a5fa' }}>
+              {activePoint.pt.fullLabel}
             </strong>
-            : <strong>{formatRupiah(hoveredPoint.omset)}</strong> ({hoveredPoint.orderCount} pesanan)
-            {hoveredPoint.isPeak && <span style={{ color: '#4ade80', marginLeft: '6px' }}>(Puncak)</span>}
+            : <strong>{formatRupiah(activePoint.pt.omset)}</strong> ({activePoint.pt.orderCount} pesanan)
+            {activePoint.pt.isPeak && (
+              <span style={{ color: '#4ade80', marginLeft: '6px', fontWeight: 700 }}>(🔥 Puncak)</span>
+            )}
           </span>
         ) : (
           <span style={{ color: '#71717a' }}>
-            Arahkan kursor / tap batang grafik untuk melihat rincian omset.
+            Geser kursor / sentuh titik kurva untuk melihat rincian omset.
           </span>
         )}
       </div>
@@ -103,28 +169,24 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            {/* Standard Bar Gradient */}
-            <linearGradient id="barGradientStandard" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.7" />
+            {/* Area Gradient Fill (Neon Blue to Transparent) */}
+            <linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.0" />
             </linearGradient>
 
-            {/* Peak Bar Gradient */}
-            <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.75" />
-            </linearGradient>
-
-            {/* Hover Bar Gradient */}
-            <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.9" />
+            {/* Line Stroke Gradient */}
+            <linearGradient id="lineStrokeGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#93c5fd" />
             </linearGradient>
           </defs>
 
-          {/* Horizontal Gridlines & Y-Axis Labels */}
+          {/* Horizontal Gridlines & Auto-Rescaling Y-Axis Labels */}
           {yTicks.map((val, i) => {
-            const y = paddingTop + chartHeight - (val / maxOmset) * chartHeight;
+            const y = baselineY - (val / ceilingOmset) * chartHeight;
             return (
               <g key={i}>
                 <line
@@ -137,7 +199,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                   strokeWidth="1"
                 />
                 <text
-                  x={paddingLeft - 8}
+                  x={paddingLeft - 10}
                   y={y + 4}
                   textAnchor="end"
                   fill="#71717a"
@@ -153,78 +215,111 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
           {/* Sumbu X Baseline */}
           <line
             x1={paddingLeft}
-            y1={paddingTop + chartHeight}
+            y1={baselineY}
             x2={svgWidth - paddingRight}
-            y2={paddingTop + chartHeight}
+            y2={baselineY}
             stroke="#3f3f46"
             strokeWidth="1.5"
           />
 
-          {/* Chart Bars */}
-          {points.map((pt, idx) => {
-            const slotCenterX = paddingLeft + idx * slotWidth + slotWidth / 2;
-            const barX = slotCenterX - barWidth / 2;
-            const barH = totalOmset > 0 && pt.omset > 0 ? (pt.omset / maxOmset) * chartHeight : 2;
-            const barY = paddingTop + chartHeight - barH;
-            const isHovered = hoveredPoint?.label === pt.label;
+          {/* 1. Shaded Gradient Area Under Curve */}
+          {totalOmset > 0 && (
+            <path
+              d={areaPathD}
+              fill="url(#lineAreaGradient)"
+              style={{ transition: 'all 0.3s ease' }}
+            />
+          )}
 
-            let fill = 'url(#barGradientStandard)';
-            if (pt.isPeak) fill = 'url(#barGradientPeak)';
-            if (isHovered) fill = 'url(#barGradientHover)';
+          {/* 2. Main Curved Line Stroke */}
+          {totalOmset > 0 && (
+            <path
+              d={linePathD}
+              fill="none"
+              stroke="url(#lineStrokeGradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.35))' }}
+            />
+          )}
+
+          {/* 3. Active Crosshair Guideline */}
+          {activePoint && (
+            <g>
+              <line
+                x1={activePoint.x}
+                y1={paddingTop}
+                x2={activePoint.x}
+                y2={baselineY}
+                stroke="#60a5fa"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
+                opacity="0.75"
+              />
+            </g>
+          )}
+
+          {/* 4. Interactive Data Points & Hover Targets */}
+          {coordinates.map((coord, idx) => {
+            const isHovered = hoveredIndex === idx;
+            const isPeak = coord.pt.isPeak;
 
             return (
               <g
                 key={idx}
-                onMouseEnter={() => setHoveredPoint(pt)}
-                onMouseLeave={() => setHoveredPoint(null)}
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Transparent hit area for easy touch/mouse hover */}
+                {/* Wide transparent touch/click zone */}
                 <rect
-                  x={slotCenterX - slotWidth / 2}
+                  x={coord.x - stepX / 2}
                   y={paddingTop}
-                  width={slotWidth}
+                  width={stepX}
                   height={chartHeight + paddingBottom}
                   fill="transparent"
                 />
 
-                {/* Animated Rounded Bar */}
-                <rect
-                  x={barX}
-                  y={barY}
-                  width={barWidth}
-                  height={barH}
-                  rx="3"
-                  ry="3"
-                  fill={fill}
-                  stroke={isHovered ? '#ffffff' : pt.isPeak ? '#86efac' : 'none'}
-                  strokeWidth={isHovered ? '1.5' : '1'}
-                  opacity={hoveredPoint && !isHovered ? 0.6 : 1}
-                  style={{ transition: 'all 0.2s ease' }}
-                />
-
-                {/* Optional Peak Crown Indicator */}
-                {pt.isPeak && (
+                {/* Outer Glow Ring for Peak or Hovered Point */}
+                {(isHovered || isPeak) && totalOmset > 0 && coord.pt.omset > 0 && (
                   <circle
-                    cx={slotCenterX}
-                    cy={Math.max(paddingTop + 5, barY - 6)}
-                    r="3.5"
-                    fill="#4ade80"
+                    cx={coord.x}
+                    cy={coord.y}
+                    r={isHovered ? 8 : 6}
+                    fill="none"
+                    stroke={isPeak ? '#4ade80' : '#60a5fa'}
+                    strokeWidth="2"
+                    opacity={isHovered ? 1 : 0.6}
+                    style={{ transition: 'all 0.15s ease' }}
+                  />
+                )}
+
+                {/* Center Point Dot */}
+                {totalOmset > 0 && (
+                  <circle
+                    cx={coord.x}
+                    cy={coord.y}
+                    r={isHovered ? 5 : isPeak ? 4.5 : 3}
+                    fill={isPeak ? '#4ade80' : isHovered ? '#ffffff' : '#3b82f6'}
+                    stroke="#09090b"
+                    strokeWidth="1.5"
+                    style={{ transition: 'all 0.15s ease' }}
                   />
                 )}
 
                 {/* X-Axis Tick Label */}
                 {shouldShowLabel(idx) && (
                   <text
-                    x={slotCenterX}
-                    y={paddingTop + chartHeight + 18}
+                    x={coord.x}
+                    y={baselineY + 18}
                     textAnchor="middle"
-                    fill={pt.isPeak ? '#4ade80' : isHovered ? '#fafafa' : '#a1a1aa'}
-                    fontWeight={pt.isPeak || isHovered ? 700 : 400}
+                    fill={isPeak ? '#4ade80' : isHovered ? '#fafafa' : '#a1a1aa'}
+                    fontWeight={isPeak || isHovered ? 700 : 400}
                     fontSize={mode === 'hourly' ? '10' : '11'}
                     fontFamily="sans-serif"
                   >
-                    {pt.label}
+                    {coord.pt.label}
                   </text>
                 )}
               </g>
