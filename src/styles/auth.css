@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════
+   Triwara POS — Authentication & PIN Lock Scoped Styles
+   ═══════════════════════════════════════════════ */
+
+.pin-lock-overlay {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.pin-lock-card {
+  background-color: #121214;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.pin-lock-card.shake {
+  animation: pin-shake 0.4s ease-in-out;
+}
+
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
+
+.pin-lock-brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pin-brand-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #27272a;
+  color: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.pin-brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+
+.pin-brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fafafa;
+}
+
+.pin-brand-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pin-dots-container {
+  display: flex;
+  gap: 16px;
+  margin: 10px 0;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background-color: transparent;
+  transition: all 0.15s ease;
+}
+.pin-dot.filled {
+  background-color: #fafafa;
+  border-color: #fafafa;
+}
+
+.pin-error-text {
+  color: var(--danger-color);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pin-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.numpad-btn {
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fafafa;
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+.numpad-btn:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: #52525b;
+}
+.numpad-btn:active {
+  background-color: #fafafa;
+  color: #09090b;
+}
+.numpad-btn.action {
+  font-size: 16px;
+  color: var(--text-muted);
+}

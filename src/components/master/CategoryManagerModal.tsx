@@ -74,21 +74,18 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="master-modal-card"
+        className="menu-modal-card"
         style={{ maxWidth: '460px', width: '90%' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="master-modal-header">
-          <div>
-            <h3 className="master-modal-title">Kelola Kategori Menu</h3>
-            <span className="master-modal-subtitle">Tambah kategori baru atau hapus kategori lama</span>
-          </div>
+        <div className="menu-modal-header">
+          <h3 className="menu-modal-title">Kelola Kategori Menu</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
         </div>
 
-        <div className="master-modal-body" style={{ padding: '20px' }}>
+        <div className="menu-modal-body" style={{ padding: '20px' }}>
           {errorMsg && <div className="form-error-alert" style={{ marginBottom: '12px' }}>{errorMsg}</div>}
           {successMsg && (
             <div
@@ -116,7 +113,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
               onChange={(e) => setNewCatName(e.target.value)}
               style={{ flex: 1 }}
             />
-            <button type="submit" className="master-btn-primary" style={{ whiteSpace: 'nowrap' }}>
+            <button type="submit" className="menu-btn-primary" style={{ whiteSpace: 'nowrap' }}>
               + Tambah
             </button>
           </form>
@@ -181,8 +178,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
           </div>
         </div>
 
-        <div className="master-modal-footer">
-          <button type="button" className="master-btn-secondary" onClick={onClose}>
+        <div className="menu-modal-footer">
+          <button type="button" className="menu-btn-secondary" onClick={onClose}>
             Selesai
           </button>
         </div>

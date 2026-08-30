@@ -149,18 +149,15 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
   return (
     <>
       <div className="modal-backdrop" onClick={onClose}>
-        <div className="master-modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
-          <div className="master-modal-header">
-            <div>
-              <h3 className="master-modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
-              <span className="master-modal-subtitle">Atur detail bahan baku, satuan, &amp; kalkulasi biaya modal</span>
-            </div>
+        <div className="inv-modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="inv-modal-header">
+            <h3 className="inv-modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
             <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
               ✕
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="master-modal-body">
+          <form onSubmit={handleSubmit} className="inv-modal-body">
           {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           <div className="form-group">
@@ -207,7 +204,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
           <div className="form-row two-cols">
             <div className="form-group">
-              <label className="form-label">Stok Fisik ({unit})</label>
+              <label className="form-label">Stock ({unit})</label>
               <input
                 type="number"
                 className="form-input"
@@ -219,7 +216,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             </div>
 
             <div className="form-group">
-              <label className="form-label">Batas Minimal Alert ({unit})</label>
+              <label className="form-label">Batas Minimal ({unit})</label>
               <input
                 type="number"
                 className="form-input"
@@ -273,23 +270,23 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             </div>
 
             <div className="calc-result-badge">
-              <span>Hasil Cost per {unit}:</span>
+              <span>Hasil Cost per {unit}: </span>
               <strong>
                 {formatRupiah(calculatedCostPerUnit)} / {unit}
               </strong>
             </div>
           </div>
 
-            <div className="master-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
+            <div className="inv-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
               {isEditing && (
-                <button type="button" className="master-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                <button type="button" className="inv-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
                   Hapus Bahan
                 </button>
               )}
-              <button type="button" className="master-btn-secondary" onClick={onClose}>
+              <button type="button" className="inv-btn-secondary" onClick={onClose}>
                 Batal
               </button>
-              <button type="submit" className="master-btn-primary">
+              <button type="submit" className="inv-btn-primary">
                 {isEditing ? 'Simpan Perubahan' : 'Tambah Bahan'}
               </button>
             </div>

@@ -68,10 +68,10 @@ export const MenuPanel: React.FC = () => {
     <div className="menu-panel-layout">
       {/* Left Sidebar: Search, Add Button & Vertical Menu List */}
       <aside className="menu-panel-sidebar">
-        <div className="sidebar-header">
+        <div className="menu-sidebar-header">
           <input
             type="text"
-            className="search-input"
+            className="menu-search-input"
             placeholder="Cari menu..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -79,7 +79,7 @@ export const MenuPanel: React.FC = () => {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
-              className="master-btn-primary"
+              className="menu-btn-primary"
               style={{ flex: 1 }}
               onClick={() => {
                 setSelectedProduct(null);
@@ -90,7 +90,7 @@ export const MenuPanel: React.FC = () => {
             </button>
             <button
               type="button"
-              className="master-btn-secondary"
+              className="menu-btn-secondary"
               onClick={() => setIsCategoryManagerOpen(true)}
               title="Kelola Kategori Menu (Tambah / Hapus)"
             >
@@ -123,12 +123,12 @@ export const MenuPanel: React.FC = () => {
 
         {selectedProduct && dineHpp && takeHpp ? (
 
-          <div className="product-detail-card">
+          <div className="menu-detail-card">
             {/* Top-Right Action Row */}
-            <div className="detail-card-top-actions">
+            <div className="menu-detail-top-actions">
               <button
                 type="button"
-                className="master-btn-primary"
+                className="menu-btn-primary"
                 onClick={() => setIsEditorOpen(true)}
               >
                 ✏️ Edit Resep &amp; Menu
@@ -136,15 +136,15 @@ export const MenuPanel: React.FC = () => {
             </div>
 
             {/* Centered Hero Header */}
-            <div className="detail-card-hero-center">
-              <h3 className="detail-title-center">{selectedProduct.name}</h3>
-              <span className="detail-price-center">Harga Jual: {formatRupiah(selectedProduct.price)}</span>
+            <div className="menu-detail-hero-center">
+              <h3 className="menu-detail-title">{selectedProduct.name}</h3>
+              <span className="menu-detail-price">Harga Jual: {formatRupiah(selectedProduct.price)}</span>
             </div>
 
             {/* HPP Cards */}
-            <div className="hpp-summary-grid">
-              <div className="hpp-info-box dine-in">
-                <span className="box-title">Dine-In</span>
+            <div className="menu-hpp-grid">
+              <div className="menu-hpp-box dine-in">
+                <span className="menu-box-title">Dine-In</span>
                 <strong style={{ fontSize: '18px', color: '#fafafa' }}>
                   HPP: {formatRupiah(dineHpp.totalHpp)}
                 </strong>
@@ -153,8 +153,8 @@ export const MenuPanel: React.FC = () => {
                 </span>
               </div>
 
-              <div className="hpp-info-box takeaway">
-                <span className="box-title">Takeaway</span>
+              <div className="menu-hpp-box takeaway">
+                <span className="menu-box-title">Takeaway</span>
                 <strong style={{ fontSize: '18px', color: '#fafafa' }}>
                   HPP: {formatRupiah(takeHpp.totalHpp)}
                 </strong>

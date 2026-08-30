@@ -252,11 +252,10 @@ export const SettingsPanel: React.FC = () => {
   };
 
   return (
-    <div className="master-view-container">
-      <div className="master-view-header">
+    <div className="settings-view-container">
+      <div className="settings-view-header">
         <div>
-          <h2 className="view-title">Pengaturan Aplikasi &amp; Perangkat</h2>
-          <p className="view-subtitle">Pilih modul pengaturan yang ingin dikonfigurasi.</p>
+          <h2 className="settings-view-title">Pengaturan Aplikasi &amp; Perangkat</h2>
         </div>
       </div>
 
@@ -266,58 +265,58 @@ export const SettingsPanel: React.FC = () => {
       <div className="settings-menu-grid">
         <button
           type="button"
-          className="setting-trigger-card"
+          className="settings-trigger-card"
           onClick={() => {
             setPinMsg('');
             setActiveModal('pin');
           }}
         >
-          <div className="setting-card-info">
-            <h3 className="setting-card-title">1. Ganti PIN Keamanan</h3>
-            <p className="setting-card-desc">Ubah 4 digit kode otorisasi akses master &amp; kasir</p>
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">1. Ganti PIN Keamanan</h3>
+            <p className="settings-card-desc">Ubah 4 digit kode otorisasi akses master &amp; kasir</p>
           </div>
-          <span className="setting-card-arrow">➔</span>
+          <span className="settings-card-arrow">➔</span>
         </button>
 
         <button
           type="button"
-          className="setting-trigger-card"
+          className="settings-trigger-card"
           onClick={() => setActiveModal('printer')}
         >
-          <div className="setting-card-info">
-            <h3 className="setting-card-title">2. Koneksi Printer Thermal</h3>
-            <p className="setting-card-desc">Atur sambungan Bluetooth printer kasir (BT-58D)</p>
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">2. Koneksi Printer Thermal</h3>
+            <p className="settings-card-desc">Atur sambungan Bluetooth printer kasir (BT-58D)</p>
           </div>
-          <span className="setting-card-arrow">➔</span>
+          <span className="settings-card-arrow">➔</span>
         </button>
 
         <button
           type="button"
-          className="setting-trigger-card"
+          className="settings-trigger-card"
           onClick={() => setActiveModal('receipt')}
         >
-          <div className="setting-card-info">
-            <h3 className="setting-card-title">3. Konfigurasi Struk Pelanggan</h3>
-            <p className="setting-card-desc">Atur 3 baris header &amp; 4 baris footer (WiFi/Password)</p>
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">3. Konfigurasi Struk Pelanggan</h3>
+            <p className="settings-card-desc">Atur 3 baris header &amp; 4 baris footer (WiFi/Password)</p>
           </div>
-          <span className="setting-card-arrow">➔</span>
+          <span className="settings-card-arrow">➔</span>
         </button>
 
         <button
           type="button"
-          className="setting-trigger-card"
+          className="settings-trigger-card"
           onClick={() => setActiveModal('branding')}
         >
-          <div className="setting-card-info">
-            <h3 className="setting-card-title">4. Branding Identitas Aplikasi</h3>
-            <p className="setting-card-desc">Ubah nama kedai warkop &amp; upload logo aplikasi</p>
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">4. Branding Identitas Aplikasi</h3>
+            <p className="settings-card-desc">Ubah nama kedai warkop &amp; upload logo aplikasi</p>
           </div>
-          <span className="setting-card-arrow">➔</span>
+          <span className="settings-card-arrow">➔</span>
         </button>
 
         <button
           type="button"
-          className="setting-trigger-card"
+          className="settings-trigger-card"
           style={{ borderColor: 'rgba(239, 68, 68, 0.4)' }}
           onClick={() => {
             setDialogConfig({
@@ -345,15 +344,15 @@ export const SettingsPanel: React.FC = () => {
             });
           }}
         >
-          <div className="setting-card-info">
-            <h3 className="setting-card-title" style={{ color: '#ef4444' }}>
+          <div className="settings-card-info">
+            <h3 className="settings-card-title" style={{ color: '#f87171' }}>
               5. Reset &amp; Muat Data Demo (400 Transaksi)
             </h3>
-            <p className="setting-card-desc">
+            <p className="settings-card-desc">
               Reset database bersih + 8 menu + inventori stok aman + 400 order 1 bulan
             </p>
           </div>
-          <span className="setting-card-arrow" style={{ color: '#ef4444' }}>
+          <span className="settings-card-arrow" style={{ color: '#ef4444' }}>
             ⚡
           </span>
         </button>
@@ -362,18 +361,15 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 1: Ganti PIN */}
       {activeModal === 'pin' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="master-modal-header">
-              <div>
-                <h3 className="master-modal-title">Ganti PIN Keamanan</h3>
-                <span className="master-modal-subtitle">Gunakan 4 digit angka rahasia</span>
-              </div>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">Ganti PIN Keamanan</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleUpdatePin} className="master-modal-body">
+            <form onSubmit={handleUpdatePin} className="settings-modal-body">
               {pinMsg && <div className="form-error-alert">{pinMsg}</div>}
 
               <div className="form-group">
@@ -402,11 +398,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="master-btn-primary">
+                <button type="submit" className="settings-btn-primary">
                   Simpan PIN Baru
                 </button>
               </div>
@@ -418,18 +414,15 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="master-modal-header">
-              <div>
-                <h3 className="master-modal-title">Koneksi Printer Thermal</h3>
-                <span className="master-modal-subtitle">Protokol Bluetooth Classic (SPP) 58mm</span>
-              </div>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">Koneksi Printer Thermal</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <div className="master-modal-body">
+            <div className="settings-modal-body">
               <div style={{ backgroundColor: 'var(--bg-surface)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status Koneksi:</p>
                 <strong style={{ fontSize: '15px', color: '#fafafa' }}>
@@ -448,7 +441,7 @@ export const SettingsPanel: React.FC = () => {
 
               <button
                 type="button"
-                className="master-btn-primary"
+                className="settings-btn-primary"
                 onClick={() =>
                   setDialogConfig({
                     isOpen: true,
@@ -463,8 +456,8 @@ export const SettingsPanel: React.FC = () => {
               </button>
             </div>
 
-            <div className="master-modal-footer">
-              <button type="button" className="master-btn-primary" onClick={() => setActiveModal(null)}>
+            <div className="settings-modal-footer">
+              <button type="button" className="settings-btn-primary" onClick={() => setActiveModal(null)}>
                 Selesai
               </button>
             </div>
@@ -475,18 +468,15 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 3: Konfigurasi Struk Pelanggan */}
       {activeModal === 'receipt' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="master-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-            <div className="master-modal-header">
-              <div>
-                <h3 className="master-modal-title">Konfigurasi Struk Pelanggan</h3>
-                <span className="master-modal-subtitle">Header, footer, logo &amp; info WiFi warkop</span>
-              </div>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">Konfigurasi Struk Pelanggan</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveReceiptConfig} className="master-modal-body">
+            <form onSubmit={handleSaveReceiptConfig} className="settings-modal-body">
               <div className="form-group">
                 <label className="form-label">Logo Struk Thermal (Header)</label>
                 <input
@@ -533,14 +523,14 @@ export const SettingsPanel: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         type="button"
-                        className="btn-table-action btn-table-edit"
+                        className="settings-btn-secondary"
                         onClick={() => receiptFileInputRef.current?.click()}
                       >
                         ✏️ Ganti Foto
                       </button>
                       <button
                         type="button"
-                        className="btn-table-action btn-table-void"
+                        className="settings-btn-danger"
                         onClick={handleDeleteReceiptLogo}
                       >
                         🗑️ Hapus
@@ -564,12 +554,12 @@ export const SettingsPanel: React.FC = () => {
                         Belum ada logo struk
                       </span>
                       <small style={{ color: '#71717a', fontSize: '11px' }}>
-                        Format PNG/JPG, otomatis dioptimasi untuk printer thermal 58mm
+                        Format PNG/JPG (monokrom kontras tinggi lebih jelas)
                       </small>
                     </div>
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="settings-btn-primary"
                       style={{ fontSize: '12px', padding: '6px 14px' }}
                       onClick={() => receiptFileInputRef.current?.click()}
                     >
@@ -580,12 +570,12 @@ export const SettingsPanel: React.FC = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Header Struk (Maksimal 3 Baris):</label>
+                <label className="form-label">Header Struk (Maks 3 Baris)</label>
                 <input
                   type="text"
                   className="form-input"
                   style={{ marginBottom: '6px' }}
-                  placeholder="Header 1 (cth: Warkop Triwara)"
+                  placeholder="Header 1 (Nama Toko / Kedai)"
                   value={h1}
                   onChange={(e) => setH1(e.target.value)}
                 />
@@ -593,21 +583,21 @@ export const SettingsPanel: React.FC = () => {
                   type="text"
                   className="form-input"
                   style={{ marginBottom: '6px' }}
-                  placeholder="Header 2 (cth: Jl. Contoh No. 123)"
+                  placeholder="Header 2 (Alamat Toko)"
                   value={h2}
                   onChange={(e) => setH2(e.target.value)}
                 />
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Header 3 (cth: Telp: 0812-3456-7890)"
+                  placeholder="Header 3 (No Telepon / WhatsApp)"
                   value={h3}
                   onChange={(e) => setH3(e.target.value)}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Footer Struk (4 Baris - Termasuk WiFi &amp; Password):</label>
+                <label className="form-label">Footer Struk (Maks 4 Baris)</label>
                 <input
                   type="text"
                   className="form-input"
@@ -641,11 +631,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="master-btn-primary">
+                <button type="submit" className="settings-btn-primary">
                   Simpan Konfigurasi Struk
                 </button>
               </div>
@@ -657,18 +647,15 @@ export const SettingsPanel: React.FC = () => {
       {/* Modal 4: Branding Identitas Aplikasi */}
       {activeModal === 'branding' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="master-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="master-modal-header">
-              <div>
-                <h3 className="master-modal-title">Branding Identitas Aplikasi</h3>
-                <span className="master-modal-subtitle">Nama aplikasi dan logo header kasir</span>
-              </div>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">Branding Identitas Aplikasi</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveBranding} className="master-modal-body">
+            <form onSubmit={handleSaveBranding} className="settings-modal-body">
               <div className="form-group">
                 <label className="form-label">Logo Utama Aplikasi (Top Bar Header)</label>
                 <input
@@ -715,14 +702,14 @@ export const SettingsPanel: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         type="button"
-                        className="btn-table-action btn-table-edit"
+                        className="settings-btn-secondary"
                         onClick={() => appFileInputRef.current?.click()}
                       >
                         ✏️ Ganti Foto
                       </button>
                       <button
                         type="button"
-                        className="btn-table-action btn-table-void"
+                        className="settings-btn-danger"
                         onClick={handleDeleteAppLogo}
                       >
                         🗑️ Hapus
@@ -751,7 +738,7 @@ export const SettingsPanel: React.FC = () => {
                     </div>
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="settings-btn-primary"
                       style={{ fontSize: '12px', padding: '6px 14px' }}
                       onClick={() => appFileInputRef.current?.click()}
                     >
@@ -772,11 +759,11 @@ export const SettingsPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="master-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="master-btn-secondary" onClick={() => setActiveModal(null)}>
+              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+                <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
-                <button type="submit" className="master-btn-primary">
+                <button type="submit" className="settings-btn-primary">
                   Simpan Branding
                 </button>
               </div>

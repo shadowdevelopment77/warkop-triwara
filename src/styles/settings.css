@@ -1,0 +1,161 @@
+/* ═══════════════════════════════════════════════
+   Triwara POS — Settings & Configuration Scoped Styles
+   ═══════════════════════════════════════════════ */
+
+.settings-view-container {
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: var(--bg-page);
+}
+
+.settings-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-view-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fafafa;
+}
+
+/* Settings Trigger Cards Grid */
+.settings-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.settings-trigger-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.settings-trigger-card:hover {
+  background-color: var(--bg-surface);
+  border-color: #52525b;
+}
+
+.settings-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.settings-card-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.settings-card-arrow {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+/* Settings Modals */
+.settings-modal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+  width: 100%;
+  max-width: 500px;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #09090b;
+}
+
+.settings-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.settings-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: var(--bg-card);
+}
+
+.settings-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #09090b;
+}
+
+.settings-btn-primary {
+  background-color: #fafafa;
+  color: #09090b;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+.settings-btn-primary:hover {
+  background-color: #e4e4e7;
+}
+
+.settings-btn-secondary {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+.settings-btn-secondary:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: #3f3f46;
+}
+
+.settings-btn-danger {
+  background-color: var(--danger-color);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+.settings-btn-danger:hover {
+  background-color: var(--danger-hover);
+}

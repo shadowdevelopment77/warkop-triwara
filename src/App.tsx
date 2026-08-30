@@ -11,7 +11,12 @@ import type { IShopConfig } from './types';
 import './styles/global.css';
 import './styles/layout.css';
 import './styles/pos.css';
-import './styles/master.css';
+import './styles/menu.css';
+import './styles/inventory.css';
+import './styles/report.css';
+import './styles/settings.css';
+import './styles/logs.css';
+import './styles/auth.css';
 import './styles/dialog.css';
 
 export function App() {
