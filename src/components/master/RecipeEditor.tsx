@@ -164,15 +164,28 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       return;
     }
 
-    // Clean valid additionals
-    const cleanedAdditionals = availableAdditionals
-      .filter((a) => a.name.trim().length > 0)
-      .map((a) => ({
-        name: a.name.trim(),
-        price: Math.max(0, a.price || 0),
-        ingredientId: a.ingredientId || undefined,
-        amount: a.ingredientId && a.amount ? Math.max(0, a.amount) : undefined,
-      }));
+    // Clean and validate mandatory additionals
+    for (const a of availableAdditionals) {
+      if (!a.name.trim()) {
+        setErrorMsg('Nama additional tidak boleh kosong');
+        return;
+      }
+      if (!a.ingredientId) {
+        setErrorMsg(`Additional "${a.name}" wajib memilih bahan baku yang dipotong.`);
+        return;
+      }
+      if (!a.amount || a.amount <= 0) {
+        setErrorMsg(`Additional "${a.name}" wajib mengisi jumlah bahan baku yang dipotong (> 0).`);
+        return;
+      }
+    }
+
+    const cleanedAdditionals = availableAdditionals.map((a) => ({
+      name: a.name.trim(),
+      price: Math.max(0, a.price || 0),
+      ingredientId: a.ingredientId,
+      amount: Math.max(0, a.amount || 0),
+    }));
 
     try {
       if (isEditing && product?.id) {
@@ -244,19 +257,17 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
   return (
     <>
       <div className="modal-backdrop" onClick={onClose}>
-        <div className="master-modal-card recipe-editor-card" onClick={(e) => e.stopPropagation()}>
-          <div className="master-modal-header">
-            <div>
-              <h3 className="master-modal-title">{isEditing ? `Edit Menu: ${product?.name}` : 'Tambah Menu Baru'}</h3>
-              <span className="master-modal-subtitle">Atur detail produk, resep bahan baku, &amp; kemasan takeaway</span>
-            </div>
+        <div className="menu-modal-card recipe-editor-card" onClick={(e) => e.stopPropagation()}>
+          <div className="menu-modal-header">
+            <h3 className="menu-modal-title">{isEditing ? `Edit Menu: ${product?.name}` : 'Tambah Menu Baru'}</h3>
             <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
               ✕
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="master-modal-body">
-            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <div className="menu-modal-body">
+              {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
             <div className="form-group">
               <label className="form-label">Nama Menu Produk</label>
@@ -300,7 +311,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
             </div>
 
             <div className="form-group">
-              <label className="form-label">Deskripsi Singkat Menu</label>
+              <label className="form-label">Deskripsi</label>
               <input
                 type="text"
                 className="form-input"
@@ -311,25 +322,27 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
             </div>
 
             {/* Recipe Builder Section */}
-            <div className="recipe-builder-section">
-              <div className="recipe-builder-header">
+            <div className="menu-builder-section">
+              <div className="menu-builder-header">
                 <div>
-                  <h4 className="recipe-builder-title">1. Resep Bahan Baku Utama</h4>
-                  <small className="recipe-builder-subtitle">Bahan yang digunakan untuk penyajian Dine In &amp; Takeaway</small>
+                  <h4 className="menu-builder-title">Bahan Baku Utama</h4>
                 </div>
-                <button type="button" className="btn-secondary" onClick={handleAddRecipeRow}>
-                  + Tambah Bahan
+                <button type="button" className="menu-btn-add-item" onClick={handleAddRecipeRow}>
+                  + Add
                 </button>
               </div>
 
               {recipe.length === 0 ? (
-                <p className="empty-hint" style={{ padding: '12px 0' }}>Belum ada bahan resep. Klik "+ Tambah Bahan" di atas.</p>
+                <p className="empty-hint" style={{ padding: '8px 0', fontSize: '13px', color: '#71717a' }}>
+                  Belum ada bahan . Klik "+ Add" di atas.
+                </p>
               ) : (
-                <div className="recipe-items-table">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {recipe.map((item, idx) => (
-                    <div key={idx} className="recipe-item-row">
+                    <div key={idx} className="menu-packaging-row">
                       <select
                         className="form-select"
+                        style={{ flex: 1 }}
                         value={item.ingredientId}
                         onChange={(e) => handleRecipeIngChange(idx, parseInt(e.target.value))}
                       >
@@ -342,19 +355,18 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                           ))}
                       </select>
 
-                      <div className="amount-input-box">
+                      <div className="menu-qty-box">
                         <input
                           type="number"
-                          className="form-input amount"
                           value={item.amount}
                           onChange={(e) => handleRecipeAmountChange(idx, parseFloat(e.target.value) || 0)}
                         />
-                        <span className="unit-label">{item.unit}</span>
+                        <span>{item.unit}</span>
                       </div>
 
                       <button
                         type="button"
-                        className="btn-danger-icon"
+                        className="menu-btn-icon-danger"
                         onClick={() => handleRemoveRecipeRow(idx)}
                         title="Hapus Bahan"
                       >
@@ -367,25 +379,27 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
             </div>
 
             {/* Takeaway Packaging Section */}
-            <div className="recipe-builder-section">
-              <div className="recipe-builder-header">
+            <div className="menu-builder-section">
+              <div className="menu-builder-header">
                 <div>
-                  <h4 className="recipe-builder-title">2. Kemasan Sekali Pakai (Takeaway)</h4>
-                  <small className="recipe-builder-subtitle">Hanya dipotong saat pesanan disajikan sebagai Takeaway</small>
-                </div>
-                <button type="button" className="btn-secondary" onClick={handleAddPackagingRow}>
-                  + Tambah Kemasan
+                  <h4 className="menu-builder-title">Kemasan Takeaway</h4>
+                  </div>
+                <button type="button" className="menu-btn-add-item" onClick={handleAddPackagingRow}>
+                  + Add
                 </button>
               </div>
 
               {takeawayPackaging.length === 0 ? (
-                <p className="empty-hint" style={{ padding: '12px 0' }}>Belum ada kemasan takeaway. Klik "+ Tambah Kemasan" di atas.</p>
+                <p className="empty-hint" style={{ padding: '8px 0', fontSize: '13px', color: '#71717a' }}>
+                  Belum ada kemasan takeaway. Klik "+ Add" di atas.
+                </p>
               ) : (
-                <div className="recipe-items-table">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {takeawayPackaging.map((item, idx) => (
-                    <div key={idx} className="recipe-item-row">
+                    <div key={idx} className="menu-packaging-row">
                       <select
                         className="form-select"
+                        style={{ flex: 1 }}
                         value={item.ingredientId}
                         onChange={(e) => handlePackagingIngChange(idx, parseInt(e.target.value))}
                       >
@@ -398,19 +412,18 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                           ))}
                       </select>
 
-                      <div className="amount-input-box">
+                      <div className="menu-qty-box">
                         <input
                           type="number"
-                          className="form-input amount"
                           value={item.amount}
                           onChange={(e) => handlePackagingAmountChange(idx, parseFloat(e.target.value) || 0)}
                         />
-                        <span className="unit-label">{item.unit}</span>
+                        <span>{item.unit}</span>
                       </div>
 
                       <button
                         type="button"
-                        className="btn-danger-icon"
+                        className="menu-btn-icon-danger"
                         onClick={() => handleRemovePackagingRow(idx)}
                         title="Hapus Kemasan"
                       >
@@ -423,115 +436,113 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
             </div>
 
             {/* 3. Additional / Topping Options Section */}
-            <div className="recipe-builder-section">
-              <div className="recipe-builder-header">
+            <div className="menu-builder-section">
+              <div className="menu-builder-header">
                 <div>
-                  <h4 className="recipe-builder-title">3. Pilihan Additional / Topping Menu</h4>
-                  <small className="recipe-builder-subtitle">
-                    Kustomisasi yang dapat dipilih kasir khusus menu ini (cth: Extra Shot, Syrup, dll)
-                  </small>
+                  <h4 className="menu-builder-title">Additional</h4>
                 </div>
-                <button type="button" className="btn-secondary" onClick={handleAddAdditionalRow}>
-                  + Tambah Additional
+                <button type="button" className="menu-btn-add-item" onClick={handleAddAdditionalRow}>
+                  + Add
                 </button>
               </div>
 
               {availableAdditionals.length === 0 ? (
-                <p className="empty-hint" style={{ padding: '12px 0' }}>
-                  Belum ada additional khusus untuk menu ini. Klik "+ Tambah Additional" jika ingin menyediakan opsi tambahan.
+                <p className="empty-hint" style={{ padding: '8px 0', fontSize: '13px', color: '#71717a' }}>
+                  Belum ada additional untuk menu ini. Klik "+ Add" jika ingin menyediakan opsi tambahan.
                 </p>
               ) : (
-                <div className="recipe-items-table">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {availableAdditionals.map((add, idx) => (
-                    <div
-                      key={idx}
-                      className="recipe-item-row"
-                      style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
-                    >
-                      <input
-                        type="text"
-                        className="form-input"
-                        style={{ flex: 2 }}
-                        placeholder="Nama additional (cth: Extra Shot)"
-                        value={add.name}
-                        onChange={(e) => handleAdditionalChange(idx, 'name', e.target.value)}
-                        required
-                      />
-
-                      <div className="amount-input-box" style={{ flex: 1.2 }}>
-                        <span style={{ fontSize: '11px', color: '#a1a1aa' }}>+Rp</span>
+                    <div key={idx} className="menu-additional-card">
+                      {/* Baris 1: Nama Additional + Input Harga + Tombol Hapus */}
+                      <div className="menu-additional-top-row">
                         <input
-                          type="number"
-                          className="form-input amount"
-                          placeholder="Harga"
-                          value={add.price}
-                          onChange={(e) => handleAdditionalChange(idx, 'price', parseFloat(e.target.value) || 0)}
+                          type="text"
+                          className="form-input"
+                          style={{ flex: 1 }}
+                          placeholder="Nama additional (cth: Extra Shot)"
+                          value={add.name}
+                          onChange={(e) => handleAdditionalChange(idx, 'name', e.target.value)}
                           required
                         />
-                      </div>
 
-                      <select
-                        className="form-select"
-                        style={{ flex: 2 }}
-                        value={add.ingredientId || ''}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value) : undefined;
-                          handleAdditionalChange(idx, 'ingredientId', val);
-                        }}
-                      >
-                        <option value="">(Tanpa potong stok)</option>
-                        {ingredients
-                          .filter((i) => i.category === 'raw')
-                          .map((ing) => (
-                            <option key={ing.id} value={ing.id}>
-                              Potong: {ing.name}
-                            </option>
-                          ))}
-                      </select>
-
-                      {add.ingredientId && (
-                        <div className="amount-input-box" style={{ width: '90px' }}>
+                        <div className="menu-price-box">
+                          <span>+Rp</span>
                           <input
                             type="number"
-                            className="form-input amount"
+                            placeholder="Harga"
+                            value={add.price || ''}
+                            onChange={(e) => handleAdditionalChange(idx, 'price', parseFloat(e.target.value) || 0)}
+                            required
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          className="menu-btn-icon-danger"
+                          onClick={() => handleRemoveAdditionalRow(idx)}
+                          title="Hapus Additional"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Baris 2: Dropdown Potong Bahan Stok + Qty */}
+                      <div className="menu-additional-bottom-row">
+                        <select
+                          className="form-select"
+                          style={{ flex: 1 }}
+                          value={add.ingredientId || ''}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            handleAdditionalChange(idx, 'ingredientId', val);
+                          }}
+                          required
+                        >
+                          <option value="" disabled>-- Pilih Bahan Baku yang Dipotong --</option>
+                          {ingredients
+                            .filter((i) => i.category === 'raw')
+                            .map((ing) => (
+                              <option key={ing.id} value={ing.id}>
+                                Potong: {ing.name} ({ing.unit})
+                              </option>
+                            ))}
+                        </select>
+
+                        <div className="menu-qty-box">
+                          <input
+                            type="number"
                             placeholder="Qty"
                             value={add.amount || ''}
                             onChange={(e) => handleAdditionalChange(idx, 'amount', parseFloat(e.target.value) || 0)}
+                            required
                           />
-                          <span className="unit-label">
-                            {ingredients.find((i) => i.id === add.ingredientId)?.unit || 'gr'}
+                          <span>
+                            {ingredients.find((i) => i.id === add.ingredientId)?.unit || 'satuan'}
                           </span>
                         </div>
-                      )}
-
-                      <button
-                        type="button"
-                        className="btn-danger-icon"
-                        onClick={() => handleRemoveAdditionalRow(idx)}
-                        title="Hapus Additional"
-                      >
-                        ✕
-                      </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="master-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
-              {isEditing && (
-                <button type="button" className="master-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
-                  Hapus Menu
-                </button>
-              )}
-              <button type="button" className="master-btn-secondary" onClick={onClose}>
-                Batal
+          <div className="menu-modal-footer">
+            {isEditing && (
+              <button type="button" className="menu-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                Hapus Menu
               </button>
-              <button type="submit" className="master-btn-primary">
-                {isEditing ? 'Simpan Perubahan' : 'Tambah Menu'}
-              </button>
-            </div>
-          </form>
+            )}
+            <button type="button" className="menu-btn-secondary" onClick={onClose}>
+              Batal
+            </button>
+            <button type="submit" className="menu-btn-primary">
+              {isEditing ? 'Simpan Perubahan' : 'Tambah Menu'}
+            </button>
+          </div>
+        </form>
         </div>
       </div>
 
