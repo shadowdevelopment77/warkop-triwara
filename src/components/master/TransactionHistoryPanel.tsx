@@ -18,7 +18,6 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   onReprintOrder,
 }) => {
   const [orders, setOrders] = useState<IOrder[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
 
@@ -69,17 +68,6 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     }
   };
 
-  // Client-side search filtering
-  const filteredOrders = orders.filter((order) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      order.orderNumber.toLowerCase().includes(q) ||
-      (order.customerName || '').toLowerCase().includes(q) ||
-      (order.processedBy || '').toLowerCase().includes(q)
-    );
-  });
-
   return (
     <div className="report-view-container">
       {/* Header */}
@@ -89,23 +77,24 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
         </div>
       </div>
 
-      {/* Filter Bar: Date Range + Quick Buttons + Search */}
-      <div className="report-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#a1a1aa' }}>Periode:</span>
+      {/* Responsive Period Filter Bar (Matching ReportPanel) */}
+      <div className="report-period-filter-bar">
+        <div className="report-date-input-group">
+          <label>Mulai:</label>
           <input
             type="date"
-            className="log-date-input"
             value={startDate}
             onChange={(e) => {
               setStartDate(e.target.value);
               setCurrentPage(1);
             }}
           />
-          <span style={{ color: '#71717a' }}>—</span>
+        </div>
+
+        <div className="report-date-input-group">
+          <label>Sampai:</label>
           <input
             type="date"
-            className="log-date-input"
             value={endDate}
             onChange={(e) => {
               setEndDate(e.target.value);
@@ -114,41 +103,27 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div className="report-preset-buttons">
           <button
             type="button"
-            className={`log-filter-pill ${startDate === todayStr && endDate === todayStr ? 'active' : ''}`}
+            className={`report-filter-pill ${startDate === todayStr && endDate === todayStr ? 'active' : ''}`}
             onClick={handleSetToday}
           >
             Hari Ini
           </button>
           <button
             type="button"
-            className="log-filter-pill"
+            className="report-filter-pill"
             onClick={handleSetThisMonth}
           >
             Bulan Ini
           </button>
         </div>
-
-        <div style={{ marginLeft: 'auto', minWidth: '220px' }}>
-          <input
-            type="text"
-            className="form-input"
-            style={{ height: '34px', fontSize: '12px' }}
-            placeholder="Cari ID / Kasir / Pelanggan..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
       </div>
 
-      {/* Transaction Table */}
-      <div className="report-section-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
+      {/* Transaction Table Card */}
+      <div className="report-section-card">
+        <div className="report-table-wrapper">
           <table className="report-data-table">
             <thead>
               <tr>
@@ -163,17 +138,17 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#a1a1aa' }}>
-                    Tidak ada riwayat transaksi pada periode yang dipilih.
+                  <td colSpan={8} className="empty-table-td">
+                    Belum ada riwayat transaksi pada periode yang dipilih.
                   </td>
                 </tr>
               ) : (
-                filteredOrders
+                orders
                   .slice((currentPage - 1) * 10, currentPage * 10)
                   .map((order) => (
-                    <tr key={order.id}>
+                    <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
                       <td>
                         <strong>#{order.orderNumber}</strong>
                       </td>
@@ -204,30 +179,34 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                       </td>
                       <td>
                         <span
-                          className={`report-status-badge ${order.status === 'completed' ? 'success' : 'voided'}`}
+                          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
                         >
-                          {order.status === 'completed' ? 'Sukses' : 'Void'}
+                          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
                           <button
                             type="button"
-                            className="shift-btn-action"
+                            className="report-btn-print"
                             onClick={() => onReprintOrder(order)}
                             title="Cetak Ulang Struk Pelanggan"
                           >
-                            🖨️ Cetak Struk
+                            🖨️ Cetak
                           </button>
-                          {order.status === 'completed' && (
+                          {order.status === 'completed' ? (
                             <button
                               type="button"
-                              className="menu-btn-icon-danger"
+                              className="report-btn-void"
                               onClick={() => setVoidingOrder(order)}
                               title="Batalkan (Void) Transaksi"
                             >
-                              ✕
+                              🚫 Void
                             </button>
+                          ) : (
+                            <span className="report-voided-label" title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}>
+                              Dibatalkan
+                            </span>
                           )}
                         </div>
                       </td>
@@ -236,17 +215,17 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
               )}
             </tbody>
           </table>
+
+          {orders.length > 10 && (
+            <PaginationBar
+              currentPage={currentPage}
+              totalItems={orders.length}
+              pageSize={10}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </div>
-
-      {filteredOrders.length > 10 && (
-        <PaginationBar
-          currentPage={currentPage}
-          totalItems={filteredOrders.length}
-          pageSize={10}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       {/* Void Modal */}
       {voidingOrder && (

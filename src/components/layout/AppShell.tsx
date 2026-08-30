@@ -169,6 +169,14 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
     loadPosData();
   }, [loadPosData]);
 
+  // Subscribe to real-time notification events
+  useEffect(() => {
+    const unsubscribe = notificationService.subscribe(() => {
+      refreshNotifications();
+    });
+    return unsubscribe;
+  }, [refreshNotifications]);
+
   // Auto-close drawers, notifications, and reset folder expansion on tab switch
   useEffect(() => {
     setIsNotificationOpen(false);
@@ -318,7 +326,11 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
       await notificationService.markAsRead(notifId);
     }
     if (targetTab) {
-      setActiveTab(targetTab);
+      if (currentUser.role !== 'owner' && (targetTab === 'reports' || targetTab === 'products')) {
+        handleRequestSupervisorAccess(targetTab);
+      } else {
+        setActiveTab(targetTab);
+      }
     }
     setIsNotificationOpen(false);
     refreshNotifications();

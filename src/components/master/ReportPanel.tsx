@@ -285,21 +285,21 @@ export const ReportPanel: React.FC = () => {
           <table className="report-data-table">
             <thead>
               <tr>
-                <th>No</th>
                 <th>ID Transaksi</th>
+                <th>Kasir</th>
                 <th>Pelanggan</th>
                 <th>Waktu</th>
                 <th>Total</th>
-                <th>Bayar</th>
+                <th>Metode</th>
                 <th>Status</th>
-                <th>Aksi</th>
+                <th style={{ textAlign: 'center' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="empty-table-td">
-                    Belum ada riwayat transaksi.
+                    Belum ada riwayat transaksi pada periode yang dipilih.
                   </td>
                 </tr>
               ) : (
@@ -308,30 +308,47 @@ export const ReportPanel: React.FC = () => {
                   .map((order) => (
                     <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
                       <td>
-                        <strong>{order.sequenceNumber}</strong>
+                        <strong>#{order.orderNumber}</strong>
                       </td>
-                      <td>
-                        <code>{order.orderNumber}</code>
+                      <td style={{ color: '#60a5fa', fontWeight: 600 }}>
+                        {order.processedBy || 'Kasir'}
                       </td>
                       <td>{order.customerName || 'Umum'}</td>
-                      <td>{formatDateIndonesian(order.createdAt)}</td>
-                      <td>
-                        <strong>{formatRupiah(order.total)}</strong>
+                      <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
+                        {formatDateIndonesian(order.createdAt)}
                       </td>
-                      <td>{order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}</td>
-                      <td>
-                        {order.status === 'completed' ? (
-                          <span className="status-badge safe">Sukses</span>
-                        ) : (
-                          <span className="status-badge critical">Batal / Void</span>
-                        )}
+                      <td style={{ fontWeight: 700, color: '#fafafa' }}>
+                        {formatRupiah(order.total)}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: order.paymentMethod === 'cash' ? '#27272a' : '#1e3a8a',
+                            color: order.paymentMethod === 'cash' ? '#fafafa' : '#93c5fd',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
+                        >
+                          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
                           <button
                             type="button"
                             className="report-btn-print"
                             onClick={() => setReprintOrder(order)}
+                            title="Cetak Ulang Struk Pelanggan"
                           >
                             🖨️ Cetak
                           </button>
@@ -340,6 +357,7 @@ export const ReportPanel: React.FC = () => {
                               type="button"
                               className="report-btn-void"
                               onClick={() => handleVoidOrder(order)}
+                              title="Batalkan (Void) Transaksi"
                             >
                               🚫 Void
                             </button>

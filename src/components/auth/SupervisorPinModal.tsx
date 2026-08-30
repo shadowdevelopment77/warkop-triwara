@@ -25,6 +25,15 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
+  // Always reset PIN and error states whenever modal opens or closes
+  React.useEffect(() => {
+    if (isOpen) {
+      setPin('');
+      setErrorMsg('');
+      setIsShaking(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleKeyPress = async (digit: string) => {

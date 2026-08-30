@@ -5,11 +5,37 @@
 import { db, TriwaraDatabase } from '../database/db';
 import type { IAppNotification, NotificationType } from '../types';
 
+type NotificationListener = () => void;
+
 export class NotificationService {
   private database: TriwaraDatabase;
+  private listeners: Set<NotificationListener> = new Set();
 
   constructor(database: TriwaraDatabase = db) {
     this.database = database;
+  }
+
+  /**
+   * Subscribe to real-time notification changes
+   */
+  subscribe(listener: NotificationListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Notify all registered listeners
+   */
+  notifyListeners(): void {
+    this.listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (err) {
+        console.error('Error in notification listener:', err);
+      }
+    });
   }
 
   /**
@@ -31,6 +57,8 @@ export class NotificationService {
     };
 
     const id = (await this.database.notifications.add(notification)) as number;
+    // Notify all active UI listeners immediately
+    this.notifyListeners();
     // Trigger lightweight cleanup of notifications older than 24h in background
     this.pruneExpired().catch(() => {});
     return id;
@@ -63,6 +91,7 @@ export class NotificationService {
    */
   async markAsRead(id: number): Promise<void> {
     await this.database.notifications.update(id, { isRead: true });
+    this.notifyListeners();
   }
 
   /**
@@ -75,6 +104,7 @@ export class NotificationService {
         await this.database.notifications.update(n.id, { isRead: true });
       }
     }
+    this.notifyListeners();
   }
 
   /**
