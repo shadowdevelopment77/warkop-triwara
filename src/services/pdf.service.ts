@@ -83,6 +83,7 @@ export class PdfService {
     const ordersTableBody = orders.map((o) => [
       o.sequenceNumber,
       o.orderNumber,
+      o.processedBy || 'Kasir',
       o.customerName || 'Umum',
       formatDateIndonesian(o.createdAt),
       formatRupiah(o.total),
@@ -92,7 +93,7 @@ export class PdfService {
 
     autoTable(doc, {
       startY: finalY + 16,
-      head: [['No', 'ID Transaksi', 'Pelanggan', 'Waktu', 'Total', 'Bayar', 'Status']],
+      head: [['No', 'ID Transaksi', 'Kasir', 'Pelanggan', 'Waktu', 'Total', 'Bayar', 'Status']],
       body: ordersTableBody,
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60] },
@@ -142,11 +143,10 @@ export class PdfService {
   }
 
   /**
-   * Generates and downloads Cashier Shift Report PDF (Paperless & WhatsApp ready)
+   * Generates and downloads Cashier Shift Report PDF (Paperless financial reconciliation)
    */
   async exportShiftReportPdf(
     shift: import('../types').IShift,
-    productSales: { productName: string; quantitySold: number }[],
     config: IShopConfig
   ): Promise<void> {
     const doc = new jsPDF();
@@ -193,34 +193,7 @@ export class PdfService {
       },
     });
 
-    let currentY = ((doc as any).lastAutoTable?.finalY || 120) + 12;
-
-    // Product Sales Ranking during Shift
-    if (productSales && productSales.length > 0) {
-      doc.setFontSize(12);
-      doc.text('Ranking Produk Terjual pada Shift Ini', 14, currentY);
-
-      const productsTableBody = productSales.map((p, idx) => [
-        `#${idx + 1}`,
-        p.productName,
-        `${p.quantitySold} terjual`,
-      ]);
-
-      autoTable(doc, {
-        startY: currentY + 4,
-        head: [['Ranking', 'Nama Produk', 'Jumlah Terjual']],
-        body: productsTableBody,
-        theme: 'striped',
-        headStyles: { fillColor: [60, 60, 60] },
-        columnStyles: {
-          0: { cellWidth: 25, halign: 'center' },
-          1: { cellWidth: 115 },
-          2: { halign: 'right' },
-        },
-      });
-
-      currentY = ((doc as any).lastAutoTable?.finalY || currentY + 30) + 14;
-    }
+    const currentY = ((doc as any).lastAutoTable?.finalY || 120) + 14;
 
     if (shift.notes) {
       doc.setFontSize(10);

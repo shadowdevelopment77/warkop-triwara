@@ -55,7 +55,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="inv-modal-header">
-          <h3 className="inv-modal-title">Buka Shift Kasir</h3>
+          <h3 className="inv-modal-title">Buka Toko</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
@@ -85,7 +85,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
           </div>
 
           <div className="inv-form-group">
-            <label className="inv-form-label">Uang Kas Awal / Modal Kembalian (Rp)</label>
+            <label className="inv-form-label">Uang Kas Awal / Modal Kembalian Toko (Rp)</label>
             <input
               type="number"
               className="form-input"
@@ -123,7 +123,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
           </div>
 
           <div className="inv-form-group">
-            <label className="inv-form-label">Catatan Buka Shift (Opsional)</label>
+            <label className="inv-form-label">Catatan Buka Toko (Opsional)</label>
             <input
               type="text"
               className="form-input"
@@ -138,7 +138,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
               Batal
             </button>
             <button type="submit" className="inv-btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Membuka Shift...' : 'Buka Shift Sekarang'}
+              {isSubmitting ? 'Membuka Toko...' : 'Buka Toko Sekarang'}
             </button>
           </div>
         </form>

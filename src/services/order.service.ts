@@ -141,12 +141,16 @@ export class OrderService {
       const newCash = activeShift.totalCashSales + (isCash ? total : 0);
       const newQris = activeShift.totalQrisSales + (!isCash ? total : 0);
       const newCount = activeShift.totalTransactions + 1;
+      const newCashCount = (activeShift.cashTransactions || 0) + (isCash ? 1 : 0);
+      const newQrisCount = (activeShift.qrisTransactions || 0) + (!isCash ? 1 : 0);
       const newExpected = activeShift.startingCash + newCash;
 
       await this.database.shifts.update(activeShift.id, {
         totalCashSales: newCash,
         totalQrisSales: newQris,
         totalTransactions: newCount,
+        cashTransactions: newCashCount,
+        qrisTransactions: newQrisCount,
         expectedEndingCash: newExpected,
       });
     }
@@ -177,12 +181,16 @@ export class OrderService {
         const isCash = order.paymentMethod === 'cash';
         const newCash = Math.max(0, shift.totalCashSales - (isCash ? order.total : 0));
         const newQris = Math.max(0, shift.totalQrisSales - (!isCash ? order.total : 0));
+        const newCashCount = Math.max(0, (shift.cashTransactions || 0) - (isCash ? 1 : 0));
+        const newQrisCount = Math.max(0, (shift.qrisTransactions || 0) - (!isCash ? 1 : 0));
         const newVoided = shift.totalVoided + 1;
         const newExpected = shift.startingCash + newCash;
 
         await this.database.shifts.update(shift.id, {
           totalCashSales: newCash,
           totalQrisSales: newQris,
+          cashTransactions: newCashCount,
+          qrisTransactions: newQrisCount,
           totalVoided: newVoided,
           expectedEndingCash: newExpected,
         });

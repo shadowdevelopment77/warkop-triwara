@@ -3,15 +3,24 @@
 // ═══════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { IShopConfig } from '../../types';
+import type { IShopConfig, IStaff } from '../../types';
 import { configService } from '../../services/config.service';
 import { notificationService } from '../../services/notification.service';
 import { compressImage } from '../../utils/image';
 import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
-type SettingModalType = 'pin' | 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
-export const SettingsPanel: React.FC = () => {
+type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
+
+interface SettingsPanelProps {
+  currentUser: IStaff;
+  onRequestSupervisorAccess: (onSuccess: () => void) => void;
+}
+
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({
+  currentUser,
+  onRequestSupervisorAccess,
+}) => {
   const [config, setConfig] = useState<IShopConfig | null>(null);
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
@@ -34,10 +43,15 @@ export const SettingsPanel: React.FC = () => {
     onConfirm: () => {},
   });
 
-  // Security PIN states
-  const [oldPin, setOldPin] = useState<string>('');
-  const [newPin, setNewPin] = useState<string>('');
-  const [pinMsg, setPinMsg] = useState<string>('');
+  const isOwner = currentUser.role === 'owner';
+
+  const guardOwnerAction = (action: () => void) => {
+    if (isOwner) {
+      action();
+    } else {
+      onRequestSupervisorAccess(action);
+    }
+  };
 
   // Receipt lines
   const [h1, setH1] = useState<string>('');
@@ -67,26 +81,6 @@ export const SettingsPanel: React.FC = () => {
   useEffect(() => {
     loadConfig();
   }, []);
-
-  const handleUpdatePin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPinMsg('');
-    try {
-      await configService.updatePin(oldPin, newPin);
-      await notificationService.addNotification(
-        'PIN Diperbarui',
-        'PIN keamanan aplikasi berhasil diubah.',
-        'alert',
-        'settings' as any
-      );
-      setOldPin('');
-      setNewPin('');
-      setActiveModal(null);
-      setFeedbackMsg('PIN keamanan berhasil diperbarui');
-    } catch (err) {
-      setPinMsg((err as Error).message);
-    }
-  };
 
   const handleSaveReceiptConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,167 +257,113 @@ export const SettingsPanel: React.FC = () => {
 
       {feedbackMsg && <div className="form-success-alert">{feedbackMsg}</div>}
 
-      {/* 4 Menu Cards Dashboard */}
+      {/* 5 Settings Cards Dashboard */}
       <div className="settings-menu-grid">
-        <button
-          type="button"
-          className="settings-trigger-card"
-          onClick={() => {
-            setPinMsg('');
-            setActiveModal('pin');
-          }}
-        >
-          <div className="settings-card-info">
-            <h3 className="settings-card-title">1. Ganti PIN Keamanan</h3>
-            <p className="settings-card-desc">Ubah 4 digit kode otorisasi akses master &amp; kasir</p>
-          </div>
-          <span className="settings-card-arrow">➔</span>
-        </button>
-
-        <button
-          type="button"
-          className="settings-trigger-card"
-          onClick={() => setIsStaffModalOpen(true)}
-        >
-          <div className="settings-card-info">
-            <h3 className="settings-card-title">2. Kelola Karyawan &amp; Hak Akses PIN</h3>
-            <p className="settings-card-desc">Tambah kasir baru, update nama staf, dan ganti PIN</p>
-          </div>
-          <span className="settings-card-arrow">➔</span>
-        </button>
-
+        {/* 1. Koneksi Printer Thermal (Open to all) */}
         <button
           type="button"
           className="settings-trigger-card"
           onClick={() => setActiveModal('printer')}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title">3. Koneksi Printer Thermal</h3>
+            <h3 className="settings-card-title">🖨️ 1. Koneksi Printer Thermal</h3>
             <p className="settings-card-desc">Atur sambungan Bluetooth printer kasir (BT-58D)</p>
           </div>
           <span className="settings-card-arrow">➔</span>
         </button>
 
+        {/* 2. Kelola Karyawan & Hak Akses PIN (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
-          onClick={() => setActiveModal('receipt')}
+          onClick={() => guardOwnerAction(() => setIsStaffModalOpen(true))}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title">3. Konfigurasi Struk Pelanggan</h3>
+            <h3 className="settings-card-title">
+              {isOwner ? '👥 2. Kelola Karyawan & Hak Akses PIN' : '🔒 2. Kelola Karyawan & Hak Akses PIN (Owner)'}
+            </h3>
+            <p className="settings-card-desc">Tambah kasir baru, update nama staf, dan ganti PIN</p>
+          </div>
+          <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
+        </button>
+
+        {/* 3. Konfigurasi Struk Pelanggan (Owner only) */}
+        <button
+          type="button"
+          className="settings-trigger-card"
+          onClick={() => guardOwnerAction(() => setActiveModal('receipt'))}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title">
+              {isOwner ? '🧾 3. Konfigurasi Struk Pelanggan' : '🔒 3. Konfigurasi Struk Pelanggan (Owner)'}
+            </h3>
             <p className="settings-card-desc">Atur 3 baris header &amp; 4 baris footer (WiFi/Password)</p>
           </div>
-          <span className="settings-card-arrow">➔</span>
+          <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
 
+        {/* 4. Branding Identitas Aplikasi (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
-          onClick={() => setActiveModal('branding')}
+          onClick={() => guardOwnerAction(() => setActiveModal('branding'))}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title">4. Branding Identitas Aplikasi</h3>
+            <h3 className="settings-card-title">
+              {isOwner ? '🏷️ 4. Branding Identitas Aplikasi' : '🔒 4. Branding Identitas Aplikasi (Owner)'}
+            </h3>
             <p className="settings-card-desc">Ubah nama kedai warkop &amp; upload logo aplikasi</p>
           </div>
-          <span className="settings-card-arrow">➔</span>
+          <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
 
+        {/* 5. Reset & Muat Data Demo (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
           style={{ borderColor: 'rgba(239, 68, 68, 0.4)' }}
           onClick={() => {
-            setDialogConfig({
-              isOpen: true,
-              type: 'confirm',
-              title: 'Reset Seluruh Database?',
-              message: 'PERINGATAN: Semua data transaksi, menu, dan inventori akan direset dan diisi ulang dengan 8 menu siap jual serta 400 transaksi demo dalam 1 bulan terakhir.\n\nApakah Anda yakin ingin melanjutkan?',
-              isDanger: true,
-              confirmText: 'Ya, Reset Database',
-              onConfirm: async () => {
-                try {
-                  const { resetAndSeedDatabase } = await import('../../database/seed');
-                  await resetAndSeedDatabase();
-                  window.location.reload();
-                } catch (err) {
-                  setDialogConfig({
-                    isOpen: true,
-                    type: 'alert',
-                    title: 'Gagal Reset',
-                    message: 'Gagal mereset database: ' + (err as Error).message,
-                    onConfirm: () => {},
-                  });
-                }
-              },
+            guardOwnerAction(() => {
+              setDialogConfig({
+                isOpen: true,
+                type: 'confirm',
+                title: 'Reset Seluruh Database?',
+                message:
+                  'PERINGATAN: Semua data transaksi, menu, dan inventori akan direset dan diisi ulang dengan 8 menu siap jual serta 400 transaksi demo dalam 1 bulan terakhir.\n\nApakah Anda yakin ingin melanjutkan?',
+                isDanger: true,
+                confirmText: 'Ya, Reset Database',
+                onConfirm: async () => {
+                  try {
+                    const { resetAndSeedDatabase } = await import('../../database/seed');
+                    await resetAndSeedDatabase();
+                    window.location.reload();
+                  } catch (err) {
+                    setDialogConfig({
+                      isOpen: true,
+                      type: 'alert',
+                      title: 'Gagal Reset',
+                      message: 'Gagal mereset database: ' + (err as Error).message,
+                      onConfirm: () => {},
+                    });
+                  }
+                },
+              });
             });
           }}
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title" style={{ color: '#f87171' }}>
-              5. Reset &amp; Muat Data Demo (400 Transaksi)
+              {isOwner ? '⚡ 5. Reset & Muat Data Demo' : '🔒 5. Reset & Muat Data Demo (Owner)'}
             </h3>
             <p className="settings-card-desc">
               Reset database bersih + 8 menu + inventori stok aman + 400 order 1 bulan
             </p>
           </div>
           <span className="settings-card-arrow" style={{ color: '#ef4444' }}>
-            ⚡
+            {isOwner ? '⚡' : '🔒'}
           </span>
         </button>
       </div>
-
-      {/* Modal 1: Ganti PIN */}
-      {activeModal === 'pin' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="settings-modal-header">
-              <h3 className="settings-modal-title">Ganti PIN Keamanan</h3>
-              <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdatePin} className="settings-modal-body">
-              {pinMsg && <div className="form-error-alert">{pinMsg}</div>}
-
-              <div className="form-group">
-                <label className="form-label">PIN Lama (Saat Ini)</label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  className="form-input"
-                  placeholder="****"
-                  value={oldPin}
-                  onChange={(e) => setOldPin(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">PIN Baru (4 Digit Angka)</label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  className="form-input"
-                  placeholder="****"
-                  value={newPin}
-                  onChange={(e) => setNewPin(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
-                <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
-                  Batal
-                </button>
-                <button type="submit" className="settings-btn-primary">
-                  Simpan PIN Baru
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (

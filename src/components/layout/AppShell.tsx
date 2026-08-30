@@ -41,6 +41,9 @@ import { shiftService } from '../../services/shift.service';
 import { OpenShiftModal } from '../master/OpenShiftModal';
 import { CloseShiftModal } from '../master/CloseShiftModal';
 import { ShiftHistoryPanel } from '../master/ShiftHistoryPanel';
+import { TransactionHistoryPanel } from '../master/TransactionHistoryPanel';
+import { SupervisorPinModal } from '../auth/SupervisorPinModal';
+import { PostCloseStoreModal } from '../master/PostCloseStoreModal';
 
 interface AppShellProps {
   currentUser: IStaff;
@@ -53,10 +56,39 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   const [isMasterOpen, setIsMasterOpen] = useState<boolean>(false);
   const [isProductFolderOpen, setIsProductFolderOpen] = useState<boolean>(false);
 
-  // Shift State
+  // Shift & Store State
   const [activeShift, setActiveShift] = useState<IShift | null>(null);
   const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState<boolean>(false);
   const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState<boolean>(false);
+  const [justClosedShift, setJustClosedShift] = useState<IShift | null>(null);
+
+  // Supervisor PIN Modal
+  const [isSupervisorModalOpen, setIsSupervisorModalOpen] = useState<boolean>(false);
+  const [supervisorCallback, setSupervisorCallback] = useState<(() => void) | null>(null);
+  const [supervisorTitle, setSupervisorTitle] = useState<string>('');
+  const [supervisorMessage, setSupervisorMessage] = useState<string>('');
+
+  const handleRequestSupervisorAccess = (
+    targetTabOrAction: MasterTab | (() => void),
+    title?: string,
+    msg?: string
+  ) => {
+    if (typeof targetTabOrAction === 'string') {
+      const tabName = targetTabOrAction === 'reports' ? 'Laporan Penjualan' : 'Katalog Menu & Resep';
+      setSupervisorTitle(`🔒 Akses ${tabName}`);
+      setSupervisorMessage(
+        `Menu "${tabName}" memerlukan otorisasi Owner. Masukkan 4 digit PIN Owner untuk melanjutkan.`
+      );
+      setSupervisorCallback(() => () => setActiveTab(targetTabOrAction));
+    } else {
+      setSupervisorTitle(title || '🔒 Otorisasi Supervisor / Owner');
+      setSupervisorMessage(
+        msg || 'Fitur ini memerlukan otorisasi Owner. Masukkan 4 digit PIN Owner untuk melanjutkan.'
+      );
+      setSupervisorCallback(() => targetTabOrAction);
+    }
+    setIsSupervisorModalOpen(true);
+  };
 
   const loadActiveShift = useCallback(async () => {
     try {
@@ -70,16 +102,6 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   useEffect(() => {
     loadActiveShift();
   }, [loadActiveShift]);
-
-  // RBAC Guard: Restrict non-owners from reports, products recipe editor, and settings
-  useEffect(() => {
-    if (
-      currentUser.role !== 'owner' &&
-      (activeTab === 'reports' || activeTab === 'products' || activeTab === 'settings')
-    ) {
-      setActiveTab('pos');
-    }
-  }, [activeTab, currentUser]);
 
   // Dialog Modal state
   const [dialogConfig, setDialogConfig] = useState<{
@@ -341,6 +363,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         appLogo={shopConfig?.appLogoBase64}
         unreadCount={unreadCount}
         isNotificationOpen={isNotificationOpen}
+        currentUserName={currentUser.name}
         onOpenMaster={() => setIsMasterOpen(true)}
         onToggleNotifications={() => setIsNotificationOpen((prev) => !prev)}
         onLockApp={onLockApp}
@@ -362,6 +385,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         isProductFolderOpen={isProductFolderOpen}
         onToggleProductFolder={() => setIsProductFolderOpen((prev) => !prev)}
         onClose={() => setIsMasterOpen(false)}
+        onRequestSupervisorAccess={(tab) => handleRequestSupervisorAccess(tab)}
         onSelectTab={(tab) => {
           setActiveTab(tab);
           loadPosData();
@@ -381,14 +405,14 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
               >
                 {activeShift ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span>🟢 <strong>Shift #{activeShift.shiftNumber}</strong> ({activeShift.cashierName})</span>
+                    <span>🟢 <strong>Toko Buka: Shift #{activeShift.shiftNumber}</strong> ({activeShift.cashierName})</span>
                     <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
                       Kas Awal: {formatRupiah(activeShift.startingCash)} | Tunai: {formatRupiah(activeShift.totalCashSales)}
                     </span>
                   </div>
                 ) : (
                   <div>
-                    <span>⚪ <strong>Shift Kasir Belum Dibuka</strong></span>
+                    <span>⚪ <strong>Toko Sedang Tutup</strong></span>
                   </div>
                 )}
 
@@ -400,7 +424,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
                       onClick={() => setIsOpenShiftModalOpen(true)}
                     >
-                      🟢 Buka Shift
+                      🟢 Buka Toko
                     </button>
                   ) : (
                     <button
@@ -409,7 +433,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
                       onClick={() => setIsCloseShiftModalOpen(true)}
                     >
-                      🔴 Tutup Shift
+                      🔴 Tutup Toko
                     </button>
                   )}
                 </div>
@@ -438,9 +462,32 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
               onRemoveItem={handleRemoveCartItem}
               onClearCart={handleClearCart}
               onChangeDiscount={setDiscountPercent}
-              onProceedToPayment={() => setIsPaymentModalOpen(true)}
+              onProceedToPayment={() => {
+                if (!activeShift) {
+                  setDialogConfig({
+                    isOpen: true,
+                    type: 'alert',
+                    title: 'Toko Belum Dibuka',
+                    message:
+                      'Anda harus membuka toko terlebih dahulu dengan memasukkan kas awal modal kembalian sebelum dapat memproses transaksi penjualan.',
+                    confirmText: 'Buka Toko Sekarang',
+                    onConfirm: () => {
+                      setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+                      setIsOpenShiftModalOpen(true);
+                    },
+                  });
+                  return;
+                }
+                setIsPaymentModalOpen(true);
+              }}
             />
           </div>
+        )}
+
+        {activeTab === 'transactions' && (
+          <TransactionHistoryPanel
+            onReprintOrder={(order) => setCompletedOrder(order)}
+          />
         )}
 
         {activeTab === 'shifts' && (
@@ -453,7 +500,12 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         {activeTab === 'products' && <MenuPanel />}
         {activeTab === 'reports' && <ReportPanel />}
         {activeTab === 'logs' && <LogPanel />}
-        {activeTab === 'settings' && <SettingsPanel />}
+        {activeTab === 'settings' && (
+          <SettingsPanel
+            currentUser={currentUser}
+            onRequestSupervisorAccess={(cb) => handleRequestSupervisorAccess(cb)}
+          />
+        )}
       </main>
 
       {/* Variant Modal */}
@@ -487,7 +539,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         />
       )}
 
-      {/* Open Shift Modal */}
+      {/* Open Store Modal */}
       {isOpenShiftModalOpen && (
         <OpenShiftModal
           isOpen={isOpenShiftModalOpen}
@@ -500,19 +552,46 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         />
       )}
 
-      {/* Close Shift Modal */}
+      {/* Close Store Modal */}
       {isCloseShiftModalOpen && activeShift && (
         <CloseShiftModal
           isOpen={isCloseShiftModalOpen}
           shift={activeShift}
           onClose={() => setIsCloseShiftModalOpen(false)}
-          onClosed={() => {
+          onClosed={(closedShift) => {
             setActiveShift(null);
             setIsCloseShiftModalOpen(false);
+            setJustClosedShift(closedShift);
             loadActiveShift();
           }}
         />
       )}
+
+      {/* Post Close Store Modal (Thermal Receipt Preview & PDF) */}
+      {justClosedShift && (
+        <PostCloseStoreModal
+          isOpen={!!justClosedShift}
+          shift={justClosedShift}
+          shopConfig={shopConfig}
+          onFinish={() => setJustClosedShift(null)}
+        />
+      )}
+
+      {/* Supervisor PIN Modal */}
+      <SupervisorPinModal
+        isOpen={isSupervisorModalOpen}
+        title={supervisorTitle}
+        message={supervisorMessage}
+        onClose={() => {
+          setIsSupervisorModalOpen(false);
+          setSupervisorCallback(null);
+        }}
+        onSuccess={() => {
+          if (supervisorCallback) {
+            supervisorCallback();
+          }
+        }}
+      />
 
       {/* Reusable Dialog Modal for Alerts & Confirmations */}
       <DialogModal

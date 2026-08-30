@@ -5,9 +5,6 @@
 import React, { useState } from 'react';
 import type { IShift } from '../../types';
 import { shiftService } from '../../services/shift.service';
-import { pdfService } from '../../services/pdf.service';
-import { receiptService } from '../../services/receipt.service';
-import { configService } from '../../services/config.service';
 import { formatRupiah } from '../../utils/currency';
 
 interface CloseShiftModalProps {
@@ -32,51 +29,6 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   if (!isOpen) return null;
 
   const diff = actualCash - expectedCash;
-
-  const handleExportPdf = async () => {
-    try {
-      const config = await configService.getConfig();
-      const productSales = await shiftService.getShiftProductSales(shift.id!);
-      const tempShift: IShift = {
-        ...shift,
-        actualEndingCash: actualCash,
-        expectedEndingCash: expectedCash,
-        cashDifference: diff,
-        notes: notes.trim() || shift.notes,
-        closedAt: new Date(),
-      };
-      await pdfService.exportShiftReportPdf(tempShift, productSales, config);
-    } catch (err) {
-      setErrorMsg((err as Error).message);
-    }
-  };
-
-  const handlePrintReceipt = async () => {
-    try {
-      const config = await configService.getConfig();
-      const tempShift: IShift = {
-        ...shift,
-        actualEndingCash: actualCash,
-        expectedEndingCash: expectedCash,
-        cashDifference: diff,
-        notes: notes.trim() || shift.notes,
-        closedAt: new Date(),
-      };
-      const text = receiptService.generateShiftReceiptText(tempShift, config);
-      // In web browser, print dialog or console simulation
-      console.log('PRINTING SHIFT RECEIPT:\n', text);
-      const printWin = window.open('', '', 'width=400,height=600');
-      if (printWin) {
-        printWin.document.write(`<pre style="font-family: monospace; font-size: 12px;">${text}</pre>`);
-        printWin.document.close();
-        printWin.focus();
-        printWin.print();
-        printWin.close();
-      }
-    } catch (err) {
-      setErrorMsg((err as Error).message);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +58,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="inv-modal-header">
-          <h3 className="inv-modal-title">Tutup Shift Kasir</h3>
+          <h3 className="inv-modal-title">Tutup Toko</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
@@ -194,7 +146,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
           {/* Notes */}
           <div className="inv-form-group">
-            <label className="inv-form-label">Catatan Tutup Shift (Opsional)</label>
+            <label className="inv-form-label">Catatan Tutup Toko (Opsional)</label>
             <input
               type="text"
               className="form-input"
@@ -204,32 +156,12 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
             />
           </div>
 
-          {/* Paperless Export Buttons */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="shift-btn-action"
-              style={{ flex: 1, height: '36px' }}
-              onClick={handleExportPdf}
-            >
-              📄 Unduh PDF Rekap
-            </button>
-            <button
-              type="button"
-              className="shift-btn-action"
-              style={{ flex: 1, height: '36px' }}
-              onClick={handlePrintReceipt}
-            >
-              🖨️ Cetak Struk Shift
-            </button>
-          </div>
-
           <div className="inv-modal-footer" style={{ margin: '12px -20px -20px -20px' }}>
             <button type="button" className="inv-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>
             <button type="submit" className="shift-btn-danger" disabled={isSubmitting}>
-              {isSubmitting ? 'Menutup Shift...' : 'Selesaikan Tutup Shift'}
+              {isSubmitting ? 'Menutup Toko...' : 'Selesaikan Tutup Toko'}
             </button>
           </div>
         </form>

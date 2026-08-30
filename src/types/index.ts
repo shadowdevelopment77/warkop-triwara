@@ -121,7 +121,9 @@ export interface IShift {
   startingCash: number; // Kas awal modal kembalian
   totalCashSales: number; // Penjualan tunai
   totalQrisSales: number; // Penjualan QRIS
-  totalTransactions: number; // Jumlah order
+  totalTransactions: number; // Jumlah total order
+  cashTransactions?: number; // Jumlah transaksi tunai
+  qrisTransactions?: number; // Jumlah transaksi QRIS
   totalVoided: number; // Jumlah void
   expectedEndingCash?: number; // startingCash + totalCashSales
   actualEndingCash?: number; // Dihitung fisik oleh kasir

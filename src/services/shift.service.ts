@@ -48,6 +48,8 @@ export class ShiftService {
       totalCashSales: 0,
       totalQrisSales: 0,
       totalTransactions: 0,
+      cashTransactions: 0,
+      qrisTransactions: 0,
       totalVoided: 0,
       expectedEndingCash: Math.max(0, startingCash),
       notes,
@@ -58,7 +60,7 @@ export class ShiftService {
 
     await this.database.logs.add({
       type: 'shift',
-      description: `BUKA SHIFT: ${staff.name} (Modal Awal: Rp ${startingCash.toLocaleString('id-ID')})`,
+      description: `BUKA TOKO: ${staff.name} (Modal Awal: Rp ${startingCash.toLocaleString('id-ID')})`,
       referenceId: shiftNumber,
       createdAt: now,
     });
@@ -75,12 +77,16 @@ export class ShiftService {
     const newCash = active.totalCashSales + (isCash ? order.total : 0);
     const newQris = active.totalQrisSales + (!isCash ? order.total : 0);
     const newCount = active.totalTransactions + 1;
+    const newCashCount = (active.cashTransactions || 0) + (isCash ? 1 : 0);
+    const newQrisCount = (active.qrisTransactions || 0) + (!isCash ? 1 : 0);
     const newExpected = active.startingCash + newCash;
 
     await this.database.shifts.update(active.id, {
       totalCashSales: newCash,
       totalQrisSales: newQris,
       totalTransactions: newCount,
+      cashTransactions: newCashCount,
+      qrisTransactions: newQrisCount,
       expectedEndingCash: newExpected,
     });
   }
@@ -95,12 +101,16 @@ export class ShiftService {
     const isCash = order.paymentMethod === 'cash';
     const newCash = Math.max(0, shift.totalCashSales - (isCash ? order.total : 0));
     const newQris = Math.max(0, shift.totalQrisSales - (!isCash ? order.total : 0));
+    const newCashCount = Math.max(0, (shift.cashTransactions || 0) - (isCash ? 1 : 0));
+    const newQrisCount = Math.max(0, (shift.qrisTransactions || 0) - (!isCash ? 1 : 0));
     const newVoided = shift.totalVoided + 1;
     const newExpected = shift.startingCash + newCash;
 
     await this.database.shifts.update(shift.id, {
       totalCashSales: newCash,
       totalQrisSales: newQris,
+      cashTransactions: newCashCount,
+      qrisTransactions: newQrisCount,
       totalVoided: newVoided,
       expectedEndingCash: newExpected,
     });

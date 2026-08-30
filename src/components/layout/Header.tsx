@@ -9,6 +9,7 @@ interface HeaderProps {
   appLogo?: string;
   unreadCount?: number;
   isNotificationOpen?: boolean;
+  currentUserName?: string;
   onOpenMaster: () => void;
   onToggleNotifications: () => void;
   onLockApp: () => void;
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   appLogo,
   unreadCount = 0,
   isNotificationOpen = false,
+  currentUserName,
   onOpenMaster,
   onToggleNotifications,
   onLockApp,
@@ -52,8 +54,24 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right Actions: Notification Bell + Lock App + Flyout */}
-      <div className="header-right-actions">
+      {/* Right Actions: Greeting + Notification Bell + Lock App + Flyout */}
+      <div className="header-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {currentUserName && (
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#e4e4e7',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              backgroundColor: '#18181b',
+              border: '1px solid #27272a',
+            }}
+          >
+            Halo, {currentUserName}
+          </span>
+        )}
+
         <button
           type="button"
           className={`btn-notification-trigger ${isNotificationOpen ? 'active' : ''}`}

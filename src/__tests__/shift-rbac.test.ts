@@ -164,6 +164,8 @@ describe('Shift & Multi-PIN RBAC Lifecycle Tests', () => {
     expect(active.totalCashSales).toBe(36000);
     expect(active.totalQrisSales).toBe(18000);
     expect(active.totalTransactions).toBe(2);
+    expect(active.cashTransactions).toBe(1);
+    expect(active.qrisTransactions).toBe(1);
 
     // 5. Test Product Sales aggregation during shift
     const productSales = await shiftService.getShiftProductSales(shift.id!);
@@ -175,6 +177,7 @@ describe('Shift & Multi-PIN RBAC Lifecycle Tests', () => {
     await orderService.voidOrder(cashOrder.id!, 'Pelanggan membatalkan pesanan');
     active = (await shiftService.getActiveShift())!;
     expect(active.totalCashSales).toBe(0); // Deducted back!
+    expect(active.cashTransactions).toBe(0);
     expect(active.totalVoided).toBe(1);
     expect(active.expectedEndingCash).toBe(100000); // Back to starting cash
 
