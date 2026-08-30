@@ -22,7 +22,7 @@
 .log-view-title {
   font-size: 22px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .log-list-card {
@@ -43,8 +43,8 @@
 }
 
 .log-entry-item {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px 16px;
   display: flex;
@@ -120,8 +120,8 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 12px 16px;
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
 }
 
@@ -137,20 +137,20 @@
   font-size: 12px;
   font-weight: 600;
   border-radius: 6px;
-  border: 1px solid #3f3f46;
-  background-color: #27272a;
-  color: #a1a1aa;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .log-filter-pill:hover {
-  background-color: #3f3f46;
-  color: #fafafa;
+  background-color: var(--bg-surface-hover);
+  color: var(--text-main);
 }
 .log-filter-pill.active {
-  background-color: #fafafa;
-  color: #09090b;
-  border-color: #fafafa;
+  background-color: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
 }
 
 .log-date-filter-box {
@@ -163,14 +163,14 @@
   height: 34px;
   padding: 0 10px;
   font-size: 12px;
-  color: #fafafa;
-  background-color: #09090b;
-  border: 1px solid #3f3f46;
+  color: var(--text-main);
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   outline: none;
 }
 .log-date-input:focus {
-  border-color: #71717a;
+  border-color: #0f172a;
 }
 
 .log-btn-reset-date {
@@ -178,13 +178,12 @@
   padding: 0 10px;
   font-size: 12px;
   font-weight: 600;
-  color: #a1a1aa;
-  background-color: #27272a;
-  border: 1px solid #3f3f46;
+  color: var(--text-main);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
 }
 .log-btn-reset-date:hover {
-  color: #fafafa;
-  background-color: #3f3f46;
+  background-color: var(--bg-surface-hover);
 }

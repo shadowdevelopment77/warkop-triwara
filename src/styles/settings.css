@@ -22,7 +22,7 @@
 .settings-view-title {
   font-size: 22px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 /* Settings Trigger Cards Grid */
@@ -33,8 +33,8 @@
 }
 
 .settings-trigger-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 24px;
   display: flex;
@@ -44,8 +44,8 @@
   transition: all 0.15s ease;
 }
 .settings-trigger-card:hover {
-  background-color: var(--bg-surface);
-  border-color: #52525b;
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 .settings-card-info {
@@ -57,7 +57,7 @@
 .settings-card-title {
   font-size: 17px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .settings-card-desc {
@@ -72,10 +72,10 @@
 
 /* Settings Modals */
 .settings-modal-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 500px;
   max-height: 88dvh;
@@ -86,17 +86,17 @@
 
 .settings-modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #09090b;
+  background-color: #f1f5f9;
 }
 
 .settings-modal-title {
   font-size: 17px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .settings-modal-body {
@@ -106,22 +106,22 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background-color: var(--bg-card);
+  background-color: #f8fafc;
 }
 
 .settings-modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  background-color: #09090b;
+  background-color: #f1f5f9;
 }
 
 .settings-btn-primary {
-  background-color: #fafafa;
-  color: #09090b;
+  background-color: #09090b;
+  color: #ffffff;
   font-weight: 700;
   padding: 10px 16px;
   border-radius: 8px;
@@ -129,12 +129,12 @@
   transition: all 0.15s ease;
 }
 .settings-btn-primary:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 .settings-btn-secondary {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   color: var(--text-main);
   font-weight: 600;
   padding: 10px 16px;
@@ -143,8 +143,8 @@
   transition: all 0.15s ease;
 }
 .settings-btn-secondary:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: #3f3f46;
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
 }
 
 .settings-btn-danger {

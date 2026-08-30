@@ -29,35 +29,55 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '12px 16px',
-        borderTop: '1px solid var(--border-color)',
-        backgroundColor: '#121214',
+        borderTop: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
         borderBottomLeftRadius: '8px',
         borderBottomRightRadius: '8px',
       }}
     >
-      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+      <span style={{ fontSize: '12px', color: '#64748b' }}>
         Menampilkan {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} dari {totalItems} data
       </span>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           type="button"
-          className="btn-secondary"
-          style={{ padding: '4px 10px', fontSize: '12px', opacity: currentPage <= 1 ? 0.4 : 1 }}
+          style={{
+            padding: '6px 14px',
+            fontSize: '12px',
+            fontWeight: 700,
+            backgroundColor: '#f1f5f9',
+            border: '1px solid #cbd5e1',
+            borderRadius: '6px',
+            color: '#0f172a',
+            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage <= 1 ? 0.4 : 1,
+            transition: 'all 0.15s ease',
+          }}
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
         >
           ◀ Sebelumnya
         </button>
 
-        <span style={{ fontSize: '12px', fontWeight: 700, color: '#fafafa' }}>
+        <span style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
           {currentPage} / {totalPages}
         </span>
 
         <button
           type="button"
-          className="btn-secondary"
-          style={{ padding: '4px 10px', fontSize: '12px', opacity: currentPage >= totalPages ? 0.4 : 1 }}
+          style={{
+            padding: '6px 14px',
+            fontSize: '12px',
+            fontWeight: 700,
+            backgroundColor: '#f1f5f9',
+            border: '1px solid #cbd5e1',
+            borderRadius: '6px',
+            color: '#0f172a',
+            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage >= totalPages ? 0.4 : 1,
+            transition: 'all 0.15s ease',
+          }}
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
         >

@@ -158,20 +158,20 @@ export const InventoryCategoryManagerModal: React.FC<InventoryCategoryManagerMod
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
+                      backgroundColor: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 600, color: '#fafafa', fontSize: '14px' }}>
+                      <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>
                         {formatCategoryLabel(cat)}
                       </span>
                       <span
                         style={{
                           marginLeft: '8px',
                           fontSize: '12px',
-                          color: count > 0 ? '#60a5fa' : '#71717a',
+                          color: count > 0 ? '#2563eb' : '#64748b',
                         }}
                       >
                         ({count} bahan)
@@ -182,23 +182,32 @@ export const InventoryCategoryManagerModal: React.FC<InventoryCategoryManagerMod
                       {isSystem ? (
                         <span
                           style={{
-                            fontSize: '11px',
-                            backgroundColor: '#27272a',
-                            color: '#a1a1aa',
-                            padding: '3px 8px',
+                            fontSize: '16px',
+                            cursor: 'not-allowed',
+                            opacity: 0.35,
+                            color: '#71717a',
+                            padding: '4px 8px',
                             borderRadius: '4px',
                           }}
                         >
-                          Sistem
+                          🗑️
                         </span>
                       ) : (
                         <button
                           type="button"
                           className="menu-btn-icon-danger"
                           onClick={() => handleDeleteCategory(cat)}
-                          title={`Hapus kategori "${cat}"`}
+                            title={`Hapus kategori "${cat}"`}
+                            style={{background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            opacity:  1,
+                            fontSize: '16px',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            color: '#ef4444',}}
                         >
-                          ✕
+                          🗑️
                         </button>
                       )}
                     </div>

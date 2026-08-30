@@ -93,6 +93,8 @@ export class OrderService {
         hpp: itemHpp, // Accurate HPP Snapshot!
         qty: item.quantity,
         orderType: item.orderType,
+        temperature: item.temperature,
+        sugarLevel: item.sugarLevel,
         subtotal: itemSubtotal,
         hppSubtotal: itemHppSubtotal,
         toppings: orderItemToppings,

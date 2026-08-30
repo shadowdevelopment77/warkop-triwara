@@ -36,7 +36,7 @@
 .shift-view-title {
   font-size: 22px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 /* Active Shift Banner in POS Screen */
@@ -88,7 +88,7 @@
 .shift-stat-value {
   font-size: 20px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 /* Shift History Data Table Card */
@@ -116,14 +116,14 @@
   height: 6px;
 }
 .shift-table-scroll::-webkit-scrollbar-track {
-  background: #18181b;
+  background: var(--bg-surface);
 }
 .shift-table-scroll::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 .shift-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #94a3b8;
 }
 
 .shift-data-table {
@@ -138,23 +138,23 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: #121214;
+  background-color: var(--bg-surface);
   padding: 10px 14px;
   font-weight: 700;
-  color: #a1a1aa;
+  color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
 .shift-data-table td {
   padding: 8px 14px;
-  border-bottom: 1px solid #27272a;
-  color: #fafafa;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
 .shift-data-table tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--bg-surface);
 }
 
 /* Difference Badges */
@@ -185,9 +185,9 @@
 .shift-btn-primary {
   height: 38px;
   padding: 0 16px;
-  border: 1px solid #3f3f46;
-  background-color: #27272a;
-  color: #fafafa;
+  border: 1px solid #09090b;
+  background-color: #09090b;
+  color: #ffffff;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
@@ -198,7 +198,7 @@
   transition: all 0.15s ease;
 }
 .shift-btn-primary:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 .shift-btn-open{

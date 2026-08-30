@@ -177,7 +177,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                       <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
                         {formatDateIndonesian(order.createdAt)}
                       </td>
-                      <td style={{ fontWeight: 700, color: '#fafafa' }}>
+                      <td style={{ fontWeight: 700, color: '#0f172a' }}>
                         {formatRupiah(order.total)}
                       </td>
                       <td>
@@ -187,8 +187,9 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                             fontWeight: 700,
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            backgroundColor: order.paymentMethod === 'cash' ? '#27272a' : '#1e3a8a',
-                            color: order.paymentMethod === 'cash' ? '#fafafa' : '#93c5fd',
+                            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
+                            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
+                            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
                             textTransform: 'uppercase',
                           }}
                         >
@@ -204,26 +205,40 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            className="report-btn-print"
-                            onClick={() => onReprintOrder(order)}
-                            title="Cetak Ulang Struk Pelanggan"
-                          >
-                            🖨️ Cetak
-                          </button>
                           {order.status === 'completed' ? (
-                            <button
-                              type="button"
-                              className="report-btn-void"
-                              onClick={() => setVoidingOrder(order)}
-                              title="Batalkan (Void) Transaksi"
-                            >
-                              🚫 Void
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                className="report-btn-print"
+                                onClick={() => onReprintOrder(order)}
+                                title="Cetak Ulang Struk Pelanggan"
+                              >
+                                🖨️ Cetak
+                              </button>
+                              <button
+                                type="button"
+                                className="report-btn-void"
+                                onClick={() => setVoidingOrder(order)}
+                                title="Batalkan (Void) Transaksi"
+                              >
+                                🚫 Void
+                              </button>
+                            </>
                           ) : (
-                            <span className="report-voided-label" title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}>
-                              Dibatalkan
+                            <span
+                              className="report-voided-label"
+                              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
+                              style={{
+                                color: '#ef4444',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                              }}
+                            >
+                              🚫 Dibatalkan
                             </span>
                           )}
                         </div>

@@ -79,7 +79,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
       {/* Filter Toolbar: Single Date Picker (Waktu Buka) */}
       <div className="log-filter-toolbar" style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent:'flex-end' }}>
         <div className="log-date-filter-box">
-          <span style={{ fontSize: '15px', color: '#a1a1aa' }}>Opening: </span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Opening: </span>
           <input
             type="date"
             className="log-date-input"
@@ -144,19 +144,19 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
                       <tr key={shift.id}>
                         <td>{rowNumber}</td>
                         <td>
-                          <strong style={{ color: '#fafafa' }}>{shift.cashierName}</strong>
-                          <div style={{ fontSize: '11px', color: '#71717a' }}>#{shift.shiftNumber}</div>
+                          <strong style={{ color: '#0f172a' }}>{shift.cashierName}</strong>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>#{shift.shiftNumber}</div>
                         </td>
-                        <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
+                        <td style={{ fontSize: '12px', color: '#64748b' }}>
                           {formatDateIndonesian(shift.openedAt)}
                         </td>
-                        <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
+                        <td style={{ fontSize: '12px', color: '#64748b' }}>
                           {shift.closedAt ? formatDateIndonesian(shift.closedAt) : '— (Berjalan)'}
                         </td>
                         <td>{formatRupiah(shift.startingCash)}</td>
                         <td>{cashCount} pesanan</td>
                         <td>{qrisCount} pesanan</td>
-                        <td style={{ color: '#4ade80', fontWeight: 700 }}>
+                        <td style={{ color: '#16a34a', fontWeight: 700 }}>
                           {formatRupiah(shift.totalCashSales)}
                         </td>
                         <td>

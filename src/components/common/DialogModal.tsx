@@ -36,7 +36,7 @@ export const DialogModal: React.FC<DialogModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="dialog-modal-header">
-          <h3 className="dialog-modal-title" style={{ color: isDanger ? '#f87171' : '#fafafa' }}>
+          <h3 className="dialog-modal-title" style={{ color: isDanger ? '#ef4444' : '#0f172a' }}>
             {isDanger ? '⚠️ ' : type === 'confirm' ? '❓ ' : 'ℹ️ '}
             {title}
           </h3>

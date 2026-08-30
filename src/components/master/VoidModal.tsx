@@ -47,8 +47,8 @@ export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmV
 
             <div
               style={{
-                backgroundColor: '#18181b',
-                border: '1px solid #27272a',
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #cbd5e1',
                 borderRadius: '8px',
                 padding: '12px 14px',
                 marginBottom: '16px',
@@ -56,14 +56,14 @@ export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmV
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#a1a1aa' }}>Pelanggan:</span>
-                <strong style={{ color: '#fafafa' }}>{order.customerName || 'Umum'}</strong>
+                <span style={{ color: '#64748b' }}>Pelanggan:</span>
+                <strong style={{ color: '#0f172a' }}>{order.customerName || 'Umum'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#a1a1aa' }}>Total Belanja:</span>
-                <strong style={{ color: '#f87171' }}>{formatRupiah(order.total)}</strong>
+                <span style={{ color: '#64748b' }}>Total Belanja:</span>
+                <strong style={{ color: '#ef4444' }}>{formatRupiah(order.total)}</strong>
               </div>
-              <div style={{ color: '#a1a1aa', fontSize: '11px', marginTop: '6px' }}>
+              <div style={{ color: '#64748b', fontSize: '11px', marginTop: '6px' }}>
                 ⚠️ Seluruh stok bahan baku &amp; kemasan dari transaksi ini akan dikembalikan ke gudang.
               </div>
             </div>

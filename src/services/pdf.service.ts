@@ -8,6 +8,7 @@ import type { IOrder, IIngredient, IShopConfig } from '../types';
 import type { ISalesSummary, ITopProduct, ISalesChartResult } from './report.service';
 import { formatRupiah } from '../utils/currency';
 import { formatShortDate, formatDateIndonesian } from '../utils/date';
+import { db } from '../database/db';
 
 export class PdfService {
   /**
@@ -220,6 +221,71 @@ export class PdfService {
       margin: { left: 14, right: 14 },
     });
 
+    // Check for operational expenses (petty cash) in closed shifts during period
+    try {
+      const shifts = await db.shifts
+        .where('openedAt')
+        .between(startDate, endDate, true, true)
+        .toArray();
+
+      const allExpenses: { date: Date; shiftNo: string; cashier: string; desc: string; amount: number }[] = [];
+      shifts.forEach((s) => {
+        if (s.expenses && s.expenses.length > 0) {
+          s.expenses.forEach((e) => {
+            allExpenses.push({
+              date: s.openedAt,
+              shiftNo: s.shiftNumber,
+              cashier: s.cashierName,
+              desc: e.description,
+              amount: e.amount,
+            });
+          });
+        }
+      });
+
+      if (allExpenses.length > 0) {
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Rincian Pembelian / Pengeluaran Operasional (Petty Cash)', 14, 18);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 100, 100);
+        const totalExp = allExpenses.reduce((sum, e) => sum + e.amount, 0);
+        doc.text(`Periode: ${periodStr} | Total Pengeluaran: ${formatRupiah(totalExp)}`, 14, 24);
+        doc.setTextColor(0, 0, 0);
+
+        const expenseTableBody: any[] = allExpenses.map((e, idx) => [
+          idx + 1,
+          formatShortDate(e.date),
+          `#${e.shiftNo}`,
+          e.cashier,
+          e.desc,
+          formatRupiah(e.amount),
+        ]);
+        expenseTableBody.push(['', '', '', '', 'TOTAL PEMBELIAN OPERASIONAL', formatRupiah(totalExp)]);
+
+        autoTable(doc, {
+          startY: 28,
+          head: [['No', 'Tanggal', 'Shift', 'Kasir', 'Keterangan Barang / Keperluan', 'Nominal']],
+          body: expenseTableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [185, 28, 28], fontSize: 8 },
+          bodyStyles: { fontSize: 8 },
+          columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 22 },
+            2: { cellWidth: 26 },
+            3: { cellWidth: 26 },
+            4: { cellWidth: 65 },
+            5: { halign: 'right', fontStyle: 'bold' },
+          },
+        });
+      }
+    } catch (err) {
+      console.warn('Could not load shift expenses for sales report PDF:', err);
+    }
+
     doc.save(`Laporan_Penjualan_${periodStr.replace(/\//g, '-')}.pdf`);
   }
 
@@ -286,21 +352,31 @@ export class PdfService {
     doc.text(`Waktu Tutup : ${closeTimeStr}`, 14, 53);
 
     // Shift Financial Summary
-    const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales);
+    const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales - (shift.totalExpenses || 0));
     const actual = shift.actualEndingCash ?? expected;
     const diff = shift.cashDifference ?? (actual - expected);
 
     const summaryData = [
       ['Kas Awal (Modal Kembalian)', formatRupiah(shift.startingCash)],
       ['Total Penjualan Tunai', formatRupiah(shift.totalCashSales)],
+    ];
+
+    if (shift.totalExpenses && shift.totalExpenses > 0) {
+      summaryData.push(['Total Belanja / Pengeluaran Kasir', `-${formatRupiah(shift.totalExpenses)}`]);
+      if (shift.borrowedFromSales && shift.borrowedFromSales > 0) {
+        summaryData.push(['  *(Peringatan: Pinjam Uang Sales)', formatRupiah(shift.borrowedFromSales)]);
+      }
+    }
+
+    summaryData.push(
       ['Uang Tunai Sistem (Seharusnya)', formatRupiah(expected)],
       ['Uang Tunai Fisik di Laci', formatRupiah(actual)],
       ['Selisih Kas', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(LEBIH)' : '(KURANG)'}`],
       ['Total Penjualan QRIS (Non-Tunai)', formatRupiah(shift.totalQrisSales)],
       ['Total Omset Shift (Tunai + QRIS)', formatRupiah(shift.totalCashSales + shift.totalQrisSales)],
       ['Total Pesanan Selesai', `${shift.totalTransactions} Pesanan`],
-      ['Total Pesanan Dibatalkan (Void)', `${shift.totalVoided} Pesanan`],
-    ];
+      ['Total Pesanan Dibatalkan (Void)', `${shift.totalVoided} Pesanan`]
+    );
 
     autoTable(doc, {
       startY: 59,
@@ -314,10 +390,42 @@ export class PdfService {
       },
     });
 
-    const currentY = ((doc as any).lastAutoTable?.finalY || 120) + 14;
+    let currentY = ((doc as any).lastAutoTable?.finalY || 120) + 10;
+
+    // Detailed Expenses Table if cashier recorded purchases
+    if (shift.expenses && shift.expenses.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Rincian Pembelian / Pengeluaran Kasir (Petty Cash):', 14, currentY);
+      currentY += 4;
+
+      const expenseRows: any[] = shift.expenses.map((e, idx) => [
+        idx + 1,
+        e.description,
+        formatRupiah(e.amount),
+      ]);
+      expenseRows.push(['', 'TOTAL PENGELUARAN', formatRupiah(shift.totalExpenses || 0)]);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['No', 'Keterangan Barang / Keperluan', 'Nominal']],
+        body: expenseRows,
+        theme: 'grid',
+        headStyles: { fillColor: [185, 28, 28], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 15, halign: 'center' },
+          1: { cellWidth: 120 },
+          2: { halign: 'right', fontStyle: 'bold' },
+        },
+      });
+
+      currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
+    }
 
     if (shift.notes) {
       doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
       doc.text(`Catatan Kasir: ${shift.notes}`, 14, currentY);
     }
 

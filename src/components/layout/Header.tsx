@@ -61,11 +61,11 @@ export const Header: React.FC<HeaderProps> = ({
             style={{
               fontSize: '13px',
               fontWeight: 600,
-              color: '#e4e4e7',
+              color: '#ffffff',
               padding: '4px 10px',
               borderRadius: '6px',
-              backgroundColor: '#18181b',
-              border: '1px solid #27272a',
+              backgroundColor: '#27272a',
+              border: '1px solid #3f3f46',
             }}
           >
             Halo, {currentUserName}

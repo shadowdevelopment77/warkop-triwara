@@ -145,20 +145,20 @@ export const MenuPanel: React.FC = () => {
             <div className="menu-hpp-grid">
               <div className="menu-hpp-box dine-in">
                 <span className="menu-box-title">Dine-In</span>
-                <strong style={{ fontSize: '18px', color: '#fafafa' }}>
+                <strong style={{ fontSize: '18px', color: '#0f172a' }}>
                   HPP: {formatRupiah(dineHpp.totalHpp)}
                 </strong>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#34d399' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#16a34a' }}>
                   Laba Bersih: +{formatRupiah(dineHpp.grossProfit)} ({dineHpp.marginPercent}%)
                 </span>
               </div>
 
               <div className="menu-hpp-box takeaway">
                 <span className="menu-box-title">Takeaway</span>
-                <strong style={{ fontSize: '18px', color: '#fafafa' }}>
+                <strong style={{ fontSize: '18px', color: '#0f172a' }}>
                   HPP: {formatRupiah(takeHpp.totalHpp)}
                 </strong>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#38bdf8' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#0284c7' }}>
                   Laba Bersih: +{formatRupiah(takeHpp.grossProfit)} ({takeHpp.marginPercent}%)
                 </span>
               </div>
@@ -166,7 +166,7 @@ export const MenuPanel: React.FC = () => {
 
             {/* Ingredients Recipe Breakdown */}
             <div className="recipe-breakdown-section" style={{ marginTop: '16px' }}>
-              <h4 style={{ color: '#fafafa', fontSize: '14px', marginBottom: '8px' }}>
+              <h4 style={{ color: '#0f172a', fontSize: '14px', marginBottom: '8px' }}>
                 Rincian Biaya Bahan Baku Utama:
               </h4>
               {selectedProduct.recipe.length === 0 ? (
@@ -184,19 +184,19 @@ export const MenuPanel: React.FC = () => {
                           display: 'flex',
                           justifyContent: 'space-between',
                           padding: '8px 12px',
-                          backgroundColor: '#18181b',
+                          backgroundColor: '#f1f5f9',
                           borderRadius: '6px',
-                          border: '1px solid #27272a',
+                          border: '1px solid #cbd5e1',
                           fontSize: '13px',
                         }}
                       >
                         <div>
-                          <strong style={{ color: '#fafafa' }}>{ing ? ing.name : 'Bahan'}</strong>
-                          <span style={{ color: '#a1a1aa', marginLeft: '8px', fontSize: '12px' }}>
+                          <strong style={{ color: '#0f172a' }}>{ing ? ing.name : 'Bahan'}</strong>
+                          <span style={{ color: '#64748b', marginLeft: '8px', fontSize: '12px' }}>
                             ({rec.amount} {rec.unit} × {formatRupiah(unitCost)}/{rec.unit})
                           </span>
                         </div>
-                        <span style={{ fontWeight: 700, color: '#34d399' }}>
+                        <span style={{ fontWeight: 700, color: '#16a34a' }}>
                           {formatRupiah(totalCost)}
                         </span>
                       </div>
@@ -205,7 +205,7 @@ export const MenuPanel: React.FC = () => {
                 </div>
               )}
 
-              <h4 style={{ color: '#fafafa', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
+              <h4 style={{ color: '#0f172a', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
                 Rincian Biaya Kemasan:
               </h4>
               {selectedProduct.takeawayPackaging.length === 0 ? (
@@ -223,19 +223,19 @@ export const MenuPanel: React.FC = () => {
                           display: 'flex',
                           justifyContent: 'space-between',
                           padding: '8px 12px',
-                          backgroundColor: '#18181b',
+                          backgroundColor: '#f1f5f9',
                           borderRadius: '6px',
-                          border: '1px solid #27272a',
+                          border: '1px solid #cbd5e1',
                           fontSize: '13px',
                         }}
                       >
                         <div>
-                          <strong style={{ color: '#fafafa' }}>{ing ? ing.name : 'Kemasan'}</strong>
-                          <span style={{ color: '#a1a1aa', marginLeft: '8px', fontSize: '12px' }}>
+                          <strong style={{ color: '#0f172a' }}>{ing ? ing.name : 'Kemasan'}</strong>
+                          <span style={{ color: '#64748b', marginLeft: '8px', fontSize: '12px' }}>
                             ({pkg.amount} {pkg.unit} × {formatRupiah(unitCost)}/{pkg.unit})
                           </span>
                         </div>
-                        <span style={{ fontWeight: 700, color: '#38bdf8' }}>
+                        <span style={{ fontWeight: 700, color: '#0284c7' }}>
                           {formatRupiah(totalCost)}
                         </span>
                       </div>
@@ -244,7 +244,7 @@ export const MenuPanel: React.FC = () => {
                 </div>
               )}
 
-              <h4 style={{ color: '#fafafa', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
+              <h4 style={{ color: '#0f172a', fontSize: '14px', marginTop: '14px', marginBottom: '8px' }}>
                 Additional:
               </h4>
               {!selectedProduct.availableAdditionals || selectedProduct.availableAdditionals.length === 0 ? (
@@ -260,21 +260,21 @@ export const MenuPanel: React.FC = () => {
                           display: 'flex',
                           justifyContent: 'space-between',
                           padding: '8px 12px',
-                          backgroundColor: '#18181b',
+                          backgroundColor: '#f1f5f9',
                           borderRadius: '6px',
-                          border: '1px solid #27272a',
+                          border: '1px solid #cbd5e1',
                           fontSize: '13px',
                         }}
                       >
                         <div>
-                          <strong style={{ color: '#fafafa' }}>{add.name}</strong>
+                          <strong style={{ color: '#0f172a' }}>{add.name}</strong>
                           {ing && add.amount && (
-                            <span style={{ color: '#a1a1aa', marginLeft: '8px', fontSize: '12px' }}>
+                            <span style={{ color: '#64748b', marginLeft: '8px', fontSize: '12px' }}>
                               ({add.amount} {ing.unit} {ing.name})
                             </span>
                           )}
                         </div>
-                        <span style={{ fontWeight: 700, color: '#fbbf24' }}>
+                        <span style={{ fontWeight: 700, color: '#d97706' }}>
                           +{formatRupiah(add.price)}
                         </span>
                       </div>

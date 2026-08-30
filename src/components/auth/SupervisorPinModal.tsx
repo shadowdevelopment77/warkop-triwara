@@ -98,10 +98,10 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
         </div>
 
         <div className="pin-lock-brand" style={{ marginTop: '8px' }}>
-          <h3 style={{ color: '#fafafa', fontSize: '18px', margin: '0 0 6px 0', fontWeight: 800 }}>
+          <h3 style={{ color: '#0f172a', fontSize: '18px', margin: '0 0 6px 0', fontWeight: 800 }}>
             {title}
           </h3>
-          <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
+          <p style={{ color: '#64748b', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
             {message}
           </p>
         </div>

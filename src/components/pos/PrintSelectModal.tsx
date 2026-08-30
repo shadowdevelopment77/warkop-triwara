@@ -69,12 +69,12 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
 
         {/* Modal Body */}
         <div className="inv-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1 }}>
-          <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
             Preview Receipt #{order.orderNumber}:
           </p>
 
           {/* Realistic 58mm Thermal Receipt Paper Preview */}
-          <div style={{ backgroundColor: '#18181b', padding: '12px', borderRadius: '8px' }}>
+          <div style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '8px' }}>
             <div className="thermal-receipt-paper-preview">
               {/* Header / Store Branding */}
               <div style={{ textAlign: 'center', marginBottom: '8px' }}>
@@ -129,31 +129,38 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
 
               {/* Items List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '10px' }}>
-                {order.items.map((item, idx) => (
-                  <div key={idx}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                      <span>
-                        {item.productName} x{item.qty}
-                      </span>
-                      <span>{formatRupiah(item.subtotal)}</span>
+                {order.items.map((item, idx) => {
+                  const details: string[] = [];
+                  details.push(item.orderType === 'takeaway' ? 'Takeaway' : 'Dine In');
+                  if (item.temperature) details.push(item.temperature);
+                  if (item.sugarLevel) details.push(item.sugarLevel);
+                  if (item.toppings && item.toppings.length > 0) {
+                    item.toppings.forEach((t) => {
+                      details.push(`+${t.name}${t.price ? ` (${formatRupiah(t.price)})` : ''}`);
+                    });
+                  }
+
+                  return (
+                    <div key={idx} style={{ textAlign: 'left' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                        <span>
+                          {item.productName} x{item.qty}
+                        </span>
+                        <span>{formatRupiah(item.subtotal)}</span>
+                      </div>
+                      {details.length > 0 && (
+                        <div style={{ fontSize: '9px', color: '#4b5563', textAlign: 'left', marginTop: '1px' }}>
+                          ({details.join(', ')})
+                        </div>
+                      )}
+                      {item.notes && (
+                        <div style={{ fontSize: '9px', color: '#6b7280', fontStyle: 'italic', textAlign: 'left' }}>
+                          * Catatan: {item.notes}
+                        </div>
+                      )}
                     </div>
-                    {item.orderType === 'takeaway' && (
-                      <div style={{ fontSize: '9px', color: '#555555', paddingLeft: '8px' }}>
-                        • Takeaway
-                      </div>
-                    )}
-                    {item.toppings.map((t, ti) => (
-                      <div key={ti} style={{ fontSize: '9px', color: '#555555', paddingLeft: '8px' }}>
-                        • {t.name}
-                      </div>
-                    ))}
-                    {item.notes && (
-                      <div style={{ fontSize: '9px', color: '#555555', fontStyle: 'italic', paddingLeft: '8px' }}>
-                        Catatan: {item.notes}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />

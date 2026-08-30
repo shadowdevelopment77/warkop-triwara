@@ -93,7 +93,7 @@ export const InventoryPanel: React.FC = () => {
             Export PDF
           </button>
           <button type="button" className="inv-btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
-            🏷️ Kelola Kategori
+            Kelola Kategori
           </button>
           <button type="button" className="inv-btn-primary" onClick={() => setIsAddModalOpen(true)}>
             + Tambah Bahan Baru

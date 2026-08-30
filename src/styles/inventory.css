@@ -22,7 +22,7 @@
 .inv-view-title {
   font-size: 22px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .inv-header-actions {
@@ -33,8 +33,8 @@
 
 /* Inventory Action Buttons */
 .inv-btn-primary {
-  background-color: #fafafa;
-  color: #09090b;
+  background-color: #09090b;
+  color: #ffffff;
   font-weight: 700;
   padding: 10px 16px;
   border-radius: 8px;
@@ -42,7 +42,7 @@
   transition: all 0.15s ease;
 }
 .inv-btn-primary:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 .inv-btn-secondary {
@@ -92,7 +92,7 @@
   background-color: var(--bg-surface);
   padding: 12px 16px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -185,13 +185,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #09090b;
+  background-color: var(--bg-surface);
 }
 
 .inv-modal-title {
   font-size: 16px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .inv-modal-body {
@@ -212,7 +212,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  background-color: #09090b;
+  background-color: var(--bg-surface);
 }
 
 .inv-form-group {
@@ -239,8 +239,8 @@
 }
 
 .inv-calc-badge {
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 10px 14px;
   display: flex;
@@ -250,6 +250,6 @@
   color: var(--text-muted);
 }
 .inv-calc-badge strong {
-  color: #34d399;
+  color: #16a34a;
   font-size: 15px;
 }

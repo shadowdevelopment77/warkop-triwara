@@ -16,8 +16,8 @@
 .menu-panel-sidebar {
   width: 320px;
   height: 100%;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -27,7 +27,7 @@
 
 .menu-sidebar-header {
   padding: 14px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -37,9 +37,9 @@
   width: 100%;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
-  background-color: var(--bg-surface);
+  background-color: #ffffff;
   color: var(--text-main);
   font-size: 14px;
 }
@@ -57,7 +57,7 @@
 .menu-row-btn {
   width: 100%;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   gap: 15px;
@@ -66,11 +66,11 @@
   transition: all 0.15s ease;
 }
 .menu-row-btn:hover {
-  background-color: var(--bg-surface);
+  background-color: #f1f5f9;
 }
 .menu-row-btn.active {
-  background-color: var(--bg-surface-hover);
-  border-left: 3px solid #fafafa;
+  background-color: #f1f5f9;
+  border-left: 3px solid #09090b;
 }
 
 .menu-name {
@@ -92,8 +92,8 @@
 }
 
 .menu-detail-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   padding: 24px;
   display: flex;
@@ -120,14 +120,14 @@
 .menu-detail-title {
   font-size: 24px;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-main);
   margin: 4px 0 2px 0;
 }
 
 .menu-detail-price {
   font-size: 16px;
   font-weight: 700;
-  color: #34d399;
+  color: #16a34a;
 }
 
 .menu-hpp-grid {
@@ -143,7 +143,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background-color: #18181b;
+  background-color: var(--bg-surface);
 }
 .menu-hpp-box.dine-in {
   background-color: rgba(16, 185, 129, 0.08);
@@ -162,8 +162,8 @@
 
 /* Scoped Menu Buttons */
 .menu-btn-primary {
-  background-color: #fafafa;
-  color: #09090b;
+  background-color: #09090b;
+  color: #ffffff;
   font-weight: 700;
   padding: 10px 16px;
   border-radius: 8px;
@@ -171,7 +171,7 @@
   transition: all 0.15s ease;
 }
 .menu-btn-primary:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 .menu-btn-secondary {
@@ -204,10 +204,10 @@
 
 /* Recipe & Category Modals (Scoped to Menu) */
 .menu-modal-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.15);
   width: 94%;
   max-width: 660px;
   max-height: 88dvh;
@@ -218,17 +218,17 @@
 
 .menu-modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #09090b;
+  background-color: #f1f5f9;
 }
 
 .menu-modal-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .menu-modal-body {
@@ -239,17 +239,17 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  background-color: var(--bg-card);
+  background-color: #f8fafc;
 }
 
 .menu-modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  background-color: #09090b;
+  background-color: #f1f5f9;
   width: 100%;
 }
 
@@ -269,16 +269,16 @@
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #3f3f46;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background-color: #18181b;
-  color: #fafafa;
+  background-color: #ffffff;
+  color: var(--text-main);
   font-size: 14px;
 }
 .menu-form-input:focus, .menu-form-select:focus {
-  border-color: #fafafa;
+  border-color: #0f172a;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(250, 250, 250, 0.15);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
 }
 
 .menu-form-error {
@@ -293,8 +293,8 @@
 
 /* Builder Sections (Ingredients, Packaging, Additionals) */
 .menu-builder-section {
-  background-color: #121214;
-  border: 1px solid #27272a;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -313,12 +313,12 @@
 .menu-builder-title {
   font-size: 14px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .menu-builder-sub {
   font-size: 12px;
-  color: #a1a1aa;
+  color: var(--text-muted);
   display: block;
   margin-top: 2px;
 }
@@ -328,15 +328,15 @@
   font-weight: 700;
   padding: 6px 12px;
   border-radius: 6px;
-  background-color: #27272a;
-  color: #fafafa;
-  border: 1px solid #3f3f46;
+  background-color: #ffffff;
+  color: var(--text-main);
+  border: 1px solid #cbd5e1;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 .menu-btn-add-item:hover {
-  background-color: #3f3f46;
-  border-color: #71717a;
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
 }
 
 /* Packaging Single-Row Card */
@@ -344,8 +344,8 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -355,8 +355,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background-color: #18181b;
-  border: 1px solid #27272a;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 12px;
 }
@@ -376,8 +376,8 @@
 .menu-price-box {
   display: flex;
   align-items: center;
-  background-color: #121214;
-  border: 1px solid #3f3f46;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0 10px;
   height: 40px;
@@ -387,7 +387,7 @@
 .menu-price-box span {
   font-size: 12px;
   font-weight: 700;
-  color: #a1a1aa;
+  color: var(--text-muted);
   margin-right: 4px;
 }
 .menu-price-box input {
@@ -396,7 +396,7 @@
   padding: 0 !important;
   height: 100% !important;
   font-size: 14px !important;
-  color: #fafafa !important;
+  color: var(--text-main) !important;
   width: 100% !important;
   box-shadow: none !important;
 }
@@ -404,8 +404,8 @@
 .menu-qty-box {
   display: flex;
   align-items: center;
-  background-color: #121214;
-  border: 1px solid #3f3f46;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0 10px;
   height: 40px;
@@ -418,14 +418,14 @@
   padding: 0 !important;
   height: 100% !important;
   font-size: 14px !important;
-  color: #fafafa !important;
+  color: var(--text-main) !important;
   width: 100% !important;
   box-shadow: none !important;
 }
 .menu-qty-box span {
   font-size: 12px;
   font-weight: 600;
-  color: #a1a1aa;
+  color: var(--text-muted);
   margin-left: 4px;
 }
 

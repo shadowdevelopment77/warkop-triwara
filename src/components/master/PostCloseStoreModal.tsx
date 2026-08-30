@@ -78,12 +78,12 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
         </div>
 
         <div className="inv-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1 }}>
-          <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
             Rekap Shift disimpan ke sistem. Anda dapat mencetak struk thermal kasir atau mengunduh dokumen PDF rekap berikut:
           </p>
 
           {/* Realistic 58mm Thermal Receipt Paper Preview */}
-          <div style={{ backgroundColor: '#18181b', padding: '12px', borderRadius: '8px' }}>
+          <div style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '8px' }}>
             <div className="thermal-receipt-paper-preview">
               {/* Header / Store Branding */}
               <div style={{ textAlign: 'center', marginBottom: '8px' }}>
@@ -154,8 +154,22 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Transaksi Tunai ({cashCount}):</span>
-                  <span>{formatRupiah(shift.totalCashSales)}</span>
+                  <span>+{formatRupiah(shift.totalCashSales)}</span>
                 </div>
+                {shift.totalExpenses && shift.totalExpenses > 0 ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#b91c1c' }}>
+                      <span>Total Pengeluaran Kasir:</span>
+                      <strong>-{formatRupiah(shift.totalExpenses)}</strong>
+                    </div>
+                    {shift.borrowedFromSales && shift.borrowedFromSales > 0 ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontStyle: 'italic', color: '#b45309' }}>
+                        <span>*(Pinjam Uang Sales):</span>
+                        <span>{formatRupiah(shift.borrowedFromSales)}</span>
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Transaksi QRIS ({qrisCount}):</span>
                   <span>{formatRupiah(shift.totalQrisSales)}</span>
@@ -165,6 +179,22 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
                   <span>{shift.totalVoided} void</span>
                 </div>
               </div>
+
+              {/* Detailed Expense List in Receipt Preview */}
+              {shift.expenses && shift.expenses.length > 0 && (
+                <>
+                  <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+                  <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <span style={{ fontWeight: 700 }}>Rincian Belanja Kasir:</span>
+                    {shift.expenses.map((e, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '4px' }}>
+                        <span>{idx + 1}. {e.description}</span>
+                        <span>{formatRupiah(e.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
 

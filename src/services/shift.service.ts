@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════
 
 import { db, TriwaraDatabase } from '../database/db';
-import type { IShift, IStaff, IOrder } from '../types';
+import type { IShift, IStaff, IOrder, IShiftExpense } from '../types';
 
 export class ShiftService {
   private database: TriwaraDatabase;
@@ -120,7 +120,8 @@ export class ShiftService {
   async closeShift(
     shiftId: number,
     actualCash: number,
-    notes?: string
+    notes?: string,
+    expenses?: IShiftExpense[]
   ): Promise<IShift> {
     const shift = await this.database.shifts.get(shiftId);
     if (!shift) {
@@ -131,7 +132,10 @@ export class ShiftService {
     }
 
     const now = new Date();
-    const expected = shift.startingCash + shift.totalCashSales;
+    const validExpenses = (expenses || []).filter((e) => e.amount > 0);
+    const totalExpenses = validExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const borrowedFromSales = Math.max(0, totalExpenses - shift.startingCash);
+    const expected = shift.startingCash + shift.totalCashSales - totalExpenses;
     const difference = actualCash - expected;
 
     const updateData: Partial<IShift> = {
@@ -139,6 +143,9 @@ export class ShiftService {
       actualEndingCash: actualCash,
       expectedEndingCash: expected,
       cashDifference: difference,
+      expenses: validExpenses,
+      totalExpenses,
+      borrowedFromSales,
       status: 'closed',
       notes: notes !== undefined ? notes : shift.notes,
     };
@@ -147,7 +154,7 @@ export class ShiftService {
 
     await this.database.logs.add({
       type: 'shift',
-      description: `TUTUP SHIFT: ${shift.cashierName} (Uang Fisik: Rp ${actualCash.toLocaleString('id-ID')}, Selisih: Rp ${difference.toLocaleString('id-ID')})`,
+      description: `TUTUP SHIFT: ${shift.cashierName} (Uang Fisik: Rp ${actualCash.toLocaleString('id-ID')}, Belanja: Rp ${totalExpenses.toLocaleString('id-ID')}, Selisih: Rp ${difference.toLocaleString('id-ID')})`,
       referenceId: shift.shiftNumber,
       createdAt: now,
     });

@@ -27,7 +27,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   onChangeDiscount,
   onProceedToPayment,
   isMobileOpen,
-  onCloseMobile,
+
 }) => {
   const subtotal = cartItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
@@ -38,16 +38,6 @@ export const CartPanel: React.FC<CartPanelProps> = ({
     <aside className={`pos-right-column cart-panel-right ${isMobileOpen ? 'mobile-show' : ''}`}>
       <div className="cart-panel-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {onCloseMobile && (
-            <button
-              type="button"
-              className="btn-mobile-back-menu"
-              onClick={onCloseMobile}
-              title="Kembali ke Daftar Menu"
-            >
-              ← Menu
-            </button>
-          )}
           <h2 className="cart-panel-title">Pesanan</h2>
         </div>
         {cartItems.length > 0 && (
@@ -119,14 +109,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({
               className="btn-add-discount-trigger"
               onClick={() => setIsDiscountOpen(true)}
             >
-              <span>🏷️ + Tambah Diskon</span>
+              <span>Discount</span>
               <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Pilih % Diskon</span>
             </button>
           ) : (
             <div className="discount-compact-box">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#fafafa' }}>
-                  🏷️ Diskon: {discountPercent}%
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
+                  Discount: {discountPercent} %
                 </span>
                 <button
                   type="button"
@@ -148,17 +138,16 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                     min="0"
                     max="100"
                     className="discount-input"
-                    placeholder="%"
+                    placeholder="0"
                     value={discountPercent || ''}
                     onChange={(e) => {
                       const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
                       onChangeDiscount(val);
                     }}
                   />
-                  <span className="percent-symbol">%</span>
                 </div>
                 <div className="discount-helpers">
-                  {[10, 25, 50].map((pct) => (
+                  {[25, 50, 75, 100].map((pct) => (
                     <button
                       key={pct}
                       type="button"

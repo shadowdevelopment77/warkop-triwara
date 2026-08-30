@@ -5,7 +5,9 @@
 .pin-lock-overlay {
   width: 100vw;
   min-height: 100vh;
-  background-color: #000000;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,8 +18,8 @@
 }
 
 .pin-lock-card {
-  background-color: #121214;
-  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 16px;
   padding: 28px 24px;
   width: 100%;
@@ -27,7 +29,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .pin-lock-card.shake {
@@ -52,8 +54,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #27272a;
-  color: #fafafa;
+  background-color: #f1f5f9;
+  color: var(--text-main);
+  border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,12 +76,12 @@
 .pin-brand-title {
   font-size: 20px;
   font-weight: 800;
-  color: #fafafa;
+  color: #0f172a;
 }
 
 .pin-brand-subtitle {
   font-size: 13px;
-  color: var(--text-muted);
+  color: #64748b;
 }
 
 .pin-dots-container {
@@ -91,13 +94,13 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid var(--border-color);
+  border: 2px solid #cbd5e1;
   background-color: transparent;
   transition: all 0.15s ease;
 }
 .pin-dot.filled {
-  background-color: #fafafa;
-  border-color: #fafafa;
+  background-color: #0f172a;
+  border-color: #0f172a;
 }
 
 .pin-error-text {
@@ -117,23 +120,23 @@
 .numpad-btn {
   height: 56px;
   border-radius: 50%;
-  border: 1px solid var(--border-color);
+  border: 1px solid #cbd5e1;
   font-size: 20px;
   font-weight: 700;
-  color: #fafafa;
-  background-color: var(--bg-surface);
+  color: var(--text-main);
+  background-color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.1s ease;
 }
 .numpad-btn:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: #52525b;
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
 }
 .numpad-btn:active {
-  background-color: #fafafa;
-  color: #09090b;
+  background-color: #09090b;
+  color: #ffffff;
 }
 .numpad-btn.action {
   font-size: 16px;

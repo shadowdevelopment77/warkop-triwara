@@ -377,9 +377,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
 
             <div className="settings-modal-body">
-              <div style={{ backgroundColor: 'var(--bg-surface)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ backgroundColor: '#f1f5f9', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status Koneksi:</p>
-                <strong style={{ fontSize: '15px', color: '#fafafa' }}>
+                <strong style={{ fontSize: '15px', color: '#0f172a' }}>
                   {config?.printerMacAddress ? `Terhubung (${config.printerName || 'Xantri BT-58D'})` : 'Belum Dihubungkan'}
                 </strong>
                 {config?.printerMacAddress && (
@@ -448,8 +448,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
+                      backgroundColor: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                     }}
                   >
@@ -464,13 +464,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           backgroundColor: '#ffffff',
                           borderRadius: '4px',
                           padding: '4px',
+                          border: '1px solid #cbd5e1',
                         }}
                       />
                       <div>
-                        <strong style={{ color: '#fafafa', fontSize: '13px', display: 'block' }}>
+                        <strong style={{ color: '#0f172a', fontSize: '13px', display: 'block' }}>
                           Logo Struk Aktif
                         </strong>
-                        <span style={{ color: '#34d399', fontSize: '11px' }}>✓ Siap dicetak di struk 58mm</span>
                       </div>
                     </div>
 
@@ -480,14 +480,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         className="settings-btn-secondary"
                         onClick={() => receiptFileInputRef.current?.click()}
                       >
-                        ✏️ Ganti Foto
+                        Ganti
                       </button>
                       <button
                         type="button"
                         className="settings-btn-danger"
                         onClick={handleDeleteReceiptLogo}
                       >
-                        🗑️ Hapus
+                        Hapus
                       </button>
                     </div>
                   </div>
@@ -517,7 +517,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       style={{ fontSize: '12px', padding: '6px 14px' }}
                       onClick={() => receiptFileInputRef.current?.click()}
                     >
-                      📷 Pilih Foto
+                      Pilih Foto
                     </button>
                   </div>
                 )}
@@ -611,7 +611,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
             <form onSubmit={handleSaveBranding} className="settings-modal-body">
               <div className="form-group">
-                <label className="form-label">Logo Utama Aplikasi (Top Bar Header)</label>
+                <label className="form-label">Logo Utama Aplikasi</label>
                 <input
                   type="file"
                   ref={appFileInputRef}
@@ -627,8 +627,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
+                      backgroundColor: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                     }}
                   >
@@ -641,16 +641,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           height: '42px',
                           borderRadius: '6px',
                           objectFit: 'contain',
-                          backgroundColor: '#27272a',
+                          backgroundColor: '#ffffff',
                           padding: '2px',
+                          border: '1px solid #cbd5e1',
                         }}
                       />
                       <div>
-                        <strong style={{ color: '#fafafa', fontSize: '13px', display: 'block' }}>
+                        <strong style={{ color: '#0f172a', fontSize: '13px', display: 'block' }}>
                           Logo Header Aktif
                         </strong>
-                        <span style={{ color: '#34d399', fontSize: '11px' }}>✓ Tampil di bar navigasi kasir</span>
-                      </div>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -659,14 +659,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         className="settings-btn-secondary"
                         onClick={() => appFileInputRef.current?.click()}
                       >
-                        ✏️ Ganti Foto
+                        Ganti
                       </button>
                       <button
                         type="button"
                         className="settings-btn-danger"
                         onClick={handleDeleteAppLogo}
                       >
-                        🗑️ Hapus
+                        Hapus
                       </button>
                     </div>
                   </div>
@@ -696,7 +696,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       style={{ fontSize: '12px', padding: '6px 14px' }}
                       onClick={() => appFileInputRef.current?.click()}
                     >
-                      📷 Pilih Foto
+                      Pilih Foto
                     </button>
                   </div>
                 )}

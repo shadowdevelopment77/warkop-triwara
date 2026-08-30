@@ -194,7 +194,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                   y1={y}
                   x2={svgWidth - paddingRight}
                   y2={y}
-                  stroke="#27272a"
+                  stroke="#e2e8f0"
                   strokeDasharray={i === 0 ? 'none' : '3 3'}
                   strokeWidth="1"
                 />
@@ -202,7 +202,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                   x={paddingLeft - 10}
                   y={y + 4}
                   textAnchor="end"
-                  fill="#71717a"
+                  fill="#64748b"
                   fontSize="11"
                   fontFamily="sans-serif"
                 >
@@ -218,7 +218,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
             y1={baselineY}
             x2={svgWidth - paddingRight}
             y2={baselineY}
-            stroke="#3f3f46"
+            stroke="#cbd5e1"
             strokeWidth="1.5"
           />
 

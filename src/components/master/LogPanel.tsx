@@ -46,7 +46,7 @@ export const LogPanel: React.FC = () => {
     <div className="log-view-container">
       <div className="log-view-header">
         <div>
-          <h2 className="log-view-title">Log Aktivitas Sistem</h2>
+          <h2 className="log-view-title">Log</h2>
         </div>
       </div>
 

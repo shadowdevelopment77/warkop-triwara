@@ -20,19 +20,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #09090b;
+  background-color: var(--bg-surface);
 }
 
 .dialog-modal-title {
   font-size: 16px;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-main);
 }
 
 .dialog-modal-body {
   padding: 20px;
   font-size: 14px;
-  color: #d4d4d8;
+  color: var(--text-main);
   line-height: 1.6;
   white-space: pre-line;
 }
@@ -44,7 +44,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  background-color: #09090b;
+  background-color: var(--bg-surface);
 }
 
 .dialog-btn-cancel {
@@ -52,15 +52,14 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  background-color: #27272a;
-  color: #e4e4e7;
-  border: 1px solid #3f3f46;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   transition: all 0.15s ease;
 }
 
 .dialog-btn-cancel:hover {
-  background-color: #3f3f46;
-  color: #ffffff;
+  background-color: var(--bg-surface-hover);
 }
 
 .dialog-btn-confirm {
@@ -68,13 +67,13 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  background-color: #ffffff;
-  color: #09090b;
+  background-color: #09090b;
+  color: #ffffff;
   transition: all 0.15s ease;
 }
 
 .dialog-btn-confirm:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 .dialog-btn-confirm.danger {

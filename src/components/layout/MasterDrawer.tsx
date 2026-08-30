@@ -140,7 +140,7 @@ export const MasterDrawer: React.FC<MasterDrawerProps> = ({
             className={`nav-item ${activeTab === 'logs' ? 'active' : ''}`}
             onClick={() => handleTabClick('logs')}
           >
-            Log Aktivitas Sistem
+            Log
           </button>
 
           {/* Pengaturan Toko (Accessible to all, internal sensitive items locked) */}

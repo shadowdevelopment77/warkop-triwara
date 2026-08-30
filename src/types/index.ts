@@ -73,6 +73,8 @@ export interface IOrderItem {
   hpp: number; // Snapshot HPP per unit
   qty: number;
   orderType: OrderType;
+  temperature?: 'Hot' | 'Iced';
+  sugarLevel?: string;
   subtotal: number;
   hppSubtotal: number; // Snapshot HPP × Qty
   toppings: IOrderItemTopping[];
@@ -111,6 +113,12 @@ export interface IStaff {
   createdAt: Date;
 }
 
+export interface IShiftExpense {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 export interface IShift {
   id?: number;
   shiftNumber: string; // e.g. SHF-20260830-001
@@ -125,7 +133,10 @@ export interface IShift {
   cashTransactions?: number; // Jumlah transaksi tunai
   qrisTransactions?: number; // Jumlah transaksi QRIS
   totalVoided: number; // Jumlah void
-  expectedEndingCash?: number; // startingCash + totalCashSales
+  expenses?: IShiftExpense[]; // Rincian pembelian operasional
+  totalExpenses?: number; // Total pembelian operasional
+  borrowedFromSales?: number; // Uang yang dipinjam dari penjualan jika pengeluaran > kas awal
+  expectedEndingCash?: number; // startingCash + totalCashSales - totalExpenses
   actualEndingCash?: number; // Dihitung fisik oleh kasir
   cashDifference?: number; // actualEndingCash - expectedEndingCash
   notes?: string;

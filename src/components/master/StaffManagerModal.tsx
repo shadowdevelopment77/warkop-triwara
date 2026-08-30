@@ -125,7 +125,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
         onClick={(e) => e.stopPropagation()}
       >
         <div className="inv-modal-header">
-          <h3 className="inv-modal-title">Kelola Karyawan &amp; Hak Akses PIN</h3>
+          <h3 className="inv-modal-title">Kelola Karyawan</h3>
           <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
             ✕
           </button>
@@ -152,8 +152,8 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
           <form
             onSubmit={handleSubmit}
             style={{
-              backgroundColor: '#18181b',
-              border: '1px solid #27272a',
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '14px',
               display: 'flex',
@@ -162,7 +162,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#a1a1aa' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>
                 {editingStaff ? `EDIT KARYAWAN: ${editingStaff.name}` : '+ TAMBAH KARYAWAN BARU'}
               </span>
               {editingStaff && (
@@ -171,7 +171,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
                   onClick={resetForm}
                   style={{
                     fontSize: '11px',
-                    color: '#60a5fa',
+                    color: '#2563eb',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -223,7 +223,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
 
           {/* Staff List */}
           <div>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
               Daftar Pengguna ({staffList.length})
             </span>
 
@@ -245,28 +245,28 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '10px 14px',
-                    backgroundColor: '#18181b',
-                    border: '1px solid #27272a',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                   }}
                 >
                   <div>
-                    <strong style={{ color: '#fafafa', fontSize: '14px' }}>{s.name}</strong>
+                    <strong style={{ color: '#0f172a', fontSize: '14px' }}>{s.name}</strong>
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '2px' }}>
                       <span
                         style={{
                           fontSize: '10px',
                           padding: '1px 6px',
                           borderRadius: '4px',
-                          backgroundColor: s.role === 'owner' ? '#3b82f6' : '#27272a',
-                          color: '#fafafa',
+                          backgroundColor: s.role === 'owner' ? '#3b82f6' : '#e2e8f0',
+                          color: s.role === 'owner' ? '#ffffff' : '#0f172a',
                           fontWeight: 700,
                           textTransform: 'uppercase',
                         }}
                       >
                         {s.role}
                       </span>
-                      <span style={{ fontSize: '12px', color: '#71717a' }}>PIN: ••••</span>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>PIN: ••••</span>
                     </div>
                   </div>
 
@@ -277,7 +277,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
                       onClick={() => handleStartEdit(s)}
                       title="Edit Nama / Ganti PIN"
                     >
-                      ✏️ Edit
+                        Edit
                     </button>
                     {s.role !== 'owner' && (
                       <button

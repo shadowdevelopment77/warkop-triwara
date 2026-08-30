@@ -57,12 +57,17 @@ export class ReceiptService {
 
         lines.push(this.formatKeyValue(itemHeader.substring(0, 16), `${qtyStr} ${priceStr}`));
 
-        if (item.orderType === 'takeaway') {
-          lines.push('  + Takeaway');
-        }
+        const details: string[] = [];
+        details.push(item.orderType === 'takeaway' ? 'Takeaway' : 'Dine In');
+        if (item.temperature) details.push(item.temperature);
+        if (item.sugarLevel) details.push(item.sugarLevel);
         item.toppings.forEach((t) => {
-          lines.push(`  + ${t.name}`);
+          details.push(`+${t.name}${t.price ? ` (${formatRupiah(t.price)})` : ''}`);
         });
+
+        if (details.length > 0) {
+          lines.push(`  (${details.join(', ')})`);
+        }
         if (item.notes) {
           lines.push(`  * ${item.notes}`);
         }
@@ -100,10 +105,16 @@ export class ReceiptService {
 
       order.items.forEach((item) => {
         lines.push(this.formatKeyValue(item.productName.substring(0, 18), `x${item.qty} ${formatRupiah(item.subtotal)}`));
-        if (item.orderType === 'takeaway') {
-          lines.push('  + Takeaway');
+
+        const details: string[] = [];
+        details.push(item.orderType === 'takeaway' ? 'Takeaway' : 'Dine In');
+        if (item.temperature) details.push(item.temperature);
+        if (item.sugarLevel) details.push(item.sugarLevel);
+        item.toppings.forEach((t) => details.push(`+${t.name}`));
+
+        if (details.length > 0) {
+          lines.push(`  (${details.join(', ')})`);
         }
-        item.toppings.forEach((t) => lines.push(`  + ${t.name}`));
         if (item.notes) lines.push(`  * ${item.notes}`);
       });
 
@@ -120,10 +131,16 @@ export class ReceiptService {
 
       order.items.forEach((item) => {
         lines.push(this.formatKeyValue(item.productName.substring(0, 24), `x${item.qty}`));
-        if (item.orderType === 'takeaway') {
-          lines.push('  + Takeaway');
+
+        const details: string[] = [];
+        details.push(item.orderType === 'takeaway' ? 'Takeaway' : 'Dine In');
+        if (item.temperature) details.push(item.temperature);
+        if (item.sugarLevel) details.push(item.sugarLevel);
+        item.toppings.forEach((t) => details.push(`+${t.name}`));
+
+        if (details.length > 0) {
+          lines.push(`  (${details.join(', ')})`);
         }
-        item.toppings.forEach((t) => lines.push(`  + ${t.name}`));
         if (item.notes) lines.push(`  * ${item.notes}`);
       });
 
@@ -140,7 +157,7 @@ export class ReceiptService {
    */
   generateShiftReceiptText(shift: import('../types').IShift, config: IShopConfig): string {
     const lines: string[] = [];
-    const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales);
+    const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales - (shift.totalExpenses || 0));
     const actual = shift.actualEndingCash ?? expected;
     const diff = shift.cashDifference ?? (actual - expected);
 
@@ -157,10 +174,26 @@ export class ReceiptService {
     lines.push(this.lineDivider('-'));
     lines.push(this.formatKeyValue('Kas Awal Modal', formatRupiah(shift.startingCash)));
     lines.push(this.formatKeyValue('+ Total Tunai', formatRupiah(shift.totalCashSales)));
+    if (shift.totalExpenses && shift.totalExpenses > 0) {
+      lines.push(this.formatKeyValue('- Pengeluaran Kas', `-${formatRupiah(shift.totalExpenses)}`));
+      if (shift.borrowedFromSales && shift.borrowedFromSales > 0) {
+        lines.push(`  *(Pinjam Sales: ${formatRupiah(shift.borrowedFromSales)})`);
+      }
+    }
     lines.push(this.lineDivider('-'));
     lines.push(this.formatKeyValue('Uang Tunai Laci', formatRupiah(expected)));
     lines.push(this.formatKeyValue('Fisik Dihitung', formatRupiah(actual)));
     lines.push(this.formatKeyValue('Selisih Kas', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(+)' : '(-)'}`));
+
+    if (shift.expenses && shift.expenses.length > 0) {
+      lines.push(this.lineDivider('-'));
+      lines.push(this.centerLine('RINCIAN BELANJA KASIR:'));
+      shift.expenses.forEach((exp, idx) => {
+        lines.push(this.formatKeyValue(`${idx + 1}. ${exp.description.substring(0, 16)}`, formatRupiah(exp.amount)));
+      });
+      lines.push(this.formatKeyValue('Total Belanja:', formatRupiah(shift.totalExpenses || 0)));
+    }
+
     lines.push(this.lineDivider('-'));
     lines.push(this.formatKeyValue('Penjualan QRIS', formatRupiah(shift.totalQrisSales)));
     lines.push(this.formatKeyValue('Total Omset', formatRupiah(shift.totalCashSales + shift.totalQrisSales)));

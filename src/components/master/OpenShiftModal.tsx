@@ -66,14 +66,14 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
 
           <div className="info-summary-card">
             <div>
-              <span style={{ fontSize: '12px', color: '#a1a1aa' }}>Petugas Kasir:</span>
-              <h4 style={{ margin: 0, color: '#fafafa', fontSize: '16px' }}>{staff.name}</h4>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>Petugas Kasir:</span>
+              <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{staff.name}</h4>
             </div>
             <span
               style={{
                 fontSize: '11px',
-                backgroundColor: staff.role === 'owner' ? '#3b82f6' : '#27272a',
-                color: '#fafafa',
+                backgroundColor: staff.role === 'owner' ? '#3b82f6' : '#e2e8f0',
+                color: staff.role === 'owner' ? '#ffffff' : '#0f172a',
                 padding: '3px 8px',
                 borderRadius: '4px',
                 textTransform: 'uppercase',
@@ -108,9 +108,9 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
                     padding: '6px 0',
                     fontSize: '11px',
                     borderRadius: '4px',
-                    backgroundColor: '#27272a',
-                    border: '1px solid #3f3f46',
-                    color: '#fafafa',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#0f172a',
                     cursor: 'pointer',
                   }}
                 >

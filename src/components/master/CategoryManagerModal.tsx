@@ -130,20 +130,20 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '10px 14px',
-                    backgroundColor: '#18181b',
-                    border: '1px solid #27272a',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <strong style={{ color: '#fafafa', fontSize: '14px' }}>{cat.name}</strong>
+                    <strong style={{ color: '#0f172a', fontSize: '14px' }}>{cat.name}</strong>
                     <span
                       style={{
                         fontSize: '11px',
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        backgroundColor: usageCount > 0 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(113, 113, 122, 0.2)',
-                        color: usageCount > 0 ? '#60a5fa' : '#a1a1aa',
+                        backgroundColor: usageCount > 0 ? '#dbeafe' : '#e2e8f0',
+                        color: usageCount > 0 ? '#1d4ed8' : '#64748b',
                       }}
                     >
                       {usageCount} produk

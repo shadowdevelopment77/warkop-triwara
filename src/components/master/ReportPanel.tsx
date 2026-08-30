@@ -176,9 +176,9 @@ export const ReportPanel: React.FC = () => {
     <div className="report-view-container">
       {/* Header: Title on Left, Export PDF on Far Right */}
       <div className="report-view-header">
-        <h2 className="report-view-title">Laporan Penjualan &amp; Performa Toko</h2>
+        <h2 className="report-view-title">Laporan Penjualan </h2>
         <button type="button" className="report-btn-primary report-btn-export" onClick={handleExportPdf}>
-          📄 Export PDF
+          Export PDF
         </button>
       </div>
 
@@ -318,12 +318,12 @@ export const ReportPanel: React.FC = () => {
                   <div key={p.productId} className="report-product-item">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span className="report-product-rank">#{idx + 1}</span>
-                      <strong style={{ color: '#fafafa', fontSize: '13px' }}>{p.productName}</strong>
+                      <strong style={{ color: '#0f172a', fontSize: '13px' }}>{p.productName}</strong>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-                      <span style={{ color: '#34d399', fontWeight: 600 }}>{p.quantitySold} terjual</span>
-                      <span style={{ color: '#52525b' }}>•</span>
-                      <strong style={{ color: '#fafafa' }}>{formatRupiah(p.totalRevenue)}</strong>
+                      <span style={{ color: '#16a34a', fontWeight: 600 }}>{p.quantitySold} terjual</span>
+                      <span style={{ color: '#64748b' }}>•</span>
+                      <strong style={{ color: '#0f172a' }}>{formatRupiah(p.totalRevenue)}</strong>
                     </div>
                   </div>
                 ))}
@@ -373,7 +373,7 @@ export const ReportPanel: React.FC = () => {
                       <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
                         {formatDateIndonesian(order.createdAt)}
                       </td>
-                      <td style={{ fontWeight: 700, color: '#fafafa' }}>
+                      <td style={{ fontWeight: 700, color: '#0f172a' }}>
                         {formatRupiah(order.total)}
                       </td>
                       <td>
@@ -383,8 +383,9 @@ export const ReportPanel: React.FC = () => {
                             fontWeight: 700,
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            backgroundColor: order.paymentMethod === 'cash' ? '#27272a' : '#1e3a8a',
-                            color: order.paymentMethod === 'cash' ? '#fafafa' : '#93c5fd',
+                            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
+                            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
+                            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
                             textTransform: 'uppercase',
                           }}
                         >
@@ -400,26 +401,40 @@ export const ReportPanel: React.FC = () => {
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            className="report-btn-print"
-                            onClick={() => setReprintOrder(order)}
-                            title="Cetak Ulang Struk Pelanggan"
-                          >
-                            🖨️ Cetak
-                          </button>
                           {order.status === 'completed' ? (
-                            <button
-                              type="button"
-                              className="report-btn-void"
-                              onClick={() => handleVoidOrder(order)}
-                              title="Batalkan (Void) Transaksi"
-                            >
-                              🚫 Void
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                className="report-btn-print"
+                                onClick={() => setReprintOrder(order)}
+                                title="Cetak Ulang Struk Pelanggan"
+                              >
+                                🖨️ Cetak
+                              </button>
+                              <button
+                                type="button"
+                                className="report-btn-void"
+                                onClick={() => handleVoidOrder(order)}
+                                title="Batalkan (Void) Transaksi"
+                              >
+                                🚫 Void
+                              </button>
+                            </>
                           ) : (
-                            <span className="report-voided-label" title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}>
-                              Dibatalkan
+                            <span
+                              className="report-voided-label"
+                              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
+                              style={{
+                                color: '#ef4444',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                              }}
+                            >
+                              🚫 Dibatalkan
                             </span>
                           )}
                         </div>
