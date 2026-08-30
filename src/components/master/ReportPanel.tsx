@@ -4,18 +4,19 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { IOrder, IShopConfig } from '../../types';
-import { reportService, type ISalesSummary, type ITopProduct } from '../../services/report.service';
+import { reportService, type ISalesSummary, type ITopProduct, type ISalesChartResult } from '../../services/report.service';
 import { orderService } from '../../services/order.service';
 import { configService } from '../../services/config.service';
 import { pdfService } from '../../services/pdf.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
-import { formatDateIndonesian, formatShortDate } from '../../utils/date';
+import { formatDateIndonesian } from '../../utils/date';
 import { PrintSelectModal } from '../pos/PrintSelectModal';
 import type { ReceiptType } from '../../services/receipt.service';
 import { PaginationBar } from '../common/PaginationBar';
 import { DialogModal } from '../common/DialogModal';
 import { VoidModal } from './VoidModal';
+import { SalesChart } from './SalesChart';
 
 const toInputDateString = (d: Date) => {
   const year = d.getFullYear();
@@ -28,10 +29,10 @@ export const ReportPanel: React.FC = () => {
   const [periodPreset, setPeriodPreset] = useState<'today' | 'month' | 'custom'>('today');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
   const [summary, setSummary] = useState<ISalesSummary | null>(null);
   const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
+  const [chartData, setChartData] = useState<ISalesChartResult | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [reprintOrder, setReprintOrder] = useState<IOrder | null>(null);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
@@ -56,13 +57,17 @@ export const ReportPanel: React.FC = () => {
 
   const loadReportData = useCallback(async () => {
     try {
-      const summaryData = await reportService.getSalesSummary(startDate, endDate);
-      const topData = await reportService.getTopSellingProducts(startDate, endDate, 0);
-      const ordersData = await orderService.getOrders(startDate, endDate);
+      const [summaryData, topData, ordersData, chartRes] = await Promise.all([
+        reportService.getSalesSummary(startDate, endDate),
+        reportService.getTopSellingProducts(startDate, endDate, 0),
+        orderService.getOrders(startDate, endDate),
+        reportService.getSalesChartData(startDate, endDate),
+      ]);
 
       setSummary(summaryData);
       setTopProducts(topData);
       setOrders(ordersData);
+      setChartData(chartRes);
     } catch (err) {
       console.error('Failed to load report data:', err);
     }
@@ -223,58 +228,109 @@ export const ReportPanel: React.FC = () => {
         </button>
       </div>
 
-      {/* Summary Cards Grid (OMSET, TUNAI, QRIS, PROFIT) */}
+      {/* Summary Cards Grid (Compact 2-Row Adjustment) */}
       {summary && (
-        <div className="report-summary-cards-grid">
-          <div className="report-summary-card">
-            <span className="report-card-label">OMSET</span>
-            <strong className="report-card-val">{formatRupiah(summary.totalOmset)}</strong>
-            <small style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
-              {summary.completedCount} transaksi sukses, {summary.voidedCount} transaksi dibatalkan
-            </small>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Row 1: Financial Cards */}
+          <div className="report-summary-cards-grid">
+            <div className="report-summary-card">
+              <span className="report-card-label">Total Omset</span>
+              <strong className="report-card-val">{formatRupiah(summary.totalOmset)}</strong>
+            </div>
+
+            <div className="report-summary-card">
+              <span className="report-card-label">Penjualan Tunai</span>
+              <strong className="report-card-val">{formatRupiah(summary.totalCash)}</strong>
+            </div>
+
+            <div className="report-summary-card">
+              <span className="report-card-label">Penjualan QRIS</span>
+              <strong className="report-card-val">{formatRupiah(summary.totalQris)}</strong>
+            </div>
+
+            <div className="report-summary-card profit">
+              <span className="report-card-label">Profit Bersih</span>
+              <strong className="report-card-val" style={{ color: '#4ade80' }}>
+                {formatRupiah(summary.totalProfit)}
+              </strong>
+            </div>
           </div>
 
-          <div className="report-summary-card">
-            <span className="report-card-label">TUNAI</span>
-            <strong className="report-card-val">{formatRupiah(summary.totalCash)}</strong>
-          </div>
+          {/* Row 2: Operational & Statistics Cards (Total Transaksi, Produk Terjual, Produk Terlaris %) */}
+          <div className="report-summary-cards-grid-secondary">
+            <div className="report-summary-card">
+              <span className="report-card-label">Total Transaksi</span>
+              <strong className="report-card-val">
+                {summary.completedCount} pesanan
+              </strong>
+              <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                {summary.voidedCount > 0 ? `${summary.voidedCount} dibatalkan / void` : 'Semua transaksi sukses'}
+              </small>
+            </div>
 
-          <div className="report-summary-card">
-            <span className="report-card-label">QRIS</span>
-            <strong className="report-card-val">{formatRupiah(summary.totalQris)}</strong>
-          </div>
+            <div className="report-summary-card">
+              <span className="report-card-label">Total Produk Terjual</span>
+              <strong className="report-card-val">
+                {summary.totalItemsSold} item
+              </strong>
+              <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                Akumulasi seluruh produk terjual
+              </small>
+            </div>
 
-          <div className="report-summary-card profit">
-            <span className="report-card-label">PROFIT</span>
-            <strong className="report-card-val">{formatRupiah(summary.totalProfit)}</strong>
+            <div className="report-summary-card">
+              <span className="report-card-label">Produk Terlaris</span>
+              <strong className="report-card-val" style={{ fontSize: '15px', color: '#60a5fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={summary.topProductName}>
+                {summary.topProductName !== '-' ? summary.topProductName : '—'}
+              </strong>
+              <small style={{ color: '#4ade80', fontSize: '11px', fontWeight: 600 }}>
+                {summary.topProductPercentage > 0
+                  ? `${summary.topProductPercentage}% dari total produk terjual`
+                  : 'Belum ada data penjualan'}
+              </small>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Product Sales Section (Scrollable box ~5 items visible, responsive) */}
-      <div className="report-section-card">
-        <h3 className="report-section-title">
-          Penjualan Produk pada Periode {formatShortDate(startDate)} - {formatShortDate(endDate)}
-        </h3>
-        {topProducts.length === 0 ? (
-          <p className="empty-hint">Belum ada data penjualan pada periode ini.</p>
-        ) : (
-          <div className="report-products-scroll-container">
-            {topProducts.map((p, idx) => (
-              <div key={p.productId} className="report-product-item">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span className="report-product-rank">#{idx + 1}</span>
-                  <strong style={{ color: '#fafafa', fontSize: '14px' }}>{p.productName}</strong>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
-                  <span style={{ color: '#34d399', fontWeight: 600 }}>{p.quantitySold} terjual</span>
-                  <span style={{ color: '#52525b' }}>•</span>
-                  <strong style={{ color: '#fafafa' }}>{formatRupiah(p.totalRevenue)}</strong>
-                </div>
+      {/* 60:40 Visual Row (Left 60%: Sales Chart | Right 40%: Top Products Ranking) */}
+      <div className="report-visual-row">
+        {/* Left 60%: Sales Chart */}
+        <div className="report-chart-container">
+          {chartData && <SalesChart data={chartData} />}
+        </div>
+
+        {/* Right 40%: Top Selling Products List */}
+        <div className="report-products-container">
+          <div className="report-section-card" style={{ height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <h3 className="report-section-title">🏆 Penjualan Produk</h3>
+              <span style={{ fontSize: '11px', color: '#a1a1aa' }}>
+                {topProducts.length} menu
+              </span>
+            </div>
+
+            {topProducts.length === 0 ? (
+              <p className="empty-hint">Belum ada data penjualan pada periode ini.</p>
+            ) : (
+              <div className="report-products-scroll-container" style={{ flex: 1, maxHeight: '240px' }}>
+                {topProducts.map((p, idx) => (
+                  <div key={p.productId} className="report-product-item">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span className="report-product-rank">#{idx + 1}</span>
+                      <strong style={{ color: '#fafafa', fontSize: '13px' }}>{p.productName}</strong>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                      <span style={{ color: '#34d399', fontWeight: 600 }}>{p.quantitySold} terjual</span>
+                      <span style={{ color: '#52525b' }}>•</span>
+                      <strong style={{ color: '#fafafa' }}>{formatRupiah(p.totalRevenue)}</strong>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Transactions History Table */}
