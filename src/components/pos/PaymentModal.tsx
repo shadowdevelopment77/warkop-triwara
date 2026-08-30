@@ -123,6 +123,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <input
                 type="number"
+                inputMode="numeric"
                 className="form-input price-input-lg"
                 value={cashInput || ''}
                 onChange={(e) => setCashInput(parseFloat(e.target.value) || 0)}

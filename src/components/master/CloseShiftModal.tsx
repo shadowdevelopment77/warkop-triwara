@@ -122,6 +122,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
             <label className="inv-form-label">Uang Tunai Fisik di Laci Kasir (Rp)</label>
             <input
               type="number"
+              inputMode="numeric"
               className="form-input"
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
               value={actualCash || ''}

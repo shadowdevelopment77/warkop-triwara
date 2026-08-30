@@ -32,6 +32,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   const subtotal = cartItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const grandTotal = subtotal - discountAmount;
+  const [isDiscountOpen, setIsDiscountOpen] = React.useState<boolean>(discountPercent > 0);
 
   return (
     <aside className={`pos-right-column cart-panel-right ${isMobileOpen ? 'mobile-show' : ''}`}>
@@ -108,56 +109,69 @@ export const CartPanel: React.FC<CartPanelProps> = ({
         )}
       </div>
 
-      {/* Discount & Total Summary */}
+      {/* Discount & Total Summary Footer */}
       {cartItems.length > 0 && (
         <div className="cart-panel-footer">
-          {/* Discount Section: Label + Reset, Manual Input First, Presets Second */}
-          <div className="discount-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="discount-label" style={{ margin: 0 }}>Discount(%)</label>
-              {discountPercent > 0 && (
+          {/* Collapsible On-Demand Discount Bar */}
+          {!isDiscountOpen && discountPercent === 0 ? (
+            <button
+              type="button"
+              className="btn-add-discount-trigger"
+              onClick={() => setIsDiscountOpen(true)}
+            >
+              <span>🏷️ + Tambah Diskon</span>
+              <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Pilih % Diskon</span>
+            </button>
+          ) : (
+            <div className="discount-compact-box">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#fafafa' }}>
+                  🏷️ Diskon: {discountPercent}%
+                </span>
                 <button
                   type="button"
-                  style={{ fontSize: '15px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
-                  onClick={() => onChangeDiscount(0)}
-                  title="Reset diskon ke 0%"
+                  style={{ fontSize: '12px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => {
+                    onChangeDiscount(0);
+                    setIsDiscountOpen(false);
+                  }}
                 >
-                  ✕ Reset Discount
+                  ✕ Batal Diskon
                 </button>
-              )}
-            </div>
+              </div>
 
-            {/* Manual % Input Immediately Below Label */}
-            <div className="discount-manual-input" style={{ width: '100%' }}>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                className="discount-input"
-                placeholder="Input diskon % manual..."
-                value={discountPercent || ''}
-                onChange={(e) => {
-                  const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
-                  onChangeDiscount(val);
-                }}
-              />
-              <span className="percent-symbol">%</span>
+              <div className="discount-compact-row">
+                <div className="discount-manual-input">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="100"
+                    className="discount-input"
+                    placeholder="%"
+                    value={discountPercent || ''}
+                    onChange={(e) => {
+                      const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                      onChangeDiscount(val);
+                    }}
+                  />
+                  <span className="percent-symbol">%</span>
+                </div>
+                <div className="discount-helpers">
+                  {[10, 25, 50].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      className={`discount-helper-btn ${discountPercent === pct ? 'active' : ''}`}
+                      onClick={() => onChangeDiscount(discountPercent === pct ? 0 : pct)}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-
-            {/* Quick Percentage Helper Buttons */}
-            <div className="discount-helpers">
-              {[25, 50, 75, 100].map((pct) => (
-                <button
-                  key={pct}
-                  type="button"
-                  className={`discount-helper-btn ${discountPercent === pct ? 'active' : ''}`}
-                  onClick={() => onChangeDiscount(discountPercent === pct ? 0 : pct)}
-                >
-                  {pct}%
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Pricing Calculation Rows */}
           <div className="cart-calc-rows">
@@ -167,19 +181,22 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             </div>
             {discountPercent > 0 && (
               <div className="calc-row discount">
-                <span>Discount ({discountPercent}%)</span>
+                <span>Diskon ({discountPercent}%)</span>
                 <span>-{formatRupiah(discountAmount)}</span>
               </div>
             )}
             <div className="calc-row grand-total">
-              <span>TOTAL BAYAR</span>
-              <span className="grand-total-val">{formatRupiah(grandTotal)}</span>
+              <span>TOTAL</span>
+              <span>{formatRupiah(grandTotal)}</span>
             </div>
           </div>
 
-          {/* Checkout Action Button */}
-          <button type="button" className="btn-pay-now" onClick={onProceedToPayment}>
-            Process Transaction
+          <button
+            type="button"
+            className="btn-pay-now"
+            onClick={onProceedToPayment}
+          >
+            Bayar Sekarang • {formatRupiah(grandTotal)}
           </button>
         </div>
       )}

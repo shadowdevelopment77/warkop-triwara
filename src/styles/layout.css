@@ -366,9 +366,11 @@
   background-color: rgba(0, 0, 0, 0.75);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 14px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
@@ -379,7 +381,8 @@
   box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
   width: 100%;
   max-width: 540px;
-  max-height: 85dvh;
+  max-height: 90vh;
+  margin: 0 auto 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

@@ -88,6 +88,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
             <label className="inv-form-label">Uang Kas Awal / Modal Kembalian Toko (Rp)</label>
             <input
               type="number"
+              inputMode="numeric"
               className="form-input"
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
               value={startingCash || ''}
