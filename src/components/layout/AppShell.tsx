@@ -432,7 +432,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                   {!activeShift ? (
                     <button
                       type="button"
-                      className="shift-btn-primary"
+                      className="shift-btn-open"
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
                       onClick={() => setIsOpenShiftModalOpen(true)}
                     >

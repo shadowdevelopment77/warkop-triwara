@@ -70,7 +70,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
         {/* Modal Body */}
         <div className="inv-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1 }}>
           <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0 }}>
-            Pratinjau struk thermal 58mm untuk pesanan #{order.orderNumber}:
+            Preview Receipt #{order.orderNumber}:
           </p>
 
           {/* Realistic 58mm Thermal Receipt Paper Preview */}
@@ -209,7 +209,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
               <div className="thermal-receipt-tear-cut" />
             </div>
           </div>
-
+          <span>Cetak:</span>
           {/* 3 Print Buttons Bar Below Preview */}
           <div className="receipt-print-actions-bar" style={{ flexShrink: 0 }}>
             <button
@@ -218,7 +218,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
               onClick={() => handlePrintSingle('customer')}
               title="Cetak Struk untuk Pelanggan"
             >
-              <span>Struk Customer</span>
+              <span>🖨️Customer</span>
             </button>
 
             <button
@@ -227,7 +227,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
               onClick={() => handlePrintSingle('bar')}
               title="Cetak Struk untuk Bar Minuman"
             >
-              <span>Struk Bar</span>
+              <span>🖨️Bar</span>
             </button>
 
             <button
@@ -236,7 +236,7 @@ export const PrintSelectModal: React.FC<PrintSelectModalProps> = ({
               onClick={() => handlePrintSingle('kitchen')}
               title="Cetak Struk untuk Dapur Makanan"
             >
-              <span>Struk Dapur</span>
+              <span>🖨️Dapur</span>
             </button>
           </div>
 

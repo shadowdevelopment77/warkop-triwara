@@ -27,15 +27,14 @@ export const NotificationFlyout: React.FC<NotificationFlyoutProps> = ({
   return (
     <div className="notification-flyout" onClick={(e) => e.stopPropagation()}>
       <div className="notification-flyout-header">
-        <span className="notification-flyout-title">Notifikasi (24 Jam)</span>
+        <span className="notification-flyout-title">Notifikasi</span>
         {notifications.length > 0 && (
           <button
             type="button"
             className="btn-action-small"
-            style={{ fontSize: '11px', padding: '2px 8px' }}
             onClick={onMarkAllRead}
           >
-            Tandai Dibaca
+            Mark All Read
           </button>
         )}
       </div>
