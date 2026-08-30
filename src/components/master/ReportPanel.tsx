@@ -96,7 +96,7 @@ export const ReportPanel: React.FC = () => {
     if (!summary) return;
     try {
       const config = await configService.getConfig();
-      await pdfService.exportSalesReport(startDate, endDate, summary, topProducts, orders, config);
+      await pdfService.exportSalesReport(startDate, endDate, summary, topProducts, orders, config, chartData);
     } catch (err) {
       setDialogConfig({
         isOpen: true,
