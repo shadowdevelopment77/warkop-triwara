@@ -216,14 +216,12 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
             </tbody>
           </table>
 
-          {orders.length > 10 && (
-            <PaginationBar
-              currentPage={currentPage}
-              totalItems={orders.length}
-              pageSize={10}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          <PaginationBar
+            currentPage={currentPage}
+            totalItems={orders.length}
+            pageSize={10}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
