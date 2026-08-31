@@ -4,6 +4,7 @@
 
 import { db, TriwaraDatabase } from '../database/db';
 import type { IIngredient } from '../types';
+import { hppService } from './hpp.service';
 
 export class IngredientService {
   private database: TriwaraDatabase;
@@ -44,60 +45,71 @@ export class IngredientService {
     const costPerUnit = data.purchaseQuantity > 0 ? data.purchasePrice / data.purchaseQuantity : 0;
     const now = new Date();
 
-    return (await this.database.ingredients.add({
+    const id = (await this.database.ingredients.add({
       ...data,
       name: data.name.trim(),
       costPerUnit: Math.round(costPerUnit * 100) / 100,
       createdAt: now,
       updatedAt: now,
     })) as number;
+
+    hppService.invalidateCache();
+    return id;
   }
 
-  /** Performs Quick Restock with Weighted Average Costing */
+  /** Performs Quick Restock with Weighted Average Costing (Atomic ACID Transaction) */
   async restockIngredient(
     id: number,
     addedQty: number,
     newPurchasePrice?: number,
     newPurchaseQty?: number
   ): Promise<void> {
-    const ing = await this.database.ingredients.get(id);
-    if (!ing) throw new Error('Bahan baku tidak ditemukan');
+    await this.database.transaction(
+      'rw',
+      [this.database.ingredients, this.database.inventoryLogs, this.database.logs],
+      async () => {
+        const ing = await this.database.ingredients.get(id);
+        if (!ing) throw new Error('Bahan baku tidak ditemukan');
 
-    let updatedCostPerUnit = ing.costPerUnit;
+        let updatedCostPerUnit = ing.costPerUnit;
 
-    if (newPurchasePrice && newPurchaseQty && newPurchaseQty > 0) {
-      const batchCostPerUnit = newPurchasePrice / newPurchaseQty;
-      const currentTotalValue = ing.currentStock * ing.costPerUnit;
-      const addedTotalValue = addedQty * batchCostPerUnit;
-      const newTotalStock = ing.currentStock + addedQty;
+        if (newPurchasePrice && newPurchaseQty && newPurchaseQty > 0) {
+          const batchCostPerUnit = newPurchasePrice / newPurchaseQty;
+          const currentTotalValue = ing.currentStock * ing.costPerUnit;
+          const addedTotalValue = addedQty * batchCostPerUnit;
+          const newTotalStock = ing.currentStock + addedQty;
 
-      updatedCostPerUnit = newTotalStock > 0 ? (currentTotalValue + addedTotalValue) / newTotalStock : batchCostPerUnit;
-    }
+          updatedCostPerUnit = newTotalStock > 0 ? (currentTotalValue + addedTotalValue) / newTotalStock : batchCostPerUnit;
+        }
 
-    const newStock = ing.currentStock + addedQty;
+        const newStock = ing.currentStock + addedQty;
 
-    await this.database.ingredients.update(id, {
-      currentStock: newStock,
-      costPerUnit: Math.round(updatedCostPerUnit * 100) / 100,
-      updatedAt: new Date(),
-    });
+        await this.database.ingredients.update(id, {
+          currentStock: newStock,
+          costPerUnit: Math.round(updatedCostPerUnit * 100) / 100,
+          updatedAt: new Date(),
+        });
 
-    // Log restock activity
-    await this.database.inventoryLogs.add({
-      ingredientId: id,
-      ingredientName: ing.name,
-      type: 'restock',
-      quantity: addedQty,
-      note: `Restock +${addedQty} ${ing.unit}`,
-      createdAt: new Date(),
-    });
+        // Log restock activity
+        await this.database.inventoryLogs.add({
+          ingredientId: id,
+          ingredientName: ing.name,
+          type: 'restock',
+          quantity: addedQty,
+          note: `Restock +${addedQty} ${ing.unit}`,
+          createdAt: new Date(),
+        });
 
-    await this.database.logs.add({
-      type: 'restock',
-      description: `RESTOCK ${ing.name} +${addedQty} ${ing.unit}`,
-      referenceId: ing.name,
-      createdAt: new Date(),
-    });
+        await this.database.logs.add({
+          type: 'restock',
+          description: `RESTOCK ${ing.name} +${addedQty} ${ing.unit}`,
+          referenceId: ing.name,
+          createdAt: new Date(),
+        });
+      }
+    );
+
+    hppService.invalidateCache();
   }
 
   /** Edits ingredient details or stock opname correction */
@@ -129,22 +141,34 @@ export class IngredientService {
       costPerUnit: Math.round(costPerUnit * 100) / 100,
       updatedAt: new Date(),
     });
+
+    hppService.invalidateCache();
+  }
+
+  /** Gets list of product names that use a specific ingredient in their recipe or packaging */
+  async getProductsUsingIngredient(id: number): Promise<string[]> {
+    const products = await this.database.products.toArray();
+    const matching = products.filter(
+      (p) =>
+        (p.recipe && p.recipe.some((r) => r.ingredientId === id)) ||
+        (p.takeawayPackaging && p.takeawayPackaging.some((pkg) => pkg.ingredientId === id)) ||
+        (p.availableAdditionals && p.availableAdditionals.some((add) => add.ingredientId === id))
+    );
+    return matching.map((p) => p.name);
   }
 
   /** Deletes an ingredient after checking if used in any product recipes */
   async deleteIngredient(id: number): Promise<void> {
-    const products = await this.database.products.toArray();
-    const usedInProduct = products.find(
-      (p) =>
-        (p.recipe && p.recipe.some((r) => r.ingredientId === id)) ||
-        (p.takeawayPackaging && p.takeawayPackaging.some((pkg) => pkg.ingredientId === id))
-    );
+    const usedMenuNames = await this.getProductsUsingIngredient(id);
 
-    if (usedInProduct) {
-      throw new Error(`Bahan ini tidak dapat dihapus karena masih digunakan dalam resep menu "${usedInProduct.name}".`);
+    if (usedMenuNames.length > 0) {
+      throw new Error(
+        `Bahan ini tidak dapat dihapus karena masih digunakan pada menu:\n• ${usedMenuNames.join('\n• ')}`
+      );
     }
 
     await this.database.ingredients.delete(id);
+    hppService.invalidateCache();
   }
 
   /** Gets all ingredient categories (default + custom) */

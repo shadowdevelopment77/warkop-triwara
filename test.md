@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **22 File Lulus (100%)**
-- **Total Unit Tests**: **64 Tests Passed (100%)**
+- **Total Test Files**: **23 File Lulus (100%)**
+- **Total Unit Tests**: **68 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~23.4 detik (Vitest) + 2.7 detik (Vite build)
+- **Waktu Eksekusi**: ~19.2 detik (Vitest) + 2.2 detik (Vite build)
 
 ---
 
@@ -227,4 +227,21 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 3 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 14. Pengujian Phase 4: Ingredient Detail Lock, Custom Units & Recipe Guard
+**File**: [`src/__tests__/phase4-ingredient-recipe-guard.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase4-ingredient-recipe-guard.test.ts)
+- **Skenario 1: Penambahan Bahan dengan Satuan Custom Bebas**
+  - Mendaftarkan bahan baru dengan satuan unik string bebas (`botol`, `pack`, `shot`, `sachet`).
+  - Memverifikasi data tersimpan di Dexie dengan satuan custom dan kalkulasi cost per unit presisi.
+- **Skenario 2: Pencegahan Hapus Bahan yang Dipakai Resep Menu Minuman**
+  - Menyiapkan menu minuman yang mengonsumsi bahan dalam array resepnya.
+  - Memanggil `ingredientService.deleteIngredient(ingId)`.
+  - Memverifikasi sistem melempar error proteksi dan mengembalikan daftar nama menu yang terdampak.
+- **Skenario 3: Penghapusan Bahan yang Tidak Terikat Menu**
+  - Memverifikasi bahan tanpa keterikatan resep dapat dihapus secara permanen dan bersih.
+- **Skenario 4: Pembaruan Batas Alert Stok Mode Detail**
+  - Mengubah batas minimal alert stok pada bahan yang sudah terdaftar.
+  - Memverifikasi nilai `minStock` terbarui dengan benar tanpa mengubah identitas harga beli supplier maupun stok fisik saat ini.
+
+---
+
+*Catatan: Seluruh pengujian Phase 4 telah selesai diverifikasi dan 100% lulus.*

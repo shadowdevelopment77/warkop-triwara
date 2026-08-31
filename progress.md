@@ -261,6 +261,34 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **22/22 test files passed (64/64 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.73 detik.
 
+*Status Keseluruhan: Phase 3 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 3 Selesai 100%. Siap melanjutkan ke Phase 4 (Bahan Baku & Resep).*
+### 🚀 Phase 4: Bahan Baku & Resep — Detail Lock, Satuan Bebas & Proteksi Hapus
+- **Tujuan Teknis**:
+  - Mengubah aksi Edit menjadi **Modal Detail** dengan seluruh kolom spesifikasi/harga/stok terkunci (*read-only/disabled*) untuk mencegah mutasi fatal, menyisakan hanya batas minimal alert stok yang dapat diedit kasir/owner.
+  - Mengganti input satuan ukur dari dropdown kaku menjadi **string bebas ketik** yang didukung rekomendasi datalist (*flexible unit input*).
+  - Melindungi integritas data resep menu minuman dengan **mencegah penghapusan bahan** yang masih aktif digunakan dan menampilkan daftar menu terkait secara jelas.
+- **Perubahan yang Diterapkan**:
+  1. [`src/types/index.ts`](file:///home/shadowxz/projects/triwara-pos/src/types/index.ts):
+     - Memperluas definisi tipe `UnitType` menjadi `'gr' | 'ml' | 'pcs' | string` agar mendukung segala jenis satuan unik (misal: botol, shot, sachet, pack, kaleng).
+  2. [`src/services/ingredient.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/ingredient.service.ts):
+     - Menambahkan method `getProductsUsingIngredient(id)` untuk mencari menu yang mengonsumsi bahan tersebut dalam resep racikan, kemasan takeaway, ataupun topping tambahan (*additionals*).
+     - Memperketat validasi `deleteIngredient(id)` agar menolak penghapusan bahan dengan pesan eksplisit nama-nama menu yang terdampak.
+  3. [`src/components/master/IngredientModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/IngredientModal.tsx):
+     - Mengubah header menjadi `Detail Bahan: [Nama]` dan mengunci input nama, kategori, unit, stok fisik, dan rincian harga beli pada mode edit.
+     - Hanya field `minStock` (batas alert) yang tetap aktif dan dapat disimpan ulang.
+     - Mengganti elemen `<select>` unit dengan `<input type="text" list="unit-options-list">` untuk fleksibilitas maksimal.
+     - Mengintegrasikan modal peringatan saat tombol "Hapus Bahan" ditekan jika bahan masih digunakan oleh satu atau lebih menu minuman.
+  4. [`src/components/master/InventoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/InventoryPanel.tsx):
+     - Mengganti teks tombol aksi dari "Edit" menjadi **"Detail"**.
+  5. [`src/__tests__/phase4-ingredient-recipe-guard.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase4-ingredient-recipe-guard.test.ts):
+     - 4 pengujian unit: penambahan bahan bersatuan custom string bebas, pencegahan hapus bahan yang dipakai resep menu minuman, penghapusan bahan tak terpakai, dan pembaruan batas alert tanpa merusak data HPP.
+- **Hasil Pengujian**:
+  - `vitest run`: **23/23 test files passed (68/68 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.24 detik.
+
+---
+
+*Status Keseluruhan: Phase 4 Selesai 100%. Siap melanjutkan ke Phase 5 (Manajemen Menu & Validasi Ketat).*

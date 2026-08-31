@@ -159,7 +159,7 @@ export const InventoryPanel: React.FC = () => {
                           className="inv-btn-edit"
                           onClick={() => setEditingIngredient(ing)}
                         >
-                          Edit
+                          Detail
                         </button>
                       </div>
                     </td>

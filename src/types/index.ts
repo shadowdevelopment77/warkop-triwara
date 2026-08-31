@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════
 
 export type IngredientCategory = 'raw' | 'packaging' | string;
-export type UnitType = 'gr' | 'ml' | 'pcs';
+export type UnitType = 'gr' | 'ml' | 'pcs' | string;
 export type OrderType = 'dine_in' | 'takeaway';
 export type PaymentMethod = 'cash' | 'qris';
 export type TransactionStatus = 'completed' | 'voided';
@@ -204,4 +204,29 @@ export interface IAppNotification {
   createdAt: Date;
   isRead: boolean;
 }
+
+export interface IDailyProductSale {
+  productId: number;
+  productName: string;
+  quantitySold: number;
+  totalRevenue: number;
+}
+
+export interface IDailySummary {
+  id?: number;
+  date: string; // 'YYYY-MM-DD'
+  totalOmset: number;
+  totalProfit: number;
+  totalCash: number;
+  totalQris: number;
+  completedCount: number;
+  voidedCount: number;
+  totalItemsSold: number;
+  topProductName: string;
+  topProductPercentage: number;
+  productSales: Record<string, IDailyProductSale>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 

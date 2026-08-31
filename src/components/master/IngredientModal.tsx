@@ -57,6 +57,28 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     e.preventDefault();
     setErrorMsg('');
 
+    if (isEditing && ingredient?.id) {
+      if (minStock === '' || Number(minStock) < 0) {
+        setErrorMsg('Batas minimal alert harus diisi (minimal 0)');
+        return;
+      }
+      try {
+        await ingredientService.updateIngredient(ingredient.id, {
+          minStock: Number(minStock),
+        });
+        await notificationService.addNotification(
+          'Batas Alert Diperbarui',
+          `Batas minimal alert untuk "${ingredient.name}" berhasil diubah menjadi ${minStock} ${unit}.`,
+          'inventory',
+          'inventory'
+        );
+        onSaved();
+      } catch (err) {
+        setErrorMsg((err as Error).message);
+      }
+      return;
+    }
+
     if (!name.trim()) {
       setErrorMsg('Nama bahan baku tidak boleh kosong');
       return;
@@ -79,71 +101,70 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     }
 
     try {
-      if (isEditing && ingredient?.id) {
-        await ingredientService.updateIngredient(ingredient.id, {
-          name: name.trim(),
-          category,
-          unit,
-          currentStock: Number(currentStock),
-          minStock: Number(minStock),
-          purchasePackageName: purchasePackageName.trim() || 'Paket Standar',
-          purchasePrice: Number(purchasePrice),
-          purchaseQuantity: Number(purchaseQuantity),
-        });
-        await notificationService.addNotification(
-          'Stok Bahan Diperbarui',
-          `Bahan "${name.trim()}" berhasil diperbarui (Stok: ${currentStock} ${unit}).`,
-          'inventory',
-          'inventory'
-        );
-      } else {
-        await ingredientService.addIngredient({
-          name: name.trim(),
-          category,
-          unit,
-          currentStock: Number(currentStock),
-          minStock: Number(minStock),
-          purchasePackageName: purchasePackageName.trim() || 'Paket Standar',
-          purchasePrice: Number(purchasePrice),
-          purchaseQuantity: Number(purchaseQuantity),
-        });
-        await notificationService.addNotification(
-          'Bahan Baru Ditambahkan',
-          `Bahan "${name.trim()}" berhasil ditambahkan ke inventaris.`,
-          'inventory',
-          'inventory'
-        );
-      }
+      await ingredientService.addIngredient({
+        name: name.trim(),
+        category,
+        unit: unit.trim() || 'gr',
+        currentStock: Number(currentStock),
+        minStock: Number(minStock),
+        purchasePackageName: purchasePackageName.trim() || 'Paket Standar',
+        purchasePrice: Number(purchasePrice),
+        purchaseQuantity: Number(purchaseQuantity),
+      });
+      await notificationService.addNotification(
+        'Bahan Baru Ditambahkan',
+        `Bahan "${name.trim()}" berhasil ditambahkan ke inventaris.`,
+        'inventory',
+        'inventory'
+      );
       onSaved();
     } catch (err) {
       setErrorMsg((err as Error).message);
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!ingredient?.id) return;
-    setDialogConfig({
-      isOpen: true,
-      type: 'confirm',
-      title: 'Hapus Bahan Inventaris?',
-      message: `Hapus bahan "${ingredient.name}" dari stok? Pastikan bahan ini tidak sedang digunakan pada resep menu manapun.`,
-      isDanger: true,
-      confirmText: 'Ya, Hapus',
-      onConfirm: async () => {
-        try {
-          await ingredientService.deleteIngredient(ingredient.id!);
-          await notificationService.addNotification(
-            'Bahan Dihapus',
-            `Bahan "${ingredient.name}" telah dihapus dari inventaris.`,
-            'inventory',
-            'inventory'
-          );
-          onSaved();
-        } catch (err) {
-          setErrorMsg((err as Error).message);
-        }
-      },
-    });
+    try {
+      const usedMenuNames = await ingredientService.getProductsUsingIngredient(ingredient.id);
+      if (usedMenuNames.length > 0) {
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Tidak Dapat Menghapus Bahan',
+          message: `Bahan "${ingredient.name}" masih aktif digunakan dalam resep ${usedMenuNames.length} menu berikut:\n\n• ${usedMenuNames.join('\n• ')}\n\nSilakan hapus bahan ini dari resep menu di atas sebelum menghapusnya dari inventori.`,
+          isDanger: true,
+          confirmText: 'Mengerti',
+          onConfirm: () => {},
+        });
+        return;
+      }
+
+      setDialogConfig({
+        isOpen: true,
+        type: 'confirm',
+        title: 'Hapus Bahan Inventaris?',
+        message: `Apakah Anda yakin ingin menghapus bahan "${ingredient.name}" dari stok? Tindakan ini permanen.`,
+        isDanger: true,
+        confirmText: 'Ya, Hapus',
+        onConfirm: async () => {
+          try {
+            await ingredientService.deleteIngredient(ingredient.id!);
+            await notificationService.addNotification(
+              'Bahan Dihapus',
+              `Bahan "${ingredient.name}" telah dihapus dari inventaris.`,
+              'inventory',
+              'inventory'
+            );
+            onSaved();
+          } catch (err) {
+            setErrorMsg((err as Error).message);
+          }
+        },
+      });
+    } catch (err) {
+      setErrorMsg((err as Error).message);
+    }
   };
 
   return (
@@ -151,131 +172,161 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
       <div className="modal-backdrop" onClick={onClose}>
         <div className="inv-modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
           <div className="inv-modal-header">
-            <h3 className="inv-modal-title">{isEditing ? `Edit Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
+            <div>
+              <h3 className="inv-modal-title">{isEditing ? `Detail Bahan: ${ingredient?.name}` : 'Tambah Bahan Baku Baru'}</h3>
+              {isEditing && (
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  🔒 Kolom dikunci untuk menjaga integritas HPP & stok. Hanya batas alert yang dapat disunting.
+                </p>
+              )}
+            </div>
             <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
               ✕
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="inv-modal-body">
-          {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
-
-          <div className="form-group">
-            <label className="form-label">Nama Bahan Baku / Kemasan</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="contoh: Biji Kopi Arabica, Fresh Milk UHT, Paper Cup 8oz..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-row two-cols">
-            <div className="form-group">
-              <label className="form-label">Kategori</label>
-              <select
-                className="form-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as IngredientCategory)}
-              >
-                <option value="raw">Bahan Baku (raw)</option>
-                <option value="packaging">Kemasan Sekali Pakai (packaging)</option>
-                {availableCategories
-                  .filter((c) => c !== 'raw' && c !== 'packaging')
-                  .map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-              </select>
-            </div>
+            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
             <div className="form-group">
-              <label className="form-label">Satuan Ukur (Unit)</label>
-              <select className="form-select" value={unit} onChange={(e) => setUnit(e.target.value as UnitType)}>
-                <option value="gr">Gram (gr)</option>
-                <option value="ml">Milliliter (ml)</option>
-                <option value="pcs">Pieces (pcs / lembar)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row two-cols">
-            <div className="form-group">
-              <label className="form-label">Stock ({unit})</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="contoh: 1000"
-                value={currentStock}
-                onChange={(e) => setCurrentStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Batas Minimal ({unit})</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="contoh: 100"
-                value={minStock}
-                onChange={(e) => setMinStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Cost Calculator Section */}
-          <div className="calc-section-box">
-            <h4 className="calc-section-title">Kalkulator Biaya Modal Beli (Cost Per Unit)</h4>
-
-            <div className="form-group">
-              <label className="form-label">Nama Kemasan Pembelian Supplier</label>
+              <label className="form-label">Nama Bahan Baku / Kemasan</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="contoh: Bag 1kg, Karton 1 Liter, Sleeve 50 pcs..."
-                value={purchasePackageName}
-                onChange={(e) => setPurchasePackageName(e.target.value)}
+                placeholder="contoh: Biji Kopi Arabica, Fresh Milk UHT, Paper Cup 8oz..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isEditing}
+                required
               />
             </div>
 
             <div className="form-row two-cols">
               <div className="form-group">
-                <label className="form-label">Harga Pembelian (Rp)</label>
+                <label className="form-label">Kategori</label>
+                <select
+                  className="form-select"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as IngredientCategory)}
+                  disabled={isEditing}
+                >
+                  <option value="raw">Bahan Baku (raw)</option>
+                  <option value="packaging">Kemasan Sekali Pakai (packaging)</option>
+                  {availableCategories
+                    .filter((c) => c !== 'raw' && c !== 'packaging')
+                    .map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Satuan Ukur (Unit)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  list="unit-options-list"
+                  placeholder="contoh: gr, ml, pcs, shot, pack..."
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value as UnitType)}
+                  disabled={isEditing}
+                  required
+                />
+                <datalist id="unit-options-list">
+                  <option value="gr">Gram (gr)</option>
+                  <option value="ml">Milliliter (ml)</option>
+                  <option value="pcs">Pieces (pcs / lembar)</option>
+                  <option value="shot">Shot</option>
+                  <option value="pack">Pack</option>
+                  <option value="sachet">Sachet</option>
+                  <option value="botol">Botol</option>
+                </datalist>
+              </div>
+            </div>
+
+            <div className="form-row two-cols">
+              <div className="form-group">
+                <label className="form-label">Stock Saat Ini ({unit})</label>
                 <input
                   type="number"
                   className="form-input"
-                  placeholder="contoh: 150000"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="contoh: 1000"
+                  value={currentStock}
+                  onChange={(e) => setCurrentStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  disabled={isEditing}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Jumlah Isi per Beli ({unit})</label>
+                <label className="form-label" style={{ color: isEditing ? 'var(--primary-color)' : undefined, fontWeight: 700 }}>
+                  Batas Minimal Alert ({unit}) {isEditing && '✏️'}
+                </label>
                 <input
                   type="number"
                   className="form-input"
-                  placeholder="contoh: 1000"
-                  value={purchaseQuantity}
-                  onChange={(e) => setPurchaseQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  style={isEditing ? { borderColor: 'var(--primary-color)', backgroundColor: 'var(--bg-input)' } : undefined}
+                  placeholder="contoh: 100"
+                  value={minStock}
+                  onChange={(e) => setMinStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   required
                 />
               </div>
             </div>
 
-            <div className="calc-result-badge">
-              <span>Hasil Cost per {unit}: </span>
-              <strong>
-                {formatRupiah(calculatedCostPerUnit)} / {unit}
-              </strong>
+            {/* Cost Calculator Section */}
+            <div className="calc-section-box">
+              <h4 className="calc-section-title">Kalkulator Biaya Modal Beli (Cost Per Unit)</h4>
+
+              <div className="form-group">
+                <label className="form-label">Nama Kemasan Pembelian Supplier</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="contoh: Bag 1kg, Karton 1 Liter, Sleeve 50 pcs..."
+                  value={purchasePackageName}
+                  onChange={(e) => setPurchasePackageName(e.target.value)}
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div className="form-row two-cols">
+                <div className="form-group">
+                  <label className="form-label">Harga Pembelian (Rp)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="contoh: 150000"
+                    value={purchasePrice}
+                    onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    disabled={isEditing}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Jumlah Isi per Beli ({unit})</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="contoh: 1000"
+                    value={purchaseQuantity}
+                    onChange={(e) => setPurchaseQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    disabled={isEditing}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="calc-result-badge">
+                <span>Hasil Cost per {unit}: </span>
+                <strong>
+                  {formatRupiah(calculatedCostPerUnit)} / {unit}
+                </strong>
+              </div>
             </div>
-          </div>
 
             <div className="inv-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
               {isEditing && (
@@ -284,10 +335,10 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 </button>
               )}
               <button type="button" className="inv-btn-secondary" onClick={onClose}>
-                Batal
+                {isEditing ? 'Tutup' : 'Batal'}
               </button>
               <button type="submit" className="inv-btn-primary">
-                {isEditing ? 'Simpan Perubahan' : 'Tambah Bahan'}
+                {isEditing ? 'Simpan Batas Alert' : '+ Tambah Bahan'}
               </button>
             </div>
           </form>
