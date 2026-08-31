@@ -21,6 +21,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
   const [name, setName] = useState<string>(ingredient?.name || '');
   const [category, setCategory] = useState<IngredientCategory>(ingredient?.category || 'raw');
   const [availableCategories, setAvailableCategories] = useState<string[]>(['raw', 'packaging']);
+  const [availableUnits, setAvailableUnits] = useState<string[]>(['gr', 'ml', 'pcs']);
   const [unit, setUnit] = useState<UnitType>(ingredient?.unit || 'gr');
   const [currentStock, setCurrentStock] = useState<number | ''>(ingredient ? ingredient.currentStock : '');
   const [minStock, setMinStock] = useState<number | ''>(ingredient ? ingredient.minStock : '');
@@ -47,7 +48,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     ingredientService.getCategories().then((cats) => {
       setAvailableCategories(cats);
     });
-  }, []);
+    ingredientService.getUnits().then((u) => {
+      setAvailableUnits(u);
+      if (!ingredient && u.length > 0 && !u.includes(unit)) {
+        setUnit(u[0]);
+      }
+    });
+  }, [ingredient, unit]);
 
   const numPrice = typeof purchasePrice === 'number' ? purchasePrice : 0;
   const numQty = typeof purchaseQuantity === 'number' ? purchaseQuantity : 0;
@@ -224,25 +231,19 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
               <div className="form-group">
                 <label className="form-label">Satuan Ukur (Unit)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  list="unit-options-list"
-                  placeholder="contoh: gr, ml, pcs, shot, pack..."
+                <select
+                  className="form-select"
                   value={unit}
                   onChange={(e) => setUnit(e.target.value as UnitType)}
                   disabled={isEditing}
                   required
-                />
-                <datalist id="unit-options-list">
-                  <option value="gr">Gram (gr)</option>
-                  <option value="ml">Milliliter (ml)</option>
-                  <option value="pcs">Pieces (pcs / lembar)</option>
-                  <option value="shot">Shot</option>
-                  <option value="pack">Pack</option>
-                  <option value="sachet">Sachet</option>
-                  <option value="botol">Botol</option>
-                </datalist>
+                >
+                  {availableUnits.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

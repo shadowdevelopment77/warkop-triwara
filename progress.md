@@ -394,3 +394,22 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 | 6 | **Laporan Penjualan** | ✅ Selesai | Tabel transaksi riwayat dihapus dari laporan; laporan PDF dirampingkan menjadi 1 halaman eksekutif bersih. |
 | 7 | **Pengaturan & Pembersihan Transaksi** | ✅ Selesai | Validasi backend ketat (hanya transaksi $\ge 1$ tahun yang dapat dihapus), ekspor arsip Excel (.csv UTF-8 BOM) wajib terunduh sebelum hapus, dan audit log tercatat. |
 | 8 | **Verifikasi Akhir** | ✅ Selesai | 26 test files (78 tests) lulus 100%, TypeScript build 0 error (2.5 detik). |
+| 9 | **Kelola Satuan Ukur (Unit Manager)** | ✅ Selesai | Modal Kelola Satuan dengan proteksi relasi bahan aktif, penyimpanan custom units di config, dan dropdown select dinamis di form bahan baku. |
+
+---
+
+### 🚀 Phase 9: Kelola Satuan Ukur (Unit Manager) & Proteksi Relasi
+- **Tujuan Teknis**:
+  - Menyediakan modal manajemen satuan ukur (**UnitManagerModal**) di header tab Inventori untuk menambah dan menghapus satuan ukur kustom secara terpusat.
+  - Mengubah input satuan pada form tambah/edit bahan baku ([`IngredientModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/IngredientModal.tsx)) menjadi elemen **`<select>` dropdown dinamis** yang terhubung langsung ke daftar satuan aktif.
+  - Menerapkan **proteksi integritas relasional ganda**: satuan ukur yang sedang dipakai oleh bahan baku di inventori TIDAK DAPAT dihapus (baik melalui UI modal dialog peringatan maupun validasi exception di service layer).
+- **Perubahan yang Diterapkan**:
+  1. [`src/types/index.ts`](file:///home/shadowxz/projects/triwara-pos/src/types/index.ts): Ditambahkan field `customUnits?: string[]` pada interface `IShopConfig`.
+  2. [`src/services/ingredient.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/ingredient.service.ts): Ditambahkan method `getUnits()`, `addUnit()`, dan `deleteUnit()` dengan pengecekan relasional bahan aktif.
+  3. [`src/components/master/UnitManagerModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/UnitManagerModal.tsx): Komponen modal baru untuk menampilkan daftar satuan, status penggunaan bahan, dan tombol hapus berproteksi.
+  4. [`src/components/master/IngredientModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/IngredientModal.tsx): Form satuan ukur kini berupa `<select>` dropdown dinamis.
+  5. [`src/components/master/InventoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/InventoryPanel.tsx): Ditambahkan tombol aksi "Kelola Satuan" di samping "Kelola Kategori".
+  6. [`src/__tests__/unit-manager-guard.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/unit-manager-guard.test.ts): 5 skenario pengujian unit lulus 100%.
+- **Hasil Pengujian**:
+  - `vitest run`: **27/27 test files passed (83/83 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.03 detik.

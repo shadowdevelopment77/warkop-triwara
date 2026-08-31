@@ -173,6 +173,7 @@ export interface IShopConfig {
   printerMacAddress?: string;
   printerName?: string;
   customIngredientCategories?: string[];
+  customUnits?: string[];
 }
 
 export interface ICartItem {

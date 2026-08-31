@@ -11,6 +11,7 @@ import { formatRupiah } from '../../utils/currency';
 import { IngredientModal } from './IngredientModal';
 import { RestockModal } from './RestockModal';
 import { InventoryCategoryManagerModal } from './InventoryCategoryManagerModal';
+import { UnitManagerModal } from './UnitManagerModal';
 import { PaginationBar } from '../common/PaginationBar';
 import { DialogModal } from '../common/DialogModal';
 
@@ -22,6 +23,7 @@ export const InventoryPanel: React.FC = () => {
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState<boolean>(false);
   const [editingIngredient, setEditingIngredient] = useState<IIngredient | null>(null);
   const [restockingIngredient, setRestockingIngredient] = useState<IIngredient | null>(null);
   const [dialogConfig, setDialogConfig] = useState<{
@@ -94,6 +96,9 @@ export const InventoryPanel: React.FC = () => {
           </button>
           <button type="button" className="inv-btn-secondary" onClick={() => setIsCategoryModalOpen(true)}>
             Kelola Kategori
+          </button>
+          <button type="button" className="inv-btn-secondary" onClick={() => setIsUnitModalOpen(true)}>
+            Kelola Satuan
           </button>
           <button type="button" className="inv-btn-primary" onClick={() => setIsAddModalOpen(true)}>
             + Tambah Bahan Baru
@@ -218,6 +223,14 @@ export const InventoryPanel: React.FC = () => {
       {isCategoryModalOpen && (
         <InventoryCategoryManagerModal
           onClose={() => setIsCategoryModalOpen(false)}
+          onChanged={loadIngredients}
+        />
+      )}
+
+      {/* Unit Manager Modal */}
+      {isUnitModalOpen && (
+        <UnitManagerModal
+          onClose={() => setIsUnitModalOpen(false)}
           onChanged={loadIngredients}
         />
       )}

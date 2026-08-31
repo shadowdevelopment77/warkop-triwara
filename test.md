@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **26 File Lulus (100%)**
-- **Total Unit Tests**: **78 Tests Passed (100%)**
+- **Total Test Files**: **27 File Lulus (100%)**
+- **Total Unit Tests**: **83 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~20.6 detik (Vitest) + 2.3 detik (Vite build)
+- **Waktu Eksekusi**: ~25.3 detik (Vitest) + 3.0 detik (Vite build)
 
 ---
 
@@ -292,4 +292,25 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 7 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 18. Pengujian Fitur: Kelola Satuan Ukur (Unit Manager) & Proteksi Relasi
+**File**: [`src/__tests__/unit-manager-guard.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/unit-manager-guard.test.ts)
+- **Skenario 1: Ketersediaan Satuan Dasar Sistem (gr, ml, pcs)**
+  - Memanggil `ingredientService.getUnits()`.
+  - Memverifikasi satuan bawaan selalu tersedia di daftar opsi.
+- **Skenario 2: Penambahan Satuan Kustom dan Penolakan Duplikat**
+  - Mendaftarkan satuan kustom baru (`botol`).
+  - Memverifikasi penolakan nama kosong atau duplikat case-insensitive.
+- **Skenario 3: Proteksi Satuan Sistem Dasar**
+  - Mencoba menghapus `gr`, `ml`, atau `pcs`.
+  - Memverifikasi sistem melempar error penolakan karena merupakan satuan dasar sistem.
+- **Skenario 4: Proteksi Penghapusan Satuan yang Sedang Digunakan**
+  - Menyiapkan bahan baku yang memakai satuan `shot`.
+  - Memanggil `ingredientService.deleteUnit('shot')`.
+  - Memverifikasi sistem menolak penghapusan dan menyebutkan nama bahan baku yang menggunakannya.
+- **Skenario 5: Keberhasilan Hapus Satuan Bebas / Tidak Terpakai**
+  - Menghapus satuan `sachet` yang tidak terikat bahan manapun.
+  - Memverifikasi satuan berhasil dihapus dari `shopConfig` dan tercatat dalam log audit inventori.
+
+---
+
+*Catatan: Seluruh 18 modul pengujian telah selesai diverifikasi dan 100% lulus.*

@@ -229,6 +229,89 @@ export class IngredientService {
       });
     }
   }
+
+  /** Gets all available units (default baseline + custom from config + any active units in DB) */
+  async getUnits(): Promise<string[]> {
+    const baseline = ['gr', 'ml', 'pcs'];
+    const config = await this.database.shopConfig.toCollection().first();
+    const custom = config?.customUnits || [];
+    const ingredients = await this.database.ingredients.toArray();
+
+    const set = new Set<string>(baseline);
+    custom.forEach((u) => {
+      if (u && u.trim()) set.add(u.trim());
+    });
+    ingredients.forEach((i) => {
+      if (i.unit && i.unit.trim()) set.add(i.unit.trim());
+    });
+
+    return Array.from(set);
+  }
+
+  /** Adds a new custom unit */
+  async addUnit(unitName: string): Promise<void> {
+    const trimmed = unitName.trim();
+    if (!trimmed) throw new Error('Nama satuan ukur tidak boleh kosong');
+
+    const config = await this.database.shopConfig.toCollection().first();
+    if (config && config.id) {
+      const current = config.customUnits || [];
+      const exists =
+        current.some((u) => u.toLowerCase() === trimmed.toLowerCase()) ||
+        ['gr', 'ml', 'pcs'].some((u) => u.toLowerCase() === trimmed.toLowerCase());
+
+      if (exists) {
+        throw new Error(`Satuan "${trimmed}" sudah terdaftar.`);
+      }
+
+      await this.database.shopConfig.update(config.id, {
+        customUnits: [...current, trimmed],
+      });
+
+      await this.database.logs.add({
+        type: 'inventory',
+        description: `TAMBAH SATUAN UKUR: ${trimmed}`,
+        createdAt: new Date(),
+      });
+    }
+  }
+
+  /** Deletes a custom unit if not currently used by any ingredient */
+  async deleteUnit(unitName: string): Promise<void> {
+    const trimmed = unitName.trim();
+    if (!trimmed) return;
+
+    if (['gr', 'ml', 'pcs'].includes(trimmed.toLowerCase())) {
+      throw new Error(`Satuan sistem dasar "${trimmed}" tidak dapat dihapus.`);
+    }
+
+    const ingredients = await this.database.ingredients.toArray();
+    const usedIngredients = ingredients.filter(
+      (i) => i.unit.trim().toLowerCase() === trimmed.toLowerCase()
+    );
+
+    if (usedIngredients.length > 0) {
+      const names = usedIngredients.map((i) => i.name).join(', ');
+      throw new Error(
+        `Satuan "${trimmed}" tidak dapat dihapus karena masih digunakan oleh ${usedIngredients.length} bahan baku: ${names}.`
+      );
+    }
+
+    const config = await this.database.shopConfig.toCollection().first();
+    if (config && config.id) {
+      const current = config.customUnits || [];
+      const updated = current.filter((u) => u.toLowerCase() !== trimmed.toLowerCase());
+      await this.database.shopConfig.update(config.id, {
+        customUnits: updated,
+      });
+
+      await this.database.logs.add({
+        type: 'inventory',
+        description: `HAPUS SATUAN UKUR: ${trimmed}`,
+        createdAt: new Date(),
+      });
+    }
+  }
 }
 
 export const ingredientService = new IngredientService();
