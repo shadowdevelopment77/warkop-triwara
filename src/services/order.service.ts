@@ -21,6 +21,7 @@ export class OrderService {
   private paginatedCache = new Map<string, IPaginatedOrdersResult>();
   private totalCountCache = new Map<string, number>();
   private readonly maxCacheEntries = 20;
+  private readonly maxTotalCountEntries = 30;
 
   constructor(database: TriwaraDatabase = db, hppSvc: HppService = hppService) {
     this.database = database;
@@ -276,28 +277,38 @@ export class OrderService {
       return cached;
     }
 
-    // 2. Fetch or retrieve cached total count
-    let totalCount = this.totalCountCache.get(rangeKey);
-    const query = start && end
+    // 2. Fetch or retrieve cached total count & query requested slice in parallel
+    const totalCount = this.totalCountCache.get(rangeKey);
+    const countPromise = totalCount !== undefined
+      ? Promise.resolve(totalCount)
+      : (start && end
+          ? this.database.orders.where('createdAt').between(start, end, true, true).count()
+          : this.database.orders.count());
+
+    const ordersCollection = start && end
       ? this.database.orders.where('createdAt').between(start, end, true, true)
       : this.database.orders.toCollection();
 
-    if (totalCount === undefined) {
-      totalCount = await query.count();
-      this.totalCountCache.set(rangeKey, totalCount);
-    }
-
-    // 3. Query the requested slice
-    const orders = await query
+    const ordersPromise = ordersCollection
       .reverse()
       .offset(offset)
       .limit(size)
       .toArray();
 
-    const totalPages = Math.max(1, Math.ceil(totalCount / size));
+    const [resolvedCount, orders] = await Promise.all([countPromise, ordersPromise]);
+
+    if (totalCount === undefined) {
+      if (this.totalCountCache.size >= this.maxTotalCountEntries) {
+        const firstKey = this.totalCountCache.keys().next().value;
+        if (firstKey) this.totalCountCache.delete(firstKey);
+      }
+      this.totalCountCache.set(rangeKey, resolvedCount);
+    }
+
+    const totalPages = Math.max(1, Math.ceil(resolvedCount / size));
     const result: IPaginatedOrdersResult = {
       orders,
-      totalCount,
+      totalCount: resolvedCount,
       totalPages,
       currentPage: pageNum,
     };
@@ -327,8 +338,12 @@ export class OrderService {
     const nextCacheKey = `${rangeKey}_p${nextPage}_s${size}`;
     if (this.paginatedCache.has(nextCacheKey)) return;
 
-    // Asynchronous background prefetch without blocking main loop
-    setTimeout(async () => {
+    // Asynchronous background prefetch throttled to idle CPU time
+    const schedule = typeof window !== 'undefined' && typeof (window as unknown as { requestIdleCallback?: unknown }).requestIdleCallback === 'function'
+      ? (cb: () => void) => (window as unknown as { requestIdleCallback: (fn: () => void) => number }).requestIdleCallback(cb)
+      : (cb: () => void) => setTimeout(cb, 10);
+
+    schedule(async () => {
       try {
         const nextOffset = (nextPage - 1) * size;
         const query = start && end
@@ -357,7 +372,7 @@ export class OrderService {
       } catch {
         // Ignore background prefetch errors
       }
-    }, 10);
+    });
   }
 
   /** Gets transactions within a date range with optional limit using indexed query */

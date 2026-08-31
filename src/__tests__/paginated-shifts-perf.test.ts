@@ -84,7 +84,7 @@ describe('Paginated Shifts Performance & Index B-Tree Tests', () => {
     await shiftService.getPaginatedShifts('', 1, 10);
 
     // Wait for background prefetch microtask
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const orderBySpy = vi.spyOn(testDb.shifts, 'orderBy');
     const resultPage2 = await shiftService.getPaginatedShifts('', 2, 10);

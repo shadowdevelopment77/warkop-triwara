@@ -25,6 +25,105 @@ const toInputDateString = (d: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const getInitialDateRange = () => {
+  const now = new Date();
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
+    end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
+  };
+};
+
+interface TransactionRowProps {
+  order: IOrder;
+  onReprintOrder: (order: IOrder) => void;
+  onVoidOrder: (order: IOrder) => void;
+}
+
+const TransactionRow = React.memo<TransactionRowProps>(({ order, onReprintOrder, onVoidOrder }) => {
+  const isVoided = order.status === 'voided';
+  return (
+    <tr className={isVoided ? 'row-voided' : ''}>
+      <td>
+        <strong>#{order.orderNumber}</strong>
+      </td>
+      <td style={{ color: '#60a5fa', fontWeight: 600 }}>
+        {order.processedBy || 'Kasir'}
+      </td>
+      <td>{order.customerName || 'Umum'}</td>
+      <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
+        {formatDateIndonesian(order.createdAt)}
+      </td>
+      <td style={{ fontWeight: 700, color: '#0f172a' }}>
+        {formatRupiah(order.total)}
+      </td>
+      <td>
+        <span
+          style={{
+            fontSize: '11px',
+            fontWeight: 700,
+            padding: '2px 6px',
+            borderRadius: '4px',
+            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
+            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
+            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
+            textTransform: 'uppercase',
+          }}
+        >
+          {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
+        </span>
+      </td>
+      <td>
+        <span
+          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
+        >
+          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
+        </span>
+      </td>
+      <td style={{ textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+          {order.status === 'completed' ? (
+            <>
+              <button
+                type="button"
+                className="report-btn-print"
+                onClick={() => onReprintOrder(order)}
+                title="Cetak Ulang Struk Pelanggan"
+              >
+                🖨️ Cetak
+              </button>
+              <button
+                type="button"
+                className="report-btn-void"
+                onClick={() => onVoidOrder(order)}
+                title="Batalkan (Void) Transaksi"
+              >
+                🚫 Void
+              </button>
+            </>
+          ) : (
+            <span
+              className="report-voided-label"
+              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
+              style={{
+                color: '#ef4444',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+              }}
+            >
+              🚫 Dibatalkan
+            </span>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+TransactionRow.displayName = 'TransactionRow';
+
 export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = ({
   onReprintOrder,
 }) => {
@@ -39,13 +138,9 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     message: string;
   } | null>(null);
 
-  // Date filters (defaults to today)
-  const now = new Date();
-  const initialStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-  const initialEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-
-  const [startDate, setStartDate] = useState<Date>(initialStart);
-  const [endDate, setEndDate] = useState<Date>(initialEnd);
+  // Date filters (defaults to today, lazily computed once)
+  const [startDate, setStartDate] = useState<Date>(() => getInitialDateRange().start);
+  const [endDate, setEndDate] = useState<Date>(() => getInitialDateRange().end);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('today');
 
   const loadOrders = useCallback(async () => {
@@ -237,85 +332,13 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                 </tr>
               ) : (
                 orders.map((order) => (
-                    <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
-                      <td>
-                        <strong>#{order.orderNumber}</strong>
-                      </td>
-                      <td style={{ color: '#60a5fa', fontWeight: 600 }}>
-                        {order.processedBy || 'Kasir'}
-                      </td>
-                      <td>{order.customerName || 'Umum'}</td>
-                      <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
-                        {formatDateIndonesian(order.createdAt)}
-                      </td>
-                      <td style={{ fontWeight: 700, color: '#0f172a' }}>
-                        {formatRupiah(order.total)}
-                      </td>
-                      <td>
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
-                            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
-                            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
-                        >
-                          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                          {order.status === 'completed' ? (
-                            <>
-                              <button
-                                type="button"
-                                className="report-btn-print"
-                                onClick={() => onReprintOrder(order)}
-                                title="Cetak Ulang Struk Pelanggan"
-                              >
-                                🖨️ Cetak
-                              </button>
-                              <button
-                                type="button"
-                                className="report-btn-void"
-                                onClick={() => setVoidingOrder(order)}
-                                title="Batalkan (Void) Transaksi"
-                              >
-                                🚫 Void
-                              </button>
-                            </>
-                          ) : (
-                            <span
-                              className="report-voided-label"
-                              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
-                              style={{
-                                color: '#ef4444',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                                padding: '3px 8px',
-                                borderRadius: '4px',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid rgba(239, 68, 68, 0.2)',
-                              }}
-                            >
-                              🚫 Dibatalkan
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  <TransactionRow
+                    key={order.id}
+                    order={order}
+                    onReprintOrder={onReprintOrder}
+                    onVoidOrder={setVoidingOrder}
+                  />
+                ))
               )}
             </tbody>
           </table>
