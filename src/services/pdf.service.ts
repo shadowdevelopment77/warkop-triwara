@@ -521,26 +521,19 @@ export class PdfService {
     const diff = shift.cashDifference ?? (actual - expected);
 
     const summaryData = [
-      ['Kas Awal (Modal Kembalian)', formatRupiah(shift.startingCash)],
-      ['Total Penjualan Tunai', formatRupiah(shift.totalCashSales)],
+      ['Kas Awal', formatRupiah(shift.startingCash)],
+      ['Total Penjualan Cash', formatRupiah(shift.totalCashSales)],
+      ['Total Penjualan QRIS', formatRupiah(shift.totalQrisSales)],
+      ['Total Penjualan Omset', formatRupiah(shift.totalCashSales + shift.totalQrisSales)],
+      ['Uang Tunai (Kas + Penjualan Cash)', formatRupiah(shift.startingCash + shift.totalCashSales)],
+      [
+        'Pengeluaran Kasir',
+        shift.totalExpenses && shift.totalExpenses > 0 ? `-${formatRupiah(shift.totalExpenses)}` : 'Rp 0',
+      ],
+      ['Selisih', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(LEBIH)' : '(KURANG)'}`],
+      ['Total Transaksi Selesai', `${shift.totalTransactions} Pesanan`],
+      ['Total Pesanan Dibatalkan', `${shift.totalVoided} Pesanan`],
     ];
-
-    if (shift.totalExpenses && shift.totalExpenses > 0) {
-      summaryData.push(['Total Belanja / Pengeluaran Kasir', `-${formatRupiah(shift.totalExpenses)}`]);
-      if (shift.borrowedFromSales && shift.borrowedFromSales > 0) {
-        summaryData.push(['  *(Peringatan: Pinjam Uang Sales)', formatRupiah(shift.borrowedFromSales)]);
-      }
-    }
-
-    summaryData.push(
-      ['Uang Tunai Sistem (Seharusnya)', formatRupiah(expected)],
-      ['Uang Tunai Fisik di Laci', formatRupiah(actual)],
-      ['Selisih Kas', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(LEBIH)' : '(KURANG)'}`],
-      ['Total Penjualan QRIS (Non-Tunai)', formatRupiah(shift.totalQrisSales)],
-      ['Total Omset Shift (Tunai + QRIS)', formatRupiah(shift.totalCashSales + shift.totalQrisSales)],
-      ['Total Pesanan Selesai', `${shift.totalTransactions} Pesanan`],
-      ['Total Pesanan Dibatalkan (Void)', `${shift.totalVoided} Pesanan`]
-    );
 
     autoTable(doc, {
       startY: 59,

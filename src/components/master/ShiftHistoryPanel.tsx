@@ -116,9 +116,9 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
                 <th>Opening</th>
                 <th>Closing</th>
                 <th>Kas Awal</th>
-                <th>Transaksi Tunai</th>
-                <th>Transaksi QRIS</th>
-                <th>Total Tunai</th>
+                <th>Penjualan Tunai</th>
+                <th>Penjualan QRIS</th>
+                <th>Total Omset</th>
                 <th>Selisih</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'center' }}>Aksi</th>
@@ -154,10 +154,16 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
                           {shift.closedAt ? formatDateIndonesian(shift.closedAt) : '— (Berjalan)'}
                         </td>
                         <td>{formatRupiah(shift.startingCash)}</td>
-                        <td>{cashCount} pesanan</td>
-                        <td>{qrisCount} pesanan</td>
-                        <td style={{ color: '#16a34a', fontWeight: 700 }}>
-                          {formatRupiah(shift.totalCashSales)}
+                        <td>
+                          <div style={{ color: '#16a34a', fontWeight: 600 }}>{formatRupiah(shift.totalCashSales)}</div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>{cashCount} pesanan</div>
+                        </td>
+                        <td>
+                          <div style={{ color: '#2563eb', fontWeight: 600 }}>{formatRupiah(shift.totalQrisSales)}</div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>{qrisCount} pesanan</div>
+                        </td>
+                        <td style={{ color: '#0f172a', fontWeight: 700 }}>
+                          {formatRupiah(shift.totalCashSales + shift.totalQrisSales)}
                         </td>
                         <td>
                           {shift.status === 'closed' ? (

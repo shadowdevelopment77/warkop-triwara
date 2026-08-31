@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **21 File Lulus (100%)**
-- **Total Unit Tests**: **62 Tests Passed (100%)**
+- **Total Test Files**: **22 File Lulus (100%)**
+- **Total Unit Tests**: **64 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~23.4 detik (Vitest) + 3.0 detik (Vite build)
+- **Waktu Eksekusi**: ~23.4 detik (Vitest) + 2.7 detik (Vite build)
 
 ---
 
@@ -216,4 +216,15 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 2 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 13. Pengujian Phase 3: Shift Display & Rekap PDF Overhaul
+**File**: [`src/__tests__/phase3-shift-recap.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase3-shift-recap.test.ts)
+- **Skenario 1: Ekspor PDF Rekap Shift dengan 9 Baris Finansial Baku**
+  - Menguji cetak dokumen PDF rekapitulasi shift yang berisi kas awal, total omset tunai, total omset QRIS, omset shift total, uang tunai di laci fisik, pengeluaran kasir, selisih kas, jumlah pesanan selesai, dan jumlah pesanan void.
+  - Memverifikasi `pdfService.exportShiftReportPdf` merender data secara utuh beserta rincian tabel belanja kasir (petty cash).
+- **Skenario 2: Ekspor PDF Rekap Shift Tanpa Pengeluaran Kasir**
+  - Menyimulasikan shift yang tidak memiliki mutasi pengeluaran kas kecil.
+  - Memverifikasi tabel rincian belanja tidak memicu error dan baris pengeluaran kasir tetap menampilkan `Rp 0`.
+
+---
+
+*Catatan: Seluruh pengujian Phase 3 telah selesai diverifikasi dan 100% lulus.*

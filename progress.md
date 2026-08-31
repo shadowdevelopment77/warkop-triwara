@@ -232,6 +232,35 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **21/21 test files passed (62/62 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.08 detik.
 
+*Status Keseluruhan: Phase 2 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 2 Selesai 100%. Siap melanjutkan ke Phase 3 (Shift Panel & PDF Rekap Overhaul).*
+### 🚀 Phase 3: Shift — Tampilan Nominal Uang & Overhaul PDF Rekap
+- **Tujuan Teknis**:
+  - Memperbaiki kolom transaksi Tunai dan QRIS pada tabel riwayat shift agar menampilkan **nominal rupiah** (bukan sekadar jumlah pesanan).
+  - Melakukan restrukturisasi berkas PDF Rekap Shift Kasir agar urutan dan susunan informasinya sesuai dengan kebutuhan baku operasional warkop (urutan 1 s/d 9 yang presisi).
+- **Perubahan yang Diterapkan**:
+  1. [`src/components/master/ShiftHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/ShiftHistoryPanel.tsx):
+     - Mengubah header kolom menjadi `Penjualan Tunai`, `Penjualan QRIS`, dan `Total Omset`.
+     - Menampilkan nominal rupiah berbobot jelas (`formatRupiah`) dengan subtitle kecil jumlah pesanan (`{count} pesanan`) agar kasir dan owner dapat membaca omset fisik per shift seketika.
+  2. [`src/services/pdf.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/pdf.service.ts):
+     - Memperbarui tabel rekap kasir pada `exportShiftReportPdf` menjadi 9 baris berurutan secara konsisten:
+       1. Kas Awal
+       2. Total Penjualan Cash
+       3. Total Penjualan QRIS
+       4. Total Penjualan Omset
+       5. Uang Tunai (Kas + Penjualan Cash)
+       6. Pengeluaran Kasir
+       7. Selisih
+       8. Total Transaksi Selesai
+       9. Total Pesanan Dibatalkan
+  3. [`src/__tests__/phase3-shift-recap.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase3-shift-recap.test.ts):
+     - 2 pengujian unit: validasi ekspor PDF rekap shift dengan rincian pengeluaran operasional dan ekspor shift tanpa pengeluaran.
+- **Hasil Pengujian**:
+  - `vitest run`: **22/22 test files passed (64/64 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.73 detik.
+
+---
+
+*Status Keseluruhan: Phase 3 Selesai 100%. Siap melanjutkan ke Phase 4 (Bahan Baku & Resep).*
