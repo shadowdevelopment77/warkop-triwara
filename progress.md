@@ -395,6 +395,7 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 | 7 | **Pengaturan & Pembersihan Transaksi** | ✅ Selesai | Validasi backend ketat (hanya transaksi $\ge 1$ tahun yang dapat dihapus), ekspor arsip Excel (.csv UTF-8 BOM) wajib terunduh sebelum hapus, dan audit log tercatat. |
 | 8 | **Verifikasi Akhir** | ✅ Selesai | 26 test files (78 tests) lulus 100%, TypeScript build 0 error (2.5 detik). |
 | 9 | **Kelola Satuan Ukur (Unit Manager)** | ✅ Selesai | Modal Kelola Satuan dengan proteksi relasi bahan aktif, penyimpanan custom units di config, dan dropdown select dinamis di form bahan baku. |
+| 10 | **Optimasi Transisi & Paginasi Riwayat Transaksi** | ✅ Selesai | Eliminasi delay dan efek "nyangkut", LRU Page Cache bounded (< 50 KB), background prefetching instan (< 1ms), dan visual dimmed transition. |
 
 ---
 
@@ -413,3 +414,24 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 - **Hasil Pengujian**:
   - `vitest run`: **27/27 test files passed (83/83 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.03 detik.
+
+---
+
+### 🚀 Phase 10: Optimasi Transisi & Paginasi Riwayat Transaksi (LRU Cache & Background Prefetch)
+- **Tujuan Teknis**:
+  - Mengeliminasi jeda perpindahan halaman dan efek data "nyangkut" di Halaman 1 saat tombol "Berikutnya ▶" ditekan pada riwayat transaksi bulanan (~1.000+ data).
+  - Mengeliminasi eksekusi `query.count()` berulang pada rentang tanggal yang sama di IndexedDB.
+  - Menerapkan **LRU Page Buffer yang sangat ringan (< 50 KB RAM)** dan **Background Prefetching**: saat kasir melihat Halaman $N$, Halaman $N+1$ sudah disiapkan di buffer memori secara asinkron tanpa memblokir thread.
+  - Memberikan visual feedback transisi yang mulus (`opacity: 0.4` + subtle top loading bar) saat cold-fetch pertama kali, mengeliminasi disonansi visual antara pagination bar dan tabel.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/order.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/order.service.ts):
+     - Ditambahkan internal `paginatedCache` (max 20 entries) dan `totalCountCache`.
+     - Ditambahkan `clearPaginationCache()` yang di-trigger saat order dibuat, divoid, atau dibersihkan.
+     - `getPaginatedOrders()` memprioritaskan cache hit (< 1ms) dan menjalankan `prefetchNextPage()` di background.
+  2. [`src/components/master/TransactionHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/TransactionHistoryPanel.tsx):
+     - Ditambahkan state `isPageLoading` dan visual transition indicator saat fetching.
+  3. [`src/__tests__/paginated-orders-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-orders-perf.test.ts):
+     - 4 skenario uji performa: cache hit instan, background prefetching, pagination metadata, dan cache invalidation.
+- **Hasil Pengujian**:
+  - `vitest run`: **28/28 test files passed (87/87 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.44 detik.

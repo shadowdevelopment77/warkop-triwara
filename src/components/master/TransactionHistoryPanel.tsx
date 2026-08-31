@@ -33,6 +33,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
   const [exportProgress, setExportProgress] = useState<{ percent: number; message: string }>({
     percent: 0,
     message: '',
@@ -49,11 +50,14 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
 
   const loadOrders = useCallback(async () => {
     try {
+      setIsPageLoading(true);
       const result = await orderService.getPaginatedOrders(startDate, endDate, currentPage, 10);
       setOrders(result.orders);
       setTotalCount(result.totalCount);
     } catch (err) {
       console.error('Failed to load transaction history:', err);
+    } finally {
+      setIsPageLoading(false);
     }
   }, [startDate, endDate, currentPage]);
 
@@ -184,9 +188,30 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
       </div>
 
       {/* Transaction Table Card */}
-      <div className="report-section-card">
+      <div className="report-section-card" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Subtle Top Progress Bar during cold fetches */}
+        {isPageLoading && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              backgroundColor: '#3b82f6',
+              zIndex: 10,
+            }}
+          />
+        )}
         <div className="report-table-wrapper">
-          <table className="report-data-table">
+          <table
+            className="report-data-table"
+            style={{
+              opacity: isPageLoading ? 0.4 : 1,
+              transition: 'opacity 0.12s ease-in-out',
+              pointerEvents: isPageLoading ? 'none' : 'auto',
+            }}
+          >
             <thead>
               <tr>
                 <th>ID Transaksi</th>

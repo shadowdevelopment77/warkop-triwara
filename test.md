@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **27 File Lulus (100%)**
-- **Total Unit Tests**: **83 Tests Passed (100%)**
+- **Total Test Files**: **28 File Lulus (100%)**
+- **Total Unit Tests**: **87 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~25.3 detik (Vitest) + 3.0 detik (Vite build)
+- **Waktu Eksekusi**: ~22.4 detik (Vitest) + 2.4 detik (Vite build)
 
 ---
 
@@ -313,4 +313,21 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 18 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 19. Pengujian Performa Paginasi Riwayat Transaksi & Prefetch Cache
+**File**: [`src/__tests__/paginated-orders-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-orders-perf.test.ts)
+- **Skenario 1: Integritas Metadata Paginasi Halaman Pertama**
+  - Mengambil 10 data dari 25 total transaksi uji.
+  - Memverifikasi total count 25, total pages 3, current page 1, dan pengurutan kronologis terbalik (terbaru di atas).
+- **Skenario 2: Serving Paginasi Instan dari In-Memory Cache (< 1ms)**
+  - Mengakses halaman yang sama dua kali.
+  - Memverifikasi panggilan kedua dilayani langsung dari memori tanpa menyentuh range query IndexedDB sama sekali (`where` tidak terpanggil).
+- **Skenario 3: Background Prefetching Halaman Berikutnya**
+  - Mengakses Halaman 1, lalu menunggu siklus background prefetch.
+  - Mengakses Halaman 2 dan memverifikasi data Halaman 2 sudah siap di buffer memori tanpa memicu query I/O ke IndexedDB.
+- **Skenario 4: Invalidation Cache saat Mutasi Data**
+  - Memanggil `clearPaginationCache()`.
+  - Memverifikasi cache dibersihkan dan panggilan berikutnya kembali melakukan query segar ke database.
+
+---
+
+*Catatan: Seluruh 19 modul pengujian telah selesai diverifikasi dan 100% lulus.*
