@@ -14,6 +14,7 @@ import type {
   IAppNotification,
   IStaff,
   IShift,
+  IDailySummary,
 } from '../types';
 
 export class TriwaraDatabase extends Dexie {
@@ -27,9 +28,10 @@ export class TriwaraDatabase extends Dexie {
   notifications!: EntityTable<IAppNotification, 'id'>;
   staff!: EntityTable<IStaff, 'id'>;
   shifts!: EntityTable<IShift, 'id'>;
+  dailySummaries!: EntityTable<IDailySummary, 'id'>;
 
-  constructor() {
-    super('TriwaraPOS');
+  constructor(dbName = 'TriwaraPOS') {
+    super(dbName);
 
     this.version(1).stores({
       categories: '++id, name, sortOrder',
@@ -46,6 +48,13 @@ export class TriwaraDatabase extends Dexie {
       orders: '++id, orderNumber, sequenceNumber, status, paymentMethod, shiftId, createdAt',
       staff: '++id, pin, role, active',
       shifts: '++id, shiftNumber, cashierName, status, openedAt, closedAt',
+    });
+
+    this.version(3).stores({
+      orders: '++id, orderNumber, sequenceNumber, status, paymentMethod, shiftId, createdAt, [status+createdAt], [shiftId+createdAt]',
+      dailySummaries: '++id, &date, createdAt',
+      logs: '++id, type, createdAt, [type+createdAt]',
+      inventoryLogs: '++id, ingredientId, type, createdAt, [ingredientId+createdAt]',
     });
   }
 }

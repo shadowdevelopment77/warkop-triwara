@@ -5,7 +5,15 @@
 import { db, TriwaraDatabase } from '../database/db';
 import type { IOrder, ICartItem, IOrderItem } from '../types';
 import { hppService, HppService } from './hpp.service';
+import { ReportService } from './report.service';
 import { startOfDay, endOfDay } from '../utils/date';
+
+export interface IPaginatedOrdersResult {
+  orders: IOrder[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export class OrderService {
   private database: TriwaraDatabase;
@@ -24,12 +32,12 @@ export class OrderService {
     const day = String(today.getDate()).padStart(2, '0');
     const dateStr = `${year}${month}${day}`;
 
-    const todayOrders = await this.database.orders
+    const count = await this.database.orders
       .where('createdAt')
-      .between(startOfDay(today), endOfDay(today))
-      .toArray();
+      .between(startOfDay(today), endOfDay(today), true, true)
+      .count();
 
-    const sequenceNumber = todayOrders.length + 1;
+    const sequenceNumber = count + 1;
     const orderNumber = `TRW-${dateStr}-${String(sequenceNumber).padStart(3, '0')}`;
 
     return { orderNumber, sequenceNumber };
@@ -160,6 +168,14 @@ export class OrderService {
     // Deduct stock and get stock alert notifications
     const lowStockAlerts = await this.hppService.deductInventoryForOrder(savedOrder);
 
+    // Background real-time increment to daily summary rollup (zero scan reporting)
+    try {
+      const reportSvc = new ReportService(this.database);
+      await reportSvc.recordOrderToDailySummary(savedOrder);
+    } catch (e) {
+      console.warn('Could not record order to daily summary:', e);
+    }
+
     return { order: savedOrder, lowStockAlerts };
   }
 
@@ -202,6 +218,14 @@ export class OrderService {
     // Restore inventory
     await this.hppService.restoreInventoryForOrder(order);
 
+    // Adjust daily summary rollup in background
+    try {
+      const reportSvc = new ReportService(this.database);
+      await reportSvc.recordVoidToDailySummary(order);
+    } catch (e) {
+      console.warn('Could not record void to daily summary:', e);
+    }
+
     // Log void activity
     await this.database.logs.add({
       type: 'void',
@@ -211,21 +235,76 @@ export class OrderService {
     });
   }
 
-  /** Gets transactions within a date range */
-  async getOrders(startDate?: Date, endDate?: Date): Promise<IOrder[]> {
-    let orders = await this.database.orders.toArray();
+  /**
+   * Retrieves paginated transactions with database-level B-Tree range query and offset.
+   * Pulls ONLY the requested pageSize (e.g. 10) into memory, zero full-table scan.
+   */
+  async getPaginatedOrders(
+    startDate?: Date,
+    endDate?: Date,
+    page: number = 1,
+    pageSize: number = 10
+  ): Promise<IPaginatedOrdersResult> {
+    const pageNum = Math.max(1, page);
+    const size = Math.max(1, pageSize);
+    const offset = (pageNum - 1) * size;
 
     if (startDate && endDate) {
-      const start = startOfDay(startDate).getTime();
-      const end = endOfDay(endDate).getTime();
+      const start = startOfDay(startDate);
+      const end = endOfDay(endDate);
+      const query = this.database.orders.where('createdAt').between(start, end, true, true);
+      const totalCount = await query.count();
+      const orders = await query
+        .reverse()
+        .offset(offset)
+        .limit(size)
+        .toArray();
 
-      orders = orders.filter((o) => {
-        const time = new Date(o.createdAt).getTime();
-        return time >= start && time <= end;
-      });
+      return {
+        orders,
+        totalCount,
+        totalPages: Math.max(1, Math.ceil(totalCount / size)),
+        currentPage: pageNum,
+      };
     }
 
-    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const query = this.database.orders.toCollection();
+    const totalCount = await query.count();
+    const orders = await query
+      .reverse()
+      .offset(offset)
+      .limit(size)
+      .toArray();
+
+    return {
+      orders,
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / size)),
+      currentPage: pageNum,
+    };
+  }
+
+  /** Gets transactions within a date range with optional limit using indexed query */
+  async getOrders(startDate?: Date, endDate?: Date, limit?: number): Promise<IOrder[]> {
+    if (startDate && endDate) {
+      const start = startOfDay(startDate);
+      const end = endOfDay(endDate);
+      const query = this.database.orders
+        .where('createdAt')
+        .between(start, end, true, true)
+        .reverse();
+
+      if (limit && limit > 0) {
+        return await query.limit(limit).toArray();
+      }
+      return await query.toArray();
+    }
+
+    const query = this.database.orders.reverse();
+    if (limit && limit > 0) {
+      return await query.limit(limit).toArray();
+    }
+    return await query.toArray();
   }
 }
 
