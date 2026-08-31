@@ -8,21 +8,19 @@ import type { IOrder, IIngredient, IShopConfig } from '../types';
 import type { ISalesSummary, ITopProduct, ISalesChartResult } from './report.service';
 import { formatRupiah } from '../utils/currency';
 import { formatShortDate, formatDateIndonesian, toInputDateString } from '../utils/date';
-import { db } from '../database/db';
 
 export class PdfService {
   /**
-   * Generates and downloads Sales Report PDF:
+   * Generates and downloads Sales Report PDF (Clean 1-Page Document):
    * - Page 1: Header, Compact Metric Cards, Vector Omset Chart, and Top Selling Products Table
-   * - Page 2+: Transaction History Table (separated cleanly on next page)
    */
   async exportSalesReport(
     startDate: Date,
     endDate: Date,
     summary: ISalesSummary,
     topProducts: ITopProduct[],
-    orders: IOrder[],
-    config: IShopConfig,
+    _orders?: IOrder[],
+    config?: IShopConfig,
     chartData?: ISalesChartResult | null,
     onProgress?: (percent: number, message: string) => void
   ): Promise<void> {
@@ -43,7 +41,7 @@ export class PdfService {
     // ─── 1. Header Title ───
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(config.appName || 'Warkop Triwara', 14, 16);
+    doc.text(config?.appName || 'Warkop Triwara', 14, 16);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text('Laporan Penjualan & Performa Toko', 14, 22);
@@ -214,129 +212,7 @@ export class PdfService {
       margin: { left: 14, right: 14 },
     });
 
-    // ─── 5. Transaction History Table (Cleanly on Page 2+) ───
-    doc.addPage();
-
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(config.appName || 'Warkop Triwara', 14, 18);
-    doc.setFontSize(11);
-    doc.text('Daftar Riwayat Transaksi', 14, 25);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Periode: ${periodStr}`, 14, 30);
-    doc.setTextColor(0, 0, 0);
-
-    onProgress?.(50, 'Memformat daftar transaksi...');
-
-    const isCapped = orders.length > 500;
-    const ordersToRender = isCapped ? orders.slice(0, 500) : orders;
-
-    const ordersTableBody: any[] = ordersToRender.map((o) => [
-      o.sequenceNumber,
-      o.orderNumber,
-      o.processedBy || 'Kasir',
-      o.customerName || 'Umum',
-      formatDateIndonesian(o.createdAt),
-      formatRupiah(o.total),
-      o.paymentMethod === 'cash' ? 'Tunai' : 'QRIS',
-      o.status === 'completed' ? 'Sukses' : 'Batal/Void',
-    ]);
-
-    if (isCapped) {
-      ordersTableBody.push([
-        'Info',
-        '-',
-        '-',
-        '-',
-        '-',
-        '-',
-        '-',
-        `Menampilkan 500 dari total ${orders.length.toLocaleString('id-ID')} transaksi untuk efisiensi berkas`,
-      ]);
-    }
-
-    autoTable(doc, {
-      startY: 34,
-      head: [['No', 'ID Transaksi', 'Kasir', 'Pelanggan', 'Waktu', 'Total', 'Bayar', 'Status']],
-      body: ordersTableBody.length > 0 ? ordersTableBody : [['-', '-', '-', '-', '-', '-', '-', 'Tidak ada data']],
-      theme: 'grid',
-      headStyles: { fillColor: [60, 60, 60], fontSize: 8 },
-      bodyStyles: { fontSize: 7 },
-      margin: { left: 14, right: 14 },
-    });
-
-    onProgress?.(80, 'Memeriksa pengeluaran operasional...');
-
-    // Check for operational expenses (petty cash) in closed shifts during period
-    try {
-      const shifts = await db.shifts
-        .where('openedAt')
-        .between(startDate, endDate, true, true)
-        .toArray();
-
-      const allExpenses: { date: Date; shiftNo: string; cashier: string; desc: string; amount: number }[] = [];
-      shifts.forEach((s) => {
-        if (s.expenses && s.expenses.length > 0) {
-          s.expenses.forEach((e) => {
-            allExpenses.push({
-              date: s.openedAt,
-              shiftNo: s.shiftNumber,
-              cashier: s.cashierName,
-              desc: e.description,
-              amount: e.amount,
-            });
-          });
-        }
-      });
-
-      if (allExpenses.length > 0) {
-        const lastTableEndY = (doc as any).lastAutoTable?.finalY || 34;
-        let expenseStartY = lastTableEndY + 12;
-
-        if (expenseStartY > 240) {
-          doc.addPage();
-          expenseStartY = 20;
-        }
-
-        doc.setFontSize(10.5);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(185, 28, 28);
-        doc.text('Pengeluaran Operasional Kasir (Kas Kecil)', 14, expenseStartY);
-        doc.setTextColor(0, 0, 0);
-
-        const expenseTableBody = allExpenses.map((exp, idx) => [
-          idx + 1,
-          formatShortDate(exp.date),
-          exp.shiftNo,
-          exp.cashier,
-          exp.desc,
-          formatRupiah(exp.amount),
-        ]);
-
-        autoTable(doc, {
-          startY: expenseStartY + 4,
-          head: [['No', 'Tanggal', 'Shift', 'Kasir', 'Keperluan Pengeluaran', 'Nominal']],
-          body: expenseTableBody,
-          theme: 'grid',
-          headStyles: { fillColor: [185, 28, 28], fontSize: 8 },
-          bodyStyles: { fontSize: 8 },
-          columnStyles: {
-            0: { cellWidth: 10, halign: 'center' },
-            1: { cellWidth: 22 },
-            2: { cellWidth: 26 },
-            3: { cellWidth: 26 },
-            4: { cellWidth: 65 },
-            5: { halign: 'right', fontStyle: 'bold' },
-          },
-        });
-      }
-    } catch (err) {
-      console.warn('Could not load shift expenses for sales report PDF:', err);
-    }
-
-    onProgress?.(95, 'Mengunduh dokumen PDF...');
+    onProgress?.(90, 'Mengunduh dokumen PDF...');
 
     if (wakeLock) {
       try {

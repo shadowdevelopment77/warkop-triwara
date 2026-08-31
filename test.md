@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **24 File Lulus (100%)**
-- **Total Unit Tests**: **72 Tests Passed (100%)**
+- **Total Test Files**: **25 File Lulus (100%)**
+- **Total Unit Tests**: **74 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~21.5 detik (Vitest) + 2.3 detik (Vite build)
+- **Waktu Eksekusi**: ~19.6 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -261,4 +261,16 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 5 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 16. Pengujian Phase 6: Stand-Alone Executive Sales Report & 1-Page Clean PDF
+**File**: [`src/__tests__/phase6-sales-report-standalone.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase6-sales-report-standalone.test.ts)
+- **Skenario 1: Ekspor Dokumen Laporan Penjualan 1 Halaman Penuh**
+  - Menyiapkan ringkasan omset, profit, total transaksi, item terjual, grafik omset, dan ranking produk.
+  - Memanggil `pdfService.exportSalesReport` tanpa data order transaksi.
+  - Memverifikasi dokumen PDF berhasil di-generate sebagai 1 halaman ringkasan eksekutif yang bersih dan elegan.
+- **Skenario 2: Penanganan Laporan Periode Kosong/Nol Penjualan**
+  - Menguji cetak laporan pada rentang tanggal tanpa transaksi penjualan.
+  - Memverifikasi generator PDF tidak melempar pengecualian (throw) dan menghasilkan tabel produk berstatus 'Belum ada data'.
+
+---
+
+*Catatan: Seluruh pengujian Phase 6 telah selesai diverifikasi dan 100% lulus.*

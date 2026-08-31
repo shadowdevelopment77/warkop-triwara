@@ -309,6 +309,29 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **24/24 test files passed (72/72 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.36 detik.
 
+*Status Keseluruhan: Phase 5 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 5 Selesai 100%. Siap melanjutkan ke Phase 6 (Laporan Penjualan Stand-Alone Analytics).*
+### 🚀 Phase 6: Laporan Penjualan — Stand-Alone Executive Analytics & Clean 1-Page PDF
+- **Tujuan Teknis**:
+  - Menghapus tabel riwayat transaksi, tombol void, dan cetak ulang dari panel Laporan Penjualan karena riwayat transaksi sudah berdiri sendiri secara independen (*separation of concerns*).
+  - Mempertahankan panel Laporan Penjualan murni untuk eksekutif/owner: kartu performa finansial, kartu operasional, grafik tren omset, dan ranking top produk terlaris.
+  - Memperbaiki berkas ekspor PDF Laporan Penjualan menjadi **1 halaman bersih** (*executive one-pager*) tanpa tabel transaksi ratusan baris di halaman berikutnya.
+- **Perubahan yang Diterapkan**:
+  1. [`src/components/master/ReportPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/ReportPanel.tsx):
+     - Menghapus elemen tabel riwayat transaksi, pagination bar, modal reprint, dan modal void.
+     - Mengeliminasi query `orderService.getPaginatedOrders` pada `loadReportData` sehingga panel laporan memuat data murni dari ringkasan rollup secara instan tanpa query pagination transaksi.
+     - Membersihkan state yang tidak terpakai sehingga ukuran bundle berkurang dan performa rendering meningkat tajam.
+  2. [`src/services/pdf.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/pdf.service.ts):
+     - Memperbarui `exportSalesReport` agar selesai di Halaman 1 (Header, 7 Kartu Metrik, Vektor Grafik Omset, dan Tabel Top Menu Terlaris).
+     - Menghapus `doc.addPage()` dan tabel ratusan transaksi di halaman berikutnya, menjadikan PDF laporan sangat ringkas, profesional, dan siap dicetak/dikirim ke WhatsApp owner warkop.
+  3. [`src/__tests__/phase6-sales-report-standalone.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase6-sales-report-standalone.test.ts):
+     - 2 pengujian unit: validasi ekspor PDF laporan eksekutif 1 halaman penuh data dan penanganan periode tanpa transaksi/nol penjualan.
+- **Hasil Pengujian**:
+  - `vitest run`: **25/25 test files passed (74/74 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.32 detik.
+
+---
+
+*Status Keseluruhan: Phase 6 Selesai 100%. Siap melanjutkan ke Phase 7 (Pengaturan - Bersihkan Riwayat $\ge 1$ Tahun via Excel).*

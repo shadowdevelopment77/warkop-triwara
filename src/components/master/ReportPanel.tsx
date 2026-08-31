@@ -1,21 +1,13 @@
 // ═══════════════════════════════════════════════
-// Triwara POS — Sales Report & Transaction History Panel (Clean Text, No Icons)
+// Triwara POS — Sales Report Panel (Pure Executive Analytics)
 // ═══════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { IOrder, IShopConfig } from '../../types';
 import { reportService, type ISalesSummary, type ITopProduct, type ISalesChartResult } from '../../services/report.service';
-import { orderService } from '../../services/order.service';
 import { configService } from '../../services/config.service';
 import { pdfService } from '../../services/pdf.service';
-import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
-import { formatDateIndonesian } from '../../utils/date';
-import { PrintSelectModal } from '../pos/PrintSelectModal';
-import type { ReceiptType } from '../../services/receipt.service';
-import { PaginationBar } from '../common/PaginationBar';
 import { DialogModal } from '../common/DialogModal';
-import { VoidModal } from './VoidModal';
 import { SalesChart } from './SalesChart';
 
 const toInputDateString = (d: Date) => {
@@ -32,10 +24,6 @@ export const ReportPanel: React.FC = () => {
   const [summary, setSummary] = useState<ISalesSummary | null>(null);
   const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
   const [chartData, setChartData] = useState<ISalesChartResult | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [orders, setOrders] = useState<IOrder[]>([]);
-  const [reprintOrder, setReprintOrder] = useState<IOrder | null>(null);
-  const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -49,25 +37,14 @@ export const ReportPanel: React.FC = () => {
     message: '',
     onConfirm: () => {},
   });
-  const [shopConfig, setShopConfig] = useState<IShopConfig | null>(null);
-
-  useEffect(() => {
-    configService.getConfig().then(setShopConfig).catch(console.error);
-  }, []);
+  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
 
   const loadReportData = useCallback(async () => {
     try {
-      const [summaryData, topData, ordersData, chartRes] = await Promise.all([
-        reportService.getSalesSummary(startDate, endDate),
-        reportService.getTopSellingProducts(startDate, endDate, 0),
-        orderService.getOrders(startDate, endDate),
-        reportService.getSalesChartData(startDate, endDate),
-      ]);
-
-      setSummary(summaryData);
-      setTopProducts(topData);
-      setOrders(ordersData);
-      setChartData(chartRes);
+      const bundle = await reportService.getReportBundle(startDate, endDate);
+      setSummary(bundle.summary);
+      setTopProducts(bundle.topProducts);
+      setChartData(bundle.chart);
     } catch (err) {
       console.error('Failed to load report data:', err);
     }
@@ -79,7 +56,6 @@ export const ReportPanel: React.FC = () => {
 
   const handleSelectPreset = (preset: 'today' | 'month') => {
     setPeriodPreset(preset);
-    setCurrentPage(1);
     const now = new Date();
 
     if (preset === 'today') {
@@ -94,78 +70,28 @@ export const ReportPanel: React.FC = () => {
 
   const handleExportPdf = async () => {
     if (!summary) return;
+    setPdfProgress({ isOpen: true, percent: 5, message: 'Memulai proses export...' });
     try {
       const config = await configService.getConfig();
-      await pdfService.exportSalesReport(startDate, endDate, summary, topProducts, orders, config, chartData);
-    } catch (err) {
-      setDialogConfig({
-        isOpen: true,
-        type: 'alert',
-        title: 'Export PDF Gagal',
-        message: (err as Error).message,
-        onConfirm: () => {},
-      });
-    }
-  };
-
-  const handleVoidOrder = (order: IOrder) => {
-    if (order.status === 'voided') return;
-    setVoidingOrder(order);
-  };
-
-  const handleConfirmVoid = async (reason: string) => {
-    if (!voidingOrder) return;
-    const orderNumber = voidingOrder.orderNumber;
-    try {
-      await orderService.voidOrder(voidingOrder.id!, reason);
-      await notificationService.addNotification(
-        'Transaksi Dibatalkan (Void)',
-        `Transaksi #${orderNumber} dibatalkan. Alasan: ${reason}. Stok bahan telah dikembalikan.`,
-        'order',
-        'reports'
+      await pdfService.exportSalesReport(
+        startDate,
+        endDate,
+        summary,
+        topProducts,
+        [],
+        config,
+        chartData,
+        (percent, message) => {
+          setPdfProgress({ isOpen: true, percent, message });
+        }
       );
-      setVoidingOrder(null);
-      loadReportData();
-      setDialogConfig({
-        isOpen: true,
-        type: 'alert',
-        title: 'Transaksi Dibatalkan',
-        message: `Transaksi #${orderNumber} berhasil dibatalkan (void).\nSeluruh stok bahan telah dikembalikan ke inventori.`,
-        onConfirm: () => {},
-      });
+      setTimeout(() => setPdfProgress(null), 800);
     } catch (err) {
+      setPdfProgress(null);
       setDialogConfig({
         isOpen: true,
         type: 'alert',
-        title: 'Gagal Void Transaksi',
-        message: (err as Error).message,
-        onConfirm: () => {},
-      });
-    }
-  };
-
-  const handleConfirmPrint = async (selectedTypes: ReceiptType[]) => {
-    if (!reprintOrder) return;
-    try {
-      const config = await configService.getConfig();
-      const { receiptService } = await import('../../services/receipt.service');
-
-      for (const type of selectedTypes) {
-        const text = receiptService.generateReceiptText(reprintOrder, config, type);
-        console.log(`[PRINT ${type.toUpperCase()}]\n` + text);
-      }
-      setDialogConfig({
-        isOpen: true,
-        type: 'alert',
-        title: 'Pencetakan Terkirim',
-        message: `Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`,
-        onConfirm: () => {},
-      });
-    } catch (err) {
-      setDialogConfig({
-        isOpen: true,
-        type: 'alert',
-        title: 'Gagal Cetak Struk',
+        title: 'Gagal Export PDF',
         message: (err as Error).message,
         onConfirm: () => {},
       });
@@ -225,6 +151,13 @@ export const ReportPanel: React.FC = () => {
           onClick={() => handleSelectPreset('month')}
         >
           Bulan Ini
+        </button>
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'custom' ? 'active' : ''}`}
+          onClick={() => setPeriodPreset('custom')}
+        >
+          Kustom
         </button>
       </div>
 
@@ -333,147 +266,6 @@ export const ReportPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Transactions History Table */}
-      <div className="report-section-card">
-        <h3 className="report-section-title">RIWAYAT TRANSAKSI</h3>
-
-        <div className="report-table-wrapper">
-          <table className="report-data-table">
-            <thead>
-              <tr>
-                <th>ID Transaksi</th>
-                <th>Kasir</th>
-                <th>Pelanggan</th>
-                <th>Waktu</th>
-                <th>Total</th>
-                <th>Metode</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'center' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="empty-table-td">
-                    Belum ada riwayat transaksi pada periode yang dipilih.
-                  </td>
-                </tr>
-              ) : (
-                orders
-                  .slice((currentPage - 1) * 10, currentPage * 10)
-                  .map((order) => (
-                    <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
-                      <td>
-                        <strong>#{order.orderNumber}</strong>
-                      </td>
-                      <td style={{ color: '#60a5fa', fontWeight: 600 }}>
-                        {order.processedBy || 'Kasir'}
-                      </td>
-                      <td>{order.customerName || 'Umum'}</td>
-                      <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
-                        {formatDateIndonesian(order.createdAt)}
-                      </td>
-                      <td style={{ fontWeight: 700, color: '#0f172a' }}>
-                        {formatRupiah(order.total)}
-                      </td>
-                      <td>
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
-                            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
-                            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
-                        >
-                          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                          {order.status === 'completed' ? (
-                            <>
-                              <button
-                                type="button"
-                                className="report-btn-print"
-                                onClick={() => setReprintOrder(order)}
-                                title="Cetak Ulang Struk Pelanggan"
-                              >
-                                🖨️ Cetak
-                              </button>
-                              <button
-                                type="button"
-                                className="report-btn-void"
-                                onClick={() => handleVoidOrder(order)}
-                                title="Batalkan (Void) Transaksi"
-                              >
-                                🚫 Void
-                              </button>
-                            </>
-                          ) : (
-                            <span
-                              className="report-voided-label"
-                              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
-                              style={{
-                                color: '#ef4444',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                                padding: '3px 8px',
-                                borderRadius: '4px',
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid rgba(239, 68, 68, 0.2)',
-                              }}
-                            >
-                              🚫 Dibatalkan
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
-
-          {/* Pagination Bar (Limit 10 + Panah) */}
-          <PaginationBar
-            currentPage={currentPage}
-            totalItems={orders.length}
-            pageSize={10}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
-
-      {/* Reprint Modal */}
-      {reprintOrder && (
-        <PrintSelectModal
-          order={reprintOrder}
-          shopConfig={shopConfig}
-          onClose={() => setReprintOrder(null)}
-          onConfirmPrint={handleConfirmPrint}
-        />
-      )}
-
-      {/* Dedicated Void Modal Dialog */}
-      {voidingOrder && (
-        <VoidModal
-          order={voidingOrder}
-          onClose={() => setVoidingOrder(null)}
-          onConfirmVoid={handleConfirmVoid}
-        />
-      )}
-
       {/* Reusable Dialog Modal for Messages */}
       <DialogModal
         isOpen={dialogConfig.isOpen}
@@ -484,6 +276,51 @@ export const ReportPanel: React.FC = () => {
         onConfirm={dialogConfig.onConfirm}
         onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {/* PDF Export Progress Modal */}
+      {pdfProgress && pdfProgress.isOpen && (
+        <div className="modal-backdrop" style={{ zIndex: 9999 }}>
+          <div
+            className="settings-modal-card"
+            style={{
+              maxWidth: '380px',
+              width: '90%',
+              textAlign: 'center',
+              padding: '24px',
+              backgroundColor: '#18181b',
+              border: '1px solid #3b82f6',
+            }}
+          >
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#f4f4f5' }}>
+              📄 Mengekspor Laporan PDF
+            </h4>
+            <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#93c5fd' }}>
+              {pdfProgress.message}
+            </p>
+            <div
+              style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: '#27272a',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${pdfProgress.percent}%`,
+                  height: '100%',
+                  backgroundColor: '#3b82f6',
+                  transition: 'width 0.2s linear',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block', marginTop: '8px' }}>
+              {pdfProgress.percent}%
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
