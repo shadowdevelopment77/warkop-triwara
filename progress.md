@@ -442,22 +442,25 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 
 ---
 
-### 🚀 Phase 11: Optimasi Paginasi Log Aktivitas (10k Ready & UI Alignment)
+### 🚀 Phase 11: Optimasi Paginasi Log Aktivitas (10k Ready, Card-List Asli, & Filter Kategori)
 - **Tujuan Teknis**:
-  - Menjamin performa modul Log tetap sangat cepat (< 1ms per halaman) dan stabil bahkan jika mencapai 10.000 log aktivitas.
-  - Menerapkan **LRU Page Cache terikat (< 40 KB RAM)** dan **Background Prefetching**: saat melihat log Halaman $N$, data Halaman $N+1$ sudah disiapkan di memori secara asinkron.
-  - Mengunci tombol paginasi selama `isPageLoading` dan menambahkan visual progress bar agar pengalaman UI identik dengan Riwayat Transaksi.
-  - Menambahkan pill filter kategori **"Sistem"** (`system`) untuk log audit pembersihan transaksi berumur $\ge 1$ tahun.
+  - Mengembalikan dan mempertahankan desain UI kartu list asli Log (`log-entry-item` dengan badge dan border warna-warni khas: merah Void, hijau Restock, kuning Inventori, biru Menu, ungu Shift, cyan Sistem).
+  - Menyederhanakan filter tanggal menjadi **1 target tanggal tunggal** (`input[type="date"]`) dengan tombol reset cepat `✕ Semua Tanggal`.
+  - Memperbaiki filter kategori agar 100% presisi: mencakup pill kategori lengkap (Semua, Void, Restock, Inventori, Menu, Buka/Tutup Toko, Sistem) dengan penanganan zona waktu lokal (bebas UTC offset bug).
+  - Mengeliminasi masalah terpotong pada paginasi dengan membingkai `PaginationBar` di dalam card (`border-radius: 8px; border: 1px solid #cbd5e1`) dan menambahkan padding bawah kontainer 50px.
+  - Mempertahankan LRU Cache terikat (< 40 KB RAM) dan background prefetch instan (< 1ms).
 - **Perubahan yang Diterapkan**:
   1. [`src/services/report.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/report.service.ts):
-     - Ditambahkan `logPaginatedCache`, `logTotalCountCache`, `clearLogPaginationCache()`, dan background prefetch `prefetchNextLogPage()`.
+     - `getPaginatedLogs` mendukung target tanggal tunggal maupun Date range, query B-Tree kronologis terbalik (terbaru di atas), LRU cache, dan background prefetch.
   2. [`src/components/master/LogPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/LogPanel.tsx):
-     - **Rekonstruksi Total Tabel Data**: Mengubah container dari list card lama menjadi struktur tabel data resmi (`report-section-card` + `report-table-wrapper` + `report-data-table`) dengan 4 kolom terstruktur (`Waktu`, `Kategori`, `Deskripsi Aktivitas`, `Referensi/ID`).
-     - **Penyelarasan Filter Bar Standar**: Menggunakan `report-period-filter-bar` dengan input tanggal Mulai & Sampai, tombol preset cepat (*Hari Ini*, *Bulan Ini*, *Kustom*), serta tombol filter kategori lengkap (Semua, Void, Restock, Inventori, Menu, Shift, Sistem).
-     - **Integrasi PaginationBar Rapat**: Menempatkan `PaginationBar` menyatu di bagian bawah pembungkus tabel (*flush bottom*), bebas dari efek terpotong.
-  3. [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts):
-     - 6 skenario uji komprehensif termasuk pengurutan waktu kronologis terbalik (terbaru di baris pertama) dan range filtering dengan objek Date.
+     - Mempertahankan tampilan kartu list otentik (`log-view-container`, `log-filter-toolbar`, `log-filter-pills`, `log-date-filter-box`, `log-list-card`, `log-entries-list`, `log-entry-item`).
+     - Menghubungkan filter kategori dan target tanggal tunggal ke query teroptimasi.
+     - Paginasi terkunci saat loading (`isPageLoading`) dan bebas dari loncatan multi-klik cepat.
+  3. [`src/styles/logs.css`](file:///home/shadowxz/projects/triwara-pos/src/styles/logs.css):
+     - Menambahkan styling `.log-list-card .table-pagination-bar` dan `padding-bottom: 50px` pada `.log-view-container` agar tidak terpotong.
+  4. [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts):
+     - 6 skenario uji lulus 100%.
 - **Hasil Pengujian**:
   - `vitest run`: **29/29 test files passed (93/93 tests passed 100%)**.
-  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.27 detik.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.26 detik.
 

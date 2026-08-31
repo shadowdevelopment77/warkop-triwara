@@ -883,20 +883,20 @@ export class ReportService {
   }
 
   private resolveLogDateRange(
-    startDateOrDate?: Date | string,
+    dateOrStartDate?: string | Date,
     endDate?: Date
   ): { start: Date | null; end: Date | null; dateKey: string } {
-    if (startDateOrDate instanceof Date) {
-      const start = startDateOrDate;
+    if (dateOrStartDate instanceof Date) {
+      const start = dateOrStartDate;
       const end = endDate instanceof Date ? endDate : new Date(start.getTime() + 86400000 - 1);
       const dateKey = `${toInputDateString(start)}_${toInputDateString(end)}`;
       return { start, end, dateKey };
     }
-    if (typeof startDateOrDate === 'string' && startDateOrDate.trim()) {
-      const [y, m, d] = startDateOrDate.split('-').map(Number);
-      const start = new Date(y, m - 1, d, 0, 0, 0);
+    if (typeof dateOrStartDate === 'string' && dateOrStartDate.trim()) {
+      const [y, m, d] = dateOrStartDate.trim().split('-').map(Number);
+      const start = new Date(y, m - 1, d, 0, 0, 0, 0);
       const end = new Date(y, m - 1, d, 23, 59, 59, 999);
-      return { start, end, dateKey: startDateOrDate.trim() };
+      return { start, end, dateKey: dateOrStartDate.trim() };
     }
     return { start: null, end: null, dateKey: 'all' };
   }
@@ -932,30 +932,32 @@ export class ReportService {
    */
   async getPaginatedLogs(
     type?: string,
-    startDateOrDate?: Date | string,
-    endDateOrPage?: Date | number,
-    pageOrPageSize: number = 1,
-    pageSizeArg: number = 10
+    dateOrStartDate?: string | Date,
+    pageOrEndDate?: number | Date,
+    pageSizeOrPage: number = 10,
+    optionalPageSize: number = 10
   ): Promise<IPaginatedLogsResult> {
-    let endDate: Date | undefined;
+    let resolvedEndDate: Date | undefined;
     let page = 1;
     let pageSize = 10;
 
-    if (startDateOrDate instanceof Date) {
-      if (endDateOrPage instanceof Date) {
-        endDate = endDateOrPage;
-        page = pageOrPageSize;
-        pageSize = pageSizeArg;
-      } else if (typeof endDateOrPage === 'number') {
-        page = endDateOrPage;
-        pageSize = pageOrPageSize;
+    if (dateOrStartDate instanceof Date) {
+      if (pageOrEndDate instanceof Date) {
+        resolvedEndDate = pageOrEndDate;
+        page = pageSizeOrPage;
+        pageSize = optionalPageSize;
+      } else if (typeof pageOrEndDate === 'number') {
+        page = pageOrEndDate;
+        pageSize = pageSizeOrPage;
       }
-    } else if (typeof endDateOrPage === 'number') {
-      page = endDateOrPage;
-      pageSize = pageOrPageSize;
+    } else {
+      if (typeof pageOrEndDate === 'number') {
+        page = pageOrEndDate;
+        pageSize = pageSizeOrPage;
+      }
     }
 
-    const { start, end, dateKey } = this.resolveLogDateRange(startDateOrDate, endDate);
+    const { start, end, dateKey } = this.resolveLogDateRange(dateOrStartDate, resolvedEndDate);
     const pageNum = Math.max(1, page);
     const size = Math.max(1, pageSize);
     const offset = (pageNum - 1) * size;
