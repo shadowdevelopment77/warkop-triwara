@@ -332,6 +332,33 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **25/25 test files passed (74/74 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.32 detik.
 
+*Status Keseluruhan: Phase 6 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 6 Selesai 100%. Siap melanjutkan ke Phase 7 (Pengaturan - Bersihkan Riwayat $\ge 1$ Tahun via Excel).*
+### 🚀 Phase 7: Pengaturan — Bersihkan Riwayat Transaksi ( $\ge 1$ Tahun) via Excel Backup
+- **Tujuan Teknis**:
+  - Menyediakan utilitas pembersihan data riwayat transaksi lama ($\ge 1$ tahun dari hari ini) untuk menjaga agar database IndexedDB tetap ramping, responsif, dan bebas beban hingga bertahun-tahun ke depan.
+  - Menerapkan **validasi ketat di proses backend**: transaksi berumur kurang dari 1 tahun mutlak TIDAK BISA dihapus; jika belum ada data berumur $\ge 1$ tahun, sistem menolak eksekusi dan memunculkan notifikasi edukatif.
+  - Memastikan sistem **mengunduh arsip file Excel (.csv UTF-8 BOM)** terlebih dahulu sebelum mengeksekusi penghapusan di database, sehingga data historis tersimpan aman di perangkat owner.
+  - Menyimpan jejak audit sistem (*audit trail*) setiap kali aksi pembersihan berhasil dilakukan.
+- **Perubahan yang Diterapkan**:
+  1. [`src/utils/excel.ts`](file:///home/shadowxz/projects/triwara-pos/src/utils/excel.ts):
+     - Dibuat helper `buildOrdersCsvContent` dan `exportOrdersToExcel` berformat UTF-8 BOM (`\uFEFF`) lengkap dengan 16 kolom komprehensif (No Pesanan, Kasir, Pelanggan, Waktu, Subtotal, Diskon, Total, Metode Bayar, Rincian Topping/Item, Alasan Void).
+  2. [`src/types/index.ts`](file:///home/shadowxz/projects/triwara-pos/src/types/index.ts):
+     - Memperluas `LogType` untuk mencakup tipe `'system'` untuk pencatatan log pembersihan data.
+  3. [`src/services/order.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/order.service.ts):
+     - Menambahkan method `getOrdersOlderThanOneYear()` menggunakan index IndexedDB `createdAt.below(oneYearAgo)`.
+     - Menambahkan method `cleanOrdersOlderThanOneYear()` dengan validasi backend berlapis: menolak jika kosong, memverifikasi tanggal tidak ada yang $< 1$ tahun, melakukan `bulkDelete`, dan mencatat riwayat pembersihan ke tabel `logs`.
+  4. [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Menambahkan kartu menu pengaturan **"Bersihkan Transaksi ( $\ge 1$ Tahun)"** dengan proteksi PIN Owner.
+     - Mengintegrasikan dialog informatif jika tidak ada transaksi lama, serta alur konfirmasi bertahap yang mengunduh Excel terlebih dahulu sebelum melakukan penghapusan database.
+  5. [`src/__tests__/phase7-cleanup-old-orders.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase7-cleanup-old-orders.test.ts):
+     - 4 pengujian unit: filter transaksi $\ge 1$ tahun, penolakan pembersihan jika tidak ada transaksi lama (< 1 tahun terlindungi), eksekusi pembersihan bersih + pencatatan log audit, dan integritas format Excel backup.
+- **Hasil Pengujian**:
+  - `vitest run`: **26/26 test files passed (78/78 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.30 detik.
+
+---
+
+*Status Keseluruhan: Phase 7 Selesai 100%. Siap melanjutkan ke Phase 8 (Verifikasi Menyeluruh & Final Build).*

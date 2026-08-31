@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **25 File Lulus (100%)**
-- **Total Unit Tests**: **74 Tests Passed (100%)**
+- **Total Test Files**: **26 File Lulus (100%)**
+- **Total Unit Tests**: **78 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~19.6 detik (Vitest) + 2.3 detik (Vite build)
+- **Waktu Eksekusi**: ~20.6 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -273,4 +273,23 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 6 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 17. Pengujian Phase 7: 1-Year Order Cleanup & Excel Backup
+**File**: [`src/__tests__/phase7-cleanup-old-orders.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase7-cleanup-old-orders.test.ts)
+- **Skenario 1: Filter Presisi Transaksi $\ge 1$ Tahun**
+  - Menyiapkan transaksi berumur 30 hari yang lalu dan transaksi 400 hari yang lalu (> 1 tahun).
+  - Memanggil `orderService.getOrdersOlderThanOneYear()`.
+  - Memverifikasi hanya transaksi $\ge 1$ tahun yang terjaring dalam daftar.
+- **Skenario 2: Proteksi Penolakan Pembersihan Bila Tidak Ada Data $\ge 1$ Tahun**
+  - Menguji pemanggilan pembersihan ketika seluruh transaksi masih berumur di bawah 1 tahun.
+  - Memverifikasi sistem melempar error dan memastikan tidak ada data yang terhapus secara tidak sengaja.
+- **Skenario 3: Pembersihan Transaksi Lama & Pencatatan Log Audit Sistem**
+  - Menyiapkan transaksi berumur 2 tahun dan transaksi berumur 6 bulan.
+  - Menjalankan `cleanOrdersOlderThanOneYear()`.
+  - Memverifikasi transaksi 2 tahun terhapus bersih, transaksi 6 bulan tetap utuh, dan log bertipe `'system'` tercatat di database.
+- **Skenario 4: Pembentukan File Excel Backup (UTF-8 BOM)**
+  - Menguji konversi pesanan menjadi format CSV dengan UTF-8 BOM (`\uFEFF`) yang memuat rincian subtotal, diskon, omset, metode bayar, dan rincian item pesanan.
+  - Memverifikasi fungsi berjalan mulus tanpa error.
+
+---
+
+*Catatan: Seluruh pengujian Phase 7 telah selesai diverifikasi dan 100% lulus.*

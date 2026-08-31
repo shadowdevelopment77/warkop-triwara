@@ -8,7 +8,7 @@ export type OrderType = 'dine_in' | 'takeaway';
 export type PaymentMethod = 'cash' | 'qris';
 export type TransactionStatus = 'completed' | 'voided';
 export type TemperatureOption = 'Hot' | 'Iced';
-export type LogType = 'void' | 'restock' | 'menu' | 'inventory' | 'shift';
+export type LogType = 'void' | 'restock' | 'menu' | 'inventory' | 'shift' | 'system';
 
 export interface IIngredient {
   id?: number;

@@ -5,10 +5,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { IShopConfig, IStaff } from '../../types';
 import { configService } from '../../services/config.service';
+import { orderService } from '../../services/order.service';
 import { notificationService } from '../../services/notification.service';
 import { compressImage } from '../../utils/image';
+import { exportOrdersToExcel } from '../../utils/excel';
 import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
+import { StressTestModal } from './StressTestModal';
 
 type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
@@ -24,6 +27,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [config, setConfig] = useState<IShopConfig | null>(null);
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
+  const [isStressTestModalOpen, setIsStressTestModalOpen] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
 
   const receiptFileInputRef = useRef<HTMLInputElement>(null);
@@ -247,6 +251,75 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     });
   };
 
+  const handleCleanOldOrders = () => {
+    guardOwnerAction(async () => {
+      try {
+        const oldOrders = await orderService.getOrdersOlderThanOneYear();
+        if (oldOrders.length === 0) {
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Tidak Ada Data Berumur 1 Tahun',
+            message:
+              'Tidak ada data riwayat transaksi yang berumur 1 tahun atau lebih dari hari ini. Seluruh data transaksi masih aman dan dalam batas wajar.',
+            onConfirm: () => {},
+          });
+          return;
+        }
+
+        setDialogConfig({
+          isOpen: true,
+          type: 'confirm',
+          title: 'Bersihkan Transaksi Lama (≥ 1 Tahun)?',
+          message: `Ditemukan ${oldOrders.length} riwayat transaksi yang berumur 1 tahun atau lebih.\n\nSistem akan MENGUNDUH ARSIP EXCEL (.csv) terlebih dahulu sebelum menghapus data transaksi dari database.\n\nApakah Anda ingin melanjutkan?`,
+          isDanger: true,
+          confirmText: 'Download Excel & Bersihkan',
+          onConfirm: async () => {
+            try {
+              // 1. Download Excel/CSV first
+              const todayStr = new Date().toISOString().split('T')[0];
+              exportOrdersToExcel(oldOrders, `Arsip_Transaksi_Triwara_1Tahun_${todayStr}.csv`);
+
+              // 2. Perform backend cleanup
+              const result = await orderService.cleanOrdersOlderThanOneYear();
+
+              await notificationService.addNotification(
+                'Transaksi Lama Dibersihkan',
+                `${result.count} transaksi berumur ≥ 1 tahun berhasil diarsipkan ke Excel dan dibersihkan dari database.`,
+                'alert',
+                'settings' as any
+              );
+
+              setDialogConfig({
+                isOpen: true,
+                type: 'alert',
+                title: 'Pembersihan Sukses',
+                message: `Arsip Excel berhasil diunduh dan ${result.count} data transaksi berumur ≥ 1 tahun telah dibersihkan secara aman dari database.`,
+                onConfirm: () => {},
+              });
+            } catch (err) {
+              setDialogConfig({
+                isOpen: true,
+                type: 'alert',
+                title: 'Gagal Membersihkan Data',
+                message: (err as Error).message,
+                onConfirm: () => {},
+              });
+            }
+          },
+        });
+      } catch (err) {
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Gagal Memeriksa Data',
+          message: (err as Error).message,
+          onConfirm: () => {},
+        });
+      }
+    });
+  };
+
   return (
     <div className="settings-view-container">
       <div className="settings-view-header">
@@ -317,7 +390,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
 
-        {/* 5. Reset & Muat Data Demo (Owner only) */}
+        {/* 5. Bersihkan Riwayat Transaksi (≥ 1 Tahun) */}
+        <button
+          type="button"
+          className="settings-trigger-card"
+          style={{ borderColor: 'rgba(234, 179, 8, 0.4)' }}
+          onClick={handleCleanOldOrders}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title" style={{ color: '#facc15' }}>
+              {isOwner ? 'Bersihkan Transaksi (≥ 1 Tahun)' : 'Bersihkan Transaksi (≥ 1 Tahun) (Owner)'}
+            </h3>
+            <p className="settings-card-desc">
+              Download arsip Excel transaksi lama ≥ 1 tahun lalu bersihkan dari database
+            </p>
+          </div>
+          <span className="settings-card-arrow" style={{ color: '#eab308' }}>
+            {isOwner ? '🧹' : '🔒'}
+          </span>
+        </button>
+
+        {/* 6. Reset & Muat Data Demo (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
@@ -361,6 +454,26 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
           <span className="settings-card-arrow" style={{ color: '#ef4444' }}>
             {isOwner ? '⚡' : '🔒'}
+          </span>
+        </button>
+
+        {/* 6. Stress Test & Benchmark Generator */}
+        <button
+          type="button"
+          className="settings-trigger-card"
+          style={{ borderColor: 'rgba(59, 130, 246, 0.4)' }}
+          onClick={() => guardOwnerAction(() => setIsStressTestModalOpen(true))}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title" style={{ color: '#60a5fa' }}>
+              {isOwner ? '⚡ Stress Test & Benchmark' : '⚡ Stress Test & Benchmark (Owner)'}
+            </h3>
+            <p className="settings-card-desc">
+              Uji ketahanan 10.000 s/d 1.000.000 transaksi dummy + live stopwatch latensi
+            </p>
+          </div>
+          <span className="settings-card-arrow" style={{ color: '#3b82f6' }}>
+            {isOwner ? '🚀' : '🔒'}
           </span>
         </button>
       </div>
@@ -730,6 +843,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <StaffManagerModal
         isOpen={isStaffModalOpen}
         onClose={() => setIsStaffModalOpen(false)}
+      />
+
+      {/* Stress Test & Benchmark Modal (Owner Only) */}
+      <StressTestModal
+        isOpen={isStressTestModalOpen}
+        onClose={() => setIsStressTestModalOpen(false)}
       />
 
       {/* Reusable Dialog Modal */}

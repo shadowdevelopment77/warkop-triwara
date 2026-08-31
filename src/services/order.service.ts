@@ -306,6 +306,52 @@ export class OrderService {
     }
     return await query.toArray();
   }
+
+  /** Gets all orders that are older than 1 year (>= 365 days from today) */
+  async getOrdersOlderThanOneYear(): Promise<IOrder[]> {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    return await this.database.orders
+      .where('createdAt')
+      .below(oneYearAgo)
+      .sortBy('createdAt');
+  }
+
+  /**
+   * Cleans transactions older than 1 year.
+   * STRICT BACKEND VALIDATION:
+   * - Confirms all orders being deleted are strictly older than 1 year.
+   * - Rejects if empty or if any order is newer than 1 year.
+   * - Deletes and logs an audit record.
+   */
+  async cleanOrdersOlderThanOneYear(): Promise<{ count: number }> {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const eligibleOrders = await this.getOrdersOlderThanOneYear();
+
+    if (eligibleOrders.length === 0) {
+      throw new Error('Tidak ada data riwayat transaksi yang berumur 1 tahun atau lebih untuk dibersihkan.');
+    }
+
+    const invalidOrders = eligibleOrders.filter((o) => new Date(o.createdAt).getTime() >= oneYearAgo.getTime());
+    if (invalidOrders.length > 0) {
+      throw new Error('Validasi backend gagal: Ditemukan transaksi berumur kurang dari 1 tahun.');
+    }
+
+    const idsToDelete = eligibleOrders.map((o) => o.id!).filter(Boolean);
+    await this.database.orders.bulkDelete(idsToDelete);
+
+    await this.database.logs.add({
+      type: 'system',
+      description: `BERSIHKAN RIWAYAT TRANSAKSI: ${idsToDelete.length} transaksi berumur >= 1 tahun dibersihkan (Arsip Excel telah diekspor)`,
+      referenceId: `CLEANUP-${Date.now()}`,
+      createdAt: new Date(),
+    });
+
+    return { count: idsToDelete.length };
+  }
 }
 
 export const orderService = new OrderService();
