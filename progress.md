@@ -428,10 +428,13 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
      - Ditambahkan internal `paginatedCache` (max 20 entries) dan `totalCountCache`.
      - Ditambahkan `clearPaginationCache()` yang di-trigger saat order dibuat, divoid, atau dibersihkan.
      - `getPaginatedOrders()` memprioritaskan cache hit (< 1ms) dan menjalankan `prefetchNextPage()` di background.
-  2. [`src/components/master/TransactionHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/TransactionHistoryPanel.tsx):
-     - Ditambahkan state `isPageLoading` dan visual transition indicator saat fetching.
-  3. [`src/__tests__/paginated-orders-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-orders-perf.test.ts):
+  2. [`src/components/common/PaginationBar.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/common/PaginationBar.tsx):
+     - Ditambahkan prop `disabled?: boolean` yang menonaktifkan tombol "Sebelumnya" dan "Berikutnya" secara visual (`opacity: 0.4`, `cursor: not-allowed`) dan fungsional saat data sedang dimuat.
+  3. [`src/components/master/TransactionHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/TransactionHistoryPanel.tsx):
+     - Ditambahkan proteksi guard `handlePageChange`: mengabaikan klik berturut-turut saat `isPageLoading` aktif sehingga nomor halaman tidak melompat.
+     - Penyelarasan modal loading **Export PDF** agar 100% konsisten dengan `ReportPanel.tsx` (desain gelap `#18181b`, kartu `settings-modal-card`, border `#3b82f6`, dan auto-close delay 800ms).
+  4. [`src/__tests__/paginated-orders-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-orders-perf.test.ts):
      - 4 skenario uji performa: cache hit instan, background prefetching, pagination metadata, dan cache invalidation.
 - **Hasil Pengujian**:
   - `vitest run`: **28/28 test files passed (87/87 tests passed 100%)**.
-  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.44 detik.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.58 detik.

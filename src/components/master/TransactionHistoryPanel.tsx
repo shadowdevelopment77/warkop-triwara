@@ -32,12 +32,12 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   const [totalCount, setTotalCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
-  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
-  const [exportProgress, setExportProgress] = useState<{ percent: number; message: string }>({
-    percent: 0,
-    message: '',
-  });
+  const [pdfProgress, setPdfProgress] = useState<{
+    isOpen: boolean;
+    percent: number;
+    message: string;
+  } | null>(null);
 
   // Date filters (defaults to today)
   const now = new Date();
@@ -64,6 +64,11 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  const handlePageChange = (newPage: number) => {
+    if (isPageLoading) return; // Prevent rapid-fire multi-click jump
+    setCurrentPage(newPage);
+  };
 
   const handleSelectPreset = (preset: 'today' | 'month') => {
     setPeriodPreset(preset);
@@ -95,8 +100,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
 
   const handleExportPdf = async () => {
     try {
-      setIsExportingPdf(true);
-      setExportProgress({ percent: 10, message: 'Menyiapkan data...' });
+      setPdfProgress({ isOpen: true, percent: 5, message: 'Menyiapkan data...' });
       const config = await configService.getConfig();
       // fetch up to 500 orders for PDF export
       const ordersToExport = await orderService.getOrders(startDate, endDate, 500);
@@ -105,13 +109,13 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
         endDate,
         ordersToExport,
         config,
-        (percent, message) => setExportProgress({ percent, message })
+        (percent, message) => setPdfProgress({ isOpen: true, percent, message })
       );
+      setTimeout(() => setPdfProgress(null), 800);
     } catch (err) {
       console.error(err);
+      setPdfProgress(null);
       alert('Gagal mengekspor PDF: ' + (err as Error).message);
-    } finally {
-      setIsExportingPdf(false);
     }
   };
 
@@ -124,9 +128,9 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           type="button"
           className="report-btn-primary report-btn-export"
           onClick={handleExportPdf}
-          disabled={isExportingPdf}
+          disabled={Boolean(pdfProgress?.isOpen)}
         >
-          {isExportingPdf ? 'Mengekspor...' : '📄 Export PDF'}
+          {pdfProgress?.isOpen ? 'Mengekspor...' : '📄 Export PDF'}
         </button>
       </div>
 
@@ -320,7 +324,8 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
             currentPage={currentPage}
             totalItems={totalCount}
             pageSize={10}
-            onPageChange={setCurrentPage}
+            disabled={isPageLoading}
+            onPageChange={handlePageChange}
           />
         </div>
       </div>
@@ -335,21 +340,46 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
       )}
 
       {/* PDF Export Progress Modal */}
-      {isExportingPdf && (
-        <div className="pdf-progress-overlay">
-          <div className="pdf-progress-card">
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: 'var(--text-main)' }}>
-              Membuat Berkas PDF Riwayat Transaksi...
-            </h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-muted)' }}>
-              {exportProgress.message}
+      {pdfProgress && pdfProgress.isOpen && (
+        <div className="modal-backdrop" style={{ zIndex: 9999 }}>
+          <div
+            className="settings-modal-card"
+            style={{
+              maxWidth: '380px',
+              width: '90%',
+              textAlign: 'center',
+              padding: '24px',
+              backgroundColor: '#18181b',
+              border: '1px solid #3b82f6',
+            }}
+          >
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#f4f4f5' }}>
+              📄 Mengekspor Riwayat Transaksi PDF
+            </h4>
+            <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#93c5fd' }}>
+              {pdfProgress.message}
             </p>
-            <div className="pdf-progress-bar-bg">
-              <div className="pdf-progress-bar-fill" style={{ width: `${exportProgress.percent}%` }} />
+            <div
+              style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: '#27272a',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${pdfProgress.percent}%`,
+                  height: '100%',
+                  backgroundColor: '#3b82f6',
+                  transition: 'width 0.2s linear',
+                }}
+              />
             </div>
-            <div style={{ textAlign: 'right', marginTop: '6px', fontSize: '12px', color: 'var(--primary-color)', fontWeight: 600 }}>
-              {exportProgress.percent}%
-            </div>
+            <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block', marginTop: '8px' }}>
+              {pdfProgress.percent}%
+            </span>
           </div>
         </div>
       )}

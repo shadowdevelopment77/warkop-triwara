@@ -9,6 +9,7 @@ interface PaginationBarProps {
   totalItems: number;
   pageSize?: number;
   onPageChange: (page: number) => void;
+  disabled?: boolean;
 }
 
 export const PaginationBar: React.FC<PaginationBarProps> = ({
@@ -16,6 +17,7 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
   totalItems,
   pageSize = 10,
   onPageChange,
+  disabled = false,
 }) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
@@ -50,11 +52,11 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
             border: '1px solid #cbd5e1',
             borderRadius: '6px',
             color: '#0f172a',
-            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-            opacity: currentPage <= 1 ? 0.4 : 1,
+            cursor: currentPage <= 1 || disabled ? 'not-allowed' : 'pointer',
+            opacity: currentPage <= 1 || disabled ? 0.4 : 1,
             transition: 'all 0.15s ease',
           }}
-          disabled={currentPage <= 1}
+          disabled={currentPage <= 1 || disabled}
           onClick={() => onPageChange(currentPage - 1)}
         >
           ◀ Sebelumnya
@@ -74,11 +76,11 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
             border: '1px solid #cbd5e1',
             borderRadius: '6px',
             color: '#0f172a',
-            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-            opacity: currentPage >= totalPages ? 0.4 : 1,
+            cursor: currentPage >= totalPages || disabled ? 'not-allowed' : 'pointer',
+            opacity: currentPage >= totalPages || disabled ? 0.4 : 1,
             transition: 'all 0.15s ease',
           }}
-          disabled={currentPage >= totalPages}
+          disabled={currentPage >= totalPages || disabled}
           onClick={() => onPageChange(currentPage + 1)}
         >
           Berikutnya ▶
