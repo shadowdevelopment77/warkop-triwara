@@ -548,6 +548,28 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **32/32 test files passed (104/104 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.35 detik.
 
+---
+
+### 🚀 Phase 16: Perampingan UI, Clean Baseline Seeder untuk Capacitor & Pengujian Bersihkan Transaksi
+- **Tujuan Teknis**:
+  - Merampingkan tampilan Pengaturan dengan menghapus tombol reset demo yang berlebih.
+  - Mengubah seeder bawaan (`seed.ts`) menjadi *clean baseline* khusus Capacitor: hanya menginisialisasi master Menu (8 produk + resep HPP), Inventori bahan baku, Konfigurasi toko, dan Akun Staff (Owner 0000, Kasir 1234), dengan **0 Order, 0 Shift, dan 0 Log masa lalu**.
+  - Menyediakan fasilitas simulasi 10 data transaksi berumur 400 hari lalu langsung di dalam dialog *"Bersihkan Transaksi (≥ 1 Tahun)"* tanpa menambah tombol baru di UI.
+- **Perubahan yang Diterapkan**:
+  1. [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Menghapus tombol kartu *"Reset & Muat Data Demo (Owner)"*.
+     - Menambahkan penawaran simulasi 10 data uji 400 hari lalu secara langsung pada dialog *"Bersihkan Transaksi (≥ 1 Tahun)"* saat data kosong.
+  2. [`src/services/order.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/order.service.ts):
+     - Menambahkan method `generateOldOrdersForTesting(count = 10)` yang membuat 10 transaksi dummy bertanggal 400 hari yang lalu secara instan.
+  3. [`src/database/seed.ts`](file:///home/shadowxz/projects/triwara-pos/src/database/seed.ts):
+     - Mengubah default parameter `totalOrders = 0` pada `resetAndSeedDatabase` dan `seedDatabaseIfEmpty`. Database awal bersih tanpa fake orders.
+  4. [`src/__tests__/phase7-cleanup-old-orders.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase7-cleanup-old-orders.test.ts):
+     - Menambahkan unit test untuk `generateOldOrdersForTesting` dan memverifikasi seluruh data berhasil diunduh dan dibersihkan dari database.
+- **Hasil Pengujian**:
+  - `vitest run`: **32/32 test files passed (105/105 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.48 detik.
+
+
 
 
 

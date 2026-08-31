@@ -173,4 +173,24 @@ describe('Phase 7: Clean Orders Older Than 1 Year with Excel Backup', () => {
 
     expect(() => exportOrdersToExcel(dummyOrders, 'test_export.csv')).not.toThrow();
   });
+
+  it('generates old orders strictly older than 1 year (> 400 days) and cleans them', async () => {
+    const createdCount = await orderService.generateOldOrdersForTesting(10);
+    expect(createdCount).toBe(10);
+
+    const oldOrders = await orderService.getOrdersOlderThanOneYear();
+    expect(oldOrders.length).toBe(10);
+
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    for (const o of oldOrders) {
+      expect(new Date(o.createdAt).getTime()).toBeLessThan(oneYearAgo.getTime());
+    }
+
+    const cleanResult = await orderService.cleanOrdersOlderThanOneYear();
+    expect(cleanResult.count).toBe(10);
+
+    const remainingOld = await orderService.getOrdersOlderThanOneYear();
+    expect(remainingOld.length).toBe(0);
+  });
 });

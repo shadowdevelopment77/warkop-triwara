@@ -8,7 +8,7 @@ import type { IOrder, IOrderItem, IRecipeItem, IProductAdditional, PaymentMethod
 
 let isSeedingInProgress = false;
 
-export async function resetAndSeedDatabase(database: TriwaraDatabase = db, totalOrders = 1000): Promise<void> {
+export async function resetAndSeedDatabase(database: TriwaraDatabase = db, totalOrders = 0): Promise<void> {
   if (isSeedingInProgress) return;
   isSeedingInProgress = true;
 
@@ -444,223 +444,189 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
       });
     }
 
-    // 7. Generate 1000 Realistic Orders Across Past 30 Days (Chronological Sequence #1 to #1000)
-    const customerNames = [
-      'Budi Santoso', 'Rian Hidayat', 'Siti Rahma', 'Dewi Lestari', 'Andi Pratama',
-      'Fajar Nugraha', 'Maya Indah', 'Reza Kurnia', 'Sarah Amelia', 'Dimas Arya',
-      'Agus Wijaya', 'Putri Ayu', 'Bayu Setiawan', 'Nadia Safitri', 'Umum',
-      'Ilham Ramadhan', 'Dian Permata', 'Rizky Pratama', 'Bella Saphira', 'Eko Prasetyo',
-      'Hendro Gunawan', 'Melisa Tan', 'Rangga Sasana', 'Kirana Putri', 'Doni Kusuma',
-    ];
+    // 7. Optional Demo Orders & Past Shifts (Only generated if explicitly requested)
+    if (totalOrders > 0) {
+      const customerNames = [
+        'Budi Santoso', 'Rian Hidayat', 'Siti Rahma', 'Dewi Lestari', 'Andi Pratama',
+        'Fajar Nugraha', 'Maya Indah', 'Reza Kurnia', 'Sarah Amelia', 'Dimas Arya',
+        'Agus Wijaya', 'Putri Ayu', 'Bayu Setiawan', 'Nadia Safitri', 'Umum',
+        'Ilham Ramadhan', 'Dian Permata', 'Rizky Pratama', 'Bella Saphira', 'Eko Prasetyo',
+        'Hendro Gunawan', 'Melisa Tan', 'Rangga Sasana', 'Kirana Putri', 'Doni Kusuma',
+      ];
 
-    const startTimestamp = nowMs - 30 * 24 * 60 * 60 * 1000;
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayStartMs = todayStart.getTime();
+      const startTimestamp = nowMs - 30 * 24 * 60 * 60 * 1000;
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayStartMs = todayStart.getTime();
 
-    const timestamps: number[] = [];
+      const timestamps: number[] = [];
 
-    // Past 30 days orders (965 orders)
-    const pastOrdersTarget = Math.max(0, totalOrders - 35);
-    for (let i = 0; i < pastOrdersTarget; i++) {
-      const randomDayMs = startTimestamp + Math.random() * (todayStartMs - startTimestamp);
-      const dateObj = new Date(randomDayMs);
-      const hour = 8 + Math.floor(Math.random() * 14); // 08:00 - 22:00
-      const minute = Math.floor(Math.random() * 60);
-      dateObj.setHours(hour, minute, Math.floor(Math.random() * 60));
-      timestamps.push(dateObj.getTime());
-    }
+      const pastOrdersTarget = Math.max(0, totalOrders - 35);
+      for (let i = 0; i < pastOrdersTarget; i++) {
+        const randomDayMs = startTimestamp + Math.random() * (todayStartMs - startTimestamp);
+        const dateObj = new Date(randomDayMs);
+        const hour = 8 + Math.floor(Math.random() * 14);
+        const minute = Math.floor(Math.random() * 60);
+        dateObj.setHours(hour, minute, Math.floor(Math.random() * 60));
+        timestamps.push(dateObj.getTime());
+      }
 
-    // Today's orders (35 orders spread across hours so "Hari Ini" chart has a rich curve!)
-    const todayOrdersTarget = Math.min(totalOrders, 35);
-    for (let i = 0; i < todayOrdersTarget; i++) {
-      const dateObj = new Date();
-      const hour = 8 + Math.floor(Math.random() * 14); // 08:00 - 22:00
-      const minute = Math.floor(Math.random() * 60);
-      dateObj.setHours(hour, minute, Math.floor(Math.random() * 60));
-      timestamps.push(dateObj.getTime());
-    }
+      const todayOrdersTarget = Math.min(totalOrders, 35);
+      for (let i = 0; i < todayOrdersTarget; i++) {
+        const dateObj = new Date();
+        const hour = 8 + Math.floor(Math.random() * 14);
+        const minute = Math.floor(Math.random() * 60);
+        dateObj.setHours(hour, minute, Math.floor(Math.random() * 60));
+        timestamps.push(dateObj.getTime());
+      }
 
-    // Sort timestamps chronologically from earliest (30 days ago) to latest (today)
-    timestamps.sort((a, b) => a - b);
+      timestamps.sort((a, b) => a - b);
 
-    // Group by calendar day to compute sequential daily numbers (TRW-YYYYMMDD-001, 002...)
-    const dailySeqMap = new Map<string, number>();
-    const ordersToInsert: IOrder[] = [];
+      const dailySeqMap = new Map<string, number>();
+      const ordersToInsert: IOrder[] = [];
 
-    for (let i = 0; i < totalOrders; i++) {
-      const orderDate = new Date(timestamps[i]);
-      const yyyy = orderDate.getFullYear();
-      const mm = String(orderDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(orderDate.getDate()).padStart(2, '0');
-      const dateKey = `${yyyy}${mm}${dd}`;
+      for (let i = 0; i < totalOrders; i++) {
+        const orderDate = new Date(timestamps[i]);
+        const yyyy = orderDate.getFullYear();
+        const mm = String(orderDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(orderDate.getDate()).padStart(2, '0');
+        const dateKey = `${yyyy}${mm}${dd}`;
 
-      const dailySeq = (dailySeqMap.get(dateKey) || 0) + 1;
-      dailySeqMap.set(dateKey, dailySeq);
+        const dailySeq = (dailySeqMap.get(dateKey) || 0) + 1;
+        dailySeqMap.set(dateKey, dailySeq);
 
-      const orderNumber = `TRW-${dateKey}-${String(dailySeq).padStart(3, '0')}`;
-      const globalSeq = i + 1; // #1 at earliest date up to #1000 today
-      const customer = customerNames[Math.floor(Math.random() * customerNames.length)];
-      const processedBy = Math.random() > 0.35 ? 'Budi (Kasir)' : 'Owner Toko';
-      const paymentMethod: PaymentMethod = Math.random() > 0.45 ? 'cash' : 'qris';
-      const isVoided = Math.random() < 0.035; // ~3.5% void rate
+        const orderNumber = `TRW-${dateKey}-${String(dailySeq).padStart(3, '0')}`;
+        const globalSeq = i + 1;
+        const customer = customerNames[Math.floor(Math.random() * customerNames.length)];
+        const processedBy = Math.random() > 0.35 ? 'Budi (Kasir)' : 'Owner Toko';
+        const paymentMethod: PaymentMethod = Math.random() > 0.45 ? 'cash' : 'qris';
+        const isVoided = Math.random() < 0.035;
 
-      // Choose 1 to 3 items per order
-      const itemCount = Math.random() > 0.7 ? (Math.random() > 0.6 ? 3 : 2) : 1;
-      const orderItems: IOrderItem[] = [];
-      let subtotal = 0;
-      let hppTotal = 0;
+        const itemCount = Math.random() > 0.7 ? (Math.random() > 0.6 ? 3 : 2) : 1;
+        const orderItems: IOrderItem[] = [];
+        let subtotal = 0;
+        let hppTotal = 0;
 
-      for (let j = 0; j < itemCount; j++) {
-        // Bias towards popular items (Kopi Susu Aren & Caffe Latte)
-        const randIdx = Math.random() < 0.45 ? 0 : Math.floor(Math.random() * createdProducts.length);
-        const prod = createdProducts[randIdx];
-        const qty = Math.random() > 0.85 ? 2 : 1;
-        const itemSubtotal = prod.price * qty;
+        for (let j = 0; j < itemCount; j++) {
+          const randIdx = Math.random() < 0.45 ? 0 : Math.floor(Math.random() * createdProducts.length);
+          const prod = createdProducts[randIdx];
+          const qty = Math.random() > 0.85 ? 2 : 1;
+          const itemSubtotal = prod.price * qty;
 
-        // Calculate sample HPP cost
-        let itemHppUnit = 0;
-        for (const r of prod.recipe) {
-          itemHppUnit += (r.amount || 0) * 150;
+          let itemHppUnit = 0;
+          for (const r of prod.recipe) {
+            itemHppUnit += (r.amount || 0) * 150;
+          }
+          itemHppUnit = Math.max(itemHppUnit, prod.price * 0.35);
+
+          orderItems.push({
+            productId: prod.id!,
+            productName: prod.name,
+            price: prod.price,
+            hpp: itemHppUnit,
+            qty,
+            subtotal: itemSubtotal,
+            hppSubtotal: itemHppUnit * qty,
+            orderType: Math.random() > 0.5 ? 'dine_in' : 'takeaway',
+            toppings: [],
+            notes: Math.random() > 0.85 ? 'Less ice, normal sugar' : '',
+          });
+
+          subtotal += itemSubtotal;
+          hppTotal += itemHppUnit * qty;
         }
-        itemHppUnit = Math.max(itemHppUnit, prod.price * 0.35);
 
-        orderItems.push({
-          productId: prod.id!,
-          productName: prod.name,
-          price: prod.price,
-          hpp: itemHppUnit,
-          qty,
-          subtotal: itemSubtotal,
-          hppSubtotal: itemHppUnit * qty,
-          orderType: Math.random() > 0.5 ? 'dine_in' : 'takeaway',
-          toppings: [],
-          notes: Math.random() > 0.85 ? 'Less ice, normal sugar' : '',
+        const hasDiscount = Math.random() < 0.08;
+        const discountPercent = hasDiscount ? 10 : 0;
+        const discountAmount = hasDiscount ? Math.round(subtotal * 0.1) : 0;
+        const total = subtotal - discountAmount;
+
+        let paymentAmount = total;
+        let changeAmount = 0;
+        if (paymentMethod === 'cash') {
+          if (total <= 20000) paymentAmount = 20000;
+          else if (total <= 50000) paymentAmount = 50000;
+          else if (total <= 100000) paymentAmount = 100000;
+          else paymentAmount = Math.ceil(total / 50000) * 50000;
+          changeAmount = Math.max(0, paymentAmount - total);
+        }
+
+        const status: TransactionStatus = isVoided ? 'voided' : 'completed';
+
+        ordersToInsert.push({
+          orderNumber,
+          sequenceNumber: globalSeq,
+          customerName: customer,
+          processedBy,
+          items: orderItems,
+          subtotal,
+          discountPercent,
+          discountAmount,
+          total,
+          hppTotal,
+          profit: isVoided ? 0 : total - hppTotal,
+          paymentMethod,
+          paymentAmount,
+          changeAmount,
+          status,
+          voidedAt: isVoided ? new Date(orderDate.getTime() + 12 * 60 * 1000) : undefined,
+          voidReason: isVoided ? 'Pelanggan salah memilih pesanan / batal' : undefined,
+          createdAt: orderDate,
         });
-
-        subtotal += itemSubtotal;
-        hppTotal += itemHppUnit * qty;
       }
 
-      // Occasional small discount (10% discount on 8% of orders)
-      const hasDiscount = Math.random() < 0.08;
-      const discountPercent = hasDiscount ? 10 : 0;
-      const discountAmount = hasDiscount ? Math.round(subtotal * 0.1) : 0;
-      const total = subtotal - discountAmount;
+      await database.orders.bulkAdd(ordersToInsert);
 
-      let paymentAmount = total;
-      let changeAmount = 0;
-      if (paymentMethod === 'cash') {
-        // Round up to realistic Indonesian currency denominations
-        if (total <= 20000) paymentAmount = 20000;
-        else if (total <= 50000) paymentAmount = 50000;
-        else if (total <= 100000) paymentAmount = 100000;
-        else paymentAmount = Math.ceil(total / 50000) * 50000;
-        changeAmount = Math.max(0, paymentAmount - total);
-      }
+      // Past Closed Shifts
+      const shiftDaysAgo = [7, 5, 3, 2, 1];
+      const pastShifts = shiftDaysAgo.map((daysAgo, idx) => {
+        const openDate = new Date(nowMs - daysAgo * 24 * 60 * 60 * 1000);
+        openDate.setHours(8, 0, 0, 0);
+        const closeDate = new Date(openDate);
+        closeDate.setHours(21, 30, 0, 0);
 
-      const status: TransactionStatus = isVoided ? 'voided' : 'completed';
+        const yyyy = openDate.getFullYear();
+        const mm = String(openDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(openDate.getDate()).padStart(2, '0');
+        const shiftNumber = `SHF-${yyyy}${mm}${dd}-${String(idx + 1).padStart(3, '0')}`;
 
-      ordersToInsert.push({
-        orderNumber,
-        sequenceNumber: globalSeq,
-        customerName: customer,
-        processedBy,
-        items: orderItems,
-        subtotal,
-        discountPercent,
-        discountAmount,
-        total,
-        hppTotal,
-        profit: isVoided ? 0 : total - hppTotal,
-        paymentMethod,
-        paymentAmount,
-        changeAmount,
-        status,
-        voidedAt: isVoided ? new Date(orderDate.getTime() + 12 * 60 * 1000) : undefined,
-        voidReason: isVoided ? 'Pelanggan salah memilih pesanan / batal' : undefined,
-        createdAt: orderDate,
+        const cashSales = 480000 + idx * 45000;
+        const qrisSales = 720000 + idx * 70000;
+        const startingCash = 100000;
+        const expectedEndingCash = startingCash + cashSales;
+        const actualEndingCash = expectedEndingCash;
+
+        return {
+          shiftNumber,
+          cashierId: 2,
+          cashierName: 'Budi (Kasir)',
+          startingCash,
+          totalCashSales: cashSales,
+          totalQrisSales: qrisSales,
+          totalVoided: idx % 2 === 0 ? 1 : 0,
+          totalTransactions: 32 + idx * 5,
+          cashTransactions: 16 + idx * 2,
+          qrisTransactions: 16 + idx * 3,
+          expectedEndingCash,
+          actualEndingCash,
+          cashDifference: 0,
+          notes: 'Shift berjalan lancar, rekap kas pas tanpa selisih.',
+          status: 'closed' as const,
+          openedAt: openDate,
+          closedAt: closeDate,
+        };
       });
+
+      await database.shifts.bulkAdd(pastShifts);
     }
 
-    await database.orders.bulkAdd(ordersToInsert);
-
-    // 8. Seed Past Closed Shifts (5 closed shifts over the past 7 days)
-    const shiftDaysAgo = [7, 5, 3, 2, 1];
-    const pastShifts = shiftDaysAgo.map((daysAgo, idx) => {
-      const openDate = new Date(nowMs - daysAgo * 24 * 60 * 60 * 1000);
-      openDate.setHours(8, 0, 0, 0);
-      const closeDate = new Date(openDate);
-      closeDate.setHours(21, 30, 0, 0);
-
-      const yyyy = openDate.getFullYear();
-      const mm = String(openDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(openDate.getDate()).padStart(2, '0');
-      const shiftNumber = `SHF-${yyyy}${mm}${dd}-${String(idx + 1).padStart(3, '0')}`;
-
-      const cashSales = 480000 + idx * 45000;
-      const qrisSales = 720000 + idx * 70000;
-      const startingCash = 100000;
-      const expectedEndingCash = startingCash + cashSales;
-      const actualEndingCash = expectedEndingCash; // Pas!
-
-      return {
-        shiftNumber,
-        cashierId: 2,
-        cashierName: 'Budi (Kasir)',
-        startingCash,
-        totalCashSales: cashSales,
-        totalQrisSales: qrisSales,
-        totalVoided: idx % 2 === 0 ? 1 : 0,
-        totalTransactions: 32 + idx * 5,
-        cashTransactions: 16 + idx * 2,
-        qrisTransactions: 16 + idx * 3,
-        expectedEndingCash,
-        actualEndingCash,
-        cashDifference: 0,
-        notes: 'Shift berjalan lancar, rekap kas pas tanpa selisih.',
-        status: 'closed' as const,
-        openedAt: openDate,
-        closedAt: closeDate,
-      };
-    });
-
-    await database.shifts.bulkAdd(pastShifts);
-
-    // 9. Initial Activity Logs
-    await database.logs.bulkAdd([
-      {
-        type: 'shift',
-        description: 'Sistem Triwara POS diinisialisasi dengan data toko lengkap.',
-        createdAt: new Date(nowMs - 7 * 24 * 60 * 60 * 1000),
-      },
-      {
-        type: 'shift',
-        description: 'Kasir Budi menutup Shift #5 dengan kas pas Rp 690.000.',
-        createdAt: new Date(nowMs - 24 * 60 * 60 * 1000),
-      },
-      {
-        type: 'restock',
-        description: 'Restock bahan baku Biji Kopi Espresso 10kg dan Susu Fresh Milk 20 Liter.',
-        createdAt: new Date(nowMs - 12 * 60 * 60 * 1000),
-      },
-    ]);
-
-    // 10. Initial System Notifications
+    // 8. Initial System Notifications
     await database.notifications.bulkAdd([
       {
-        title: 'Database & Demo Siap',
-        message: `Database berhasil disiapkan dengan 9 menu siap jual dan 1000 riwayat transaksi demo.`,
+        title: 'Database Siap Digunakan',
+        message: 'Menu siap jual dan inventori stok bahan baku telah disiapkan.',
         type: 'product',
-        targetTab: 'reports',
-        createdAt: now,
-        isRead: false,
-      },
-      {
-        title: 'Stok Bahan Aman',
-        message: 'Seluruh stok bahan baku kopi dan kemasan terisi penuh untuk pengujian kasir.',
-        type: 'inventory',
-        targetTab: 'inventory',
+        targetTab: 'pos',
         createdAt: now,
         isRead: false,
       },
@@ -674,7 +640,7 @@ export async function seedDatabaseIfEmpty(): Promise<void> {
   if (isSeedingInProgress) return;
   const count = await db.products.count();
   if (count === 0) {
-    await resetAndSeedDatabase(db, 1000);
+    await resetAndSeedDatabase(db, 0);
     return;
   }
 

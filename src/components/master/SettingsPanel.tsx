@@ -260,11 +260,31 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (oldOrders.length === 0) {
           setDialogConfig({
             isOpen: true,
-            type: 'alert',
-            title: 'Tidak Ada Data Berumur 1 Tahun',
+            type: 'confirm',
+            title: 'Belum Ada Transaksi ≥ 1 Tahun',
             message:
-              'Tidak ada data riwayat transaksi yang berumur 1 tahun atau lebih dari hari ini. Seluruh data transaksi masih aman dan dalam batas wajar.',
-            onConfirm: () => {},
+              'Saat ini seluruh transaksi di database masih berumur < 1 tahun.\n\nApakah Anda ingin membuat 10 transaksi simulasi (bertanggal 400 hari lalu) untuk langsung menguji unduh arsip Excel dan pembersihan database ini?',
+            confirmText: '⚡ Buat 10 Data Uji (400 Hari Lalu)',
+            onConfirm: async () => {
+              try {
+                const count = await orderService.generateOldOrdersForTesting(10);
+                setDialogConfig({
+                  isOpen: true,
+                  type: 'alert',
+                  title: 'Data Simulasi Siap Diuji',
+                  message: `${count} transaksi simulasi berumur 400 hari lalu berhasil dibuat!\n\nSilakan klik lagi tombol "Bersihkan Transaksi (≥ 1 Tahun)" untuk menguji unduh arsip Excel dan pembersihannya.`,
+                  onConfirm: () => {},
+                });
+              } catch (e) {
+                setDialogConfig({
+                  isOpen: true,
+                  type: 'alert',
+                  title: 'Gagal Membuat Data Uji',
+                  message: (e as Error).message,
+                  onConfirm: () => {},
+                });
+              }
+            },
           });
           return;
         }
@@ -409,53 +429,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
           <span className="settings-card-arrow" style={{ color: '#eab308' }}>
             {isOwner ? '🧹' : '🔒'}
-          </span>
-        </button>
-
-        {/* 6. Reset & Muat Data Demo (Owner only) */}
-        <button
-          type="button"
-          className="settings-trigger-card"
-          style={{ borderColor: 'rgba(239, 68, 68, 0.4)' }}
-          onClick={() => {
-            guardOwnerAction(() => {
-              setDialogConfig({
-                isOpen: true,
-                type: 'confirm',
-                title: 'Reset Seluruh Database?',
-                message:
-                  'PERINGATAN: Semua data transaksi, menu, dan inventori akan direset dan diisi ulang dengan 8 menu siap jual serta 400 transaksi demo dalam 1 bulan terakhir.\n\nApakah Anda yakin ingin melanjutkan?',
-                isDanger: true,
-                confirmText: 'Ya, Reset Database',
-                onConfirm: async () => {
-                  try {
-                    const { resetAndSeedDatabase } = await import('../../database/seed');
-                    await resetAndSeedDatabase();
-                    window.location.reload();
-                  } catch (err) {
-                    setDialogConfig({
-                      isOpen: true,
-                      type: 'alert',
-                      title: 'Gagal Reset',
-                      message: 'Gagal mereset database: ' + (err as Error).message,
-                      onConfirm: () => {},
-                    });
-                  }
-                },
-              });
-            });
-          }}
-        >
-          <div className="settings-card-info">
-            <h3 className="settings-card-title" style={{ color: '#f87171' }}>
-              {isOwner ? 'Reset & Muat Data Demo' : 'Reset & Muat Data Demo (Owner)'}
-            </h3>
-            <p className="settings-card-desc">
-              Reset database bersih + 8 menu + inventori stok aman + 400 order 1 bulan
-            </p>
-          </div>
-          <span className="settings-card-arrow" style={{ color: '#ef4444' }}>
-            {isOwner ? '⚡' : '🔒'}
           </span>
         </button>
 

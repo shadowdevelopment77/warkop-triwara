@@ -453,6 +453,54 @@ export class OrderService {
 
     return { count: idsToDelete.length };
   }
+
+  /**
+   * Generates a small batch of orders strictly older than 1 year (> 400 days ago)
+   * specifically for testing the 1-year archive & cleanup workflow.
+   */
+  async generateOldOrdersForTesting(count: number = 10): Promise<number> {
+    const oldOrders: IOrder[] = [];
+    const now = Date.now();
+    const fourHundredDaysMs = 400 * 24 * 60 * 60 * 1000;
+
+    for (let i = 1; i <= count; i++) {
+      const orderDate = new Date(now - fourHundredDaysMs - i * 3600000);
+      oldOrders.push({
+        orderNumber: `TRW-OLD-${String(i).padStart(3, '0')}`,
+        sequenceNumber: i,
+        customerName: `Pelanggan Arsip ${i}`,
+        items: [
+          {
+            productId: 1,
+            productName: 'Kopi Susu Uji',
+            price: 15000,
+            hpp: 5000,
+            hppSubtotal: 5000,
+            qty: 1,
+            orderType: 'dine_in',
+            toppings: [],
+            notes: 'Data Uji Arsip',
+            subtotal: 15000,
+          },
+        ],
+        subtotal: 15000,
+        discountPercent: 0,
+        discountAmount: 0,
+        total: 15000,
+        paymentMethod: i % 2 === 0 ? 'cash' : 'qris',
+        paymentAmount: 15000,
+        changeAmount: 0,
+        status: 'completed',
+        hppTotal: 5000,
+        profit: 10000,
+        createdAt: orderDate,
+      });
+    }
+
+    await this.database.orders.bulkAdd(oldOrders);
+    this.clearPaginationCache();
+    return oldOrders.length;
+  }
 }
 
 export const orderService = new OrderService();
