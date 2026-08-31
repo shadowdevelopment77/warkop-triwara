@@ -209,6 +209,29 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **20/20 test files passed (59/59 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.31 detik.
 
+*Status Keseluruhan: Phase 1 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 1 Selesai 100%. Siap melanjutkan ke Phase 2 (Riwayat Transaksi Stand-Alone PDF).*
+### 🚀 Phase 2: Riwayat Transaksi — Stand-Alone PDF Export
+- **Tujuan Teknis**:
+  - Menjadikan Riwayat Transaksi berdiri sendiri (*stand-alone*) terpisah dari Laporan Penjualan.
+  - Menambahkan tombol ekspor PDF resmi di pojok kanan atas tabel Riwayat Transaksi.
+  - Memastikan pembuatan berkas PDF transaksi aman dari kehabisan memori (*memory crash*) dengan proteksi pembatasan 500 transaksi dan indikator progress bar visual.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/pdf.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/pdf.service.ts):
+     - Menambahkan method `exportTransactionHistoryReport(startDate, endDate, orders, config, onProgress)`.
+     - Menyusun kop surat warkop resmi, kotak ringkasan (Total Pesanan & Total Nominal Selesai), dan tabel riwayat transaksi berkolom rapi (No, ID Transaksi, Kasir, Pelanggan, Waktu, Total, Bayar, Status).
+  2. [`src/components/master/TransactionHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/TransactionHistoryPanel.tsx):
+     - Menambahkan tombol **"📄 Export PDF"** di pojok kanan atas header.
+     - Menghubungkan fungsi export berkecepatan tinggi dengan pengambilan 500 data on-demand via `orderService.getOrders(startDate, endDate, 500)`.
+     - Menambahkan modal dialog progress bar real-time selama pembuatan berkas PDF.
+  3. [`src/__tests__/phase2-transaction-history-pdf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase2-transaction-history-pdf.test.ts):
+     - 3 pengujian unit: ekspor PDF riwayat transaksi sukses dengan progress callback, penanganan daftar transaksi kosong, dan proteksi aman dataset > 500 baris.
+- **Hasil Pengujian**:
+  - `vitest run`: **21/21 test files passed (62/62 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.08 detik.
+
+---
+
+*Status Keseluruhan: Phase 2 Selesai 100%. Siap melanjutkan ke Phase 3 (Shift Panel & PDF Rekap Overhaul).*

@@ -5,6 +5,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { IOrder } from '../../types';
 import { orderService } from '../../services/order.service';
+import { pdfService } from '../../services/pdf.service';
+import { configService } from '../../services/config.service';
 import { formatDateIndonesian } from '../../utils/date';
 import { formatRupiah } from '../../utils/currency';
 import { PaginationBar } from '../common/PaginationBar';
@@ -27,8 +29,14 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   onReprintOrder,
 }) => {
   const [orders, setOrders] = useState<IOrder[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+  const [exportProgress, setExportProgress] = useState<{ percent: number; message: string }>({
+    percent: 0,
+    message: '',
+  });
 
   // Date filters (defaults to today)
   const now = new Date();
@@ -41,12 +49,13 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
 
   const loadOrders = useCallback(async () => {
     try {
-      const list = await orderService.getOrders(startDate, endDate);
-      setOrders(list);
+      const result = await orderService.getPaginatedOrders(startDate, endDate, currentPage, 10);
+      setOrders(result.orders);
+      setTotalCount(result.totalCount);
     } catch (err) {
       console.error('Failed to load transaction history:', err);
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, currentPage]);
 
   useEffect(() => {
     loadOrders();
@@ -80,13 +89,41 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     }
   };
 
+  const handleExportPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      setExportProgress({ percent: 10, message: 'Menyiapkan data...' });
+      const config = await configService.getConfig();
+      // fetch up to 500 orders for PDF export
+      const ordersToExport = await orderService.getOrders(startDate, endDate, 500);
+      await pdfService.exportTransactionHistoryReport(
+        startDate,
+        endDate,
+        ordersToExport,
+        config,
+        (percent, message) => setExportProgress({ percent, message })
+      );
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mengekspor PDF: ' + (err as Error).message);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div className="report-view-container">
       {/* Header */}
       <div className="report-view-header">
-        <div>
-          <h2 className="report-view-title">Riwayat Transaksi Penjualan</h2>
-        </div>
+        <h2 className="report-view-title">Riwayat Transaksi Penjualan</h2>
+        <button
+          type="button"
+          className="report-btn-primary report-btn-export"
+          onClick={handleExportPdf}
+          disabled={isExportingPdf}
+        >
+          {isExportingPdf ? 'Mengekspor...' : '📄 Export PDF'}
+        </button>
       </div>
 
       {/* Responsive Period Filter Bar (Matching ReportPanel) */}
@@ -137,6 +174,13 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
         >
           Bulan Ini
         </button>
+        <button
+          type="button"
+          className={`report-preset-btn ${periodPreset === 'custom' ? 'active' : ''}`}
+          onClick={() => setPeriodPreset('custom')}
+        >
+          Kustom
+        </button>
       </div>
 
       {/* Transaction Table Card */}
@@ -163,9 +207,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                   </td>
                 </tr>
               ) : (
-                orders
-                  .slice((currentPage - 1) * 10, currentPage * 10)
-                  .map((order) => (
+                orders.map((order) => (
                     <tr key={order.id} className={order.status === 'voided' ? 'row-voided' : ''}>
                       <td>
                         <strong>#{order.orderNumber}</strong>
@@ -251,7 +293,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
 
           <PaginationBar
             currentPage={currentPage}
-            totalItems={orders.length}
+            totalItems={totalCount}
             pageSize={10}
             onPageChange={setCurrentPage}
           />
@@ -265,6 +307,26 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           onClose={() => setVoidingOrder(null)}
           onConfirmVoid={handleConfirmVoid}
         />
+      )}
+
+      {/* PDF Export Progress Modal */}
+      {isExportingPdf && (
+        <div className="pdf-progress-overlay">
+          <div className="pdf-progress-card">
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: 'var(--text-main)' }}>
+              Membuat Berkas PDF Riwayat Transaksi...
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+              {exportProgress.message}
+            </p>
+            <div className="pdf-progress-bar-bg">
+              <div className="pdf-progress-bar-fill" style={{ width: `${exportProgress.percent}%` }} />
+            </div>
+            <div style={{ textAlign: 'right', marginTop: '6px', fontSize: '12px', color: 'var(--primary-color)', fontWeight: 600 }}>
+              {exportProgress.percent}%
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

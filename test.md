@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **20 File Lulus (100%)**
-- **Total Unit Tests**: **59 Tests Passed (100%)**
+- **Total Test Files**: **21 File Lulus (100%)**
+- **Total Unit Tests**: **62 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~21.9 detik (Vitest) + 3.3 detik (Vite build)
+- **Waktu Eksekusi**: ~23.4 detik (Vitest) + 3.0 detik (Vite build)
 
 ---
 
@@ -202,4 +202,18 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 1 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 12. Pengujian Phase 2: Stand-Alone Transaction History PDF Export
+**File**: [`src/__tests__/phase2-transaction-history-pdf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase2-transaction-history-pdf.test.ts)
+- **Skenario 1: Ekspor PDF Riwayat Transaksi Sukses dengan Progress Callback**
+  - Mengirim sampel transaksi penjualan multi-metode (Tunai, QRIS, Void).
+  - Memverifikasi `pdfService.exportTransactionHistoryReport` menyelesaikan proses tanpa error dan memanggil progress bar sampai 100% ('Selesai!').
+- **Skenario 2: Penanganan Daftar Transaksi Kosong (Empty State)**
+  - Menyimulasikan periode tanggal tanpa ada transaksi penjualan.
+  - Memverifikasi sistem menghasilkan berkas PDF berstatus 'Tidak ada data' dengan aman tanpa crash.
+- **Skenario 3: Proteksi Memori Capping 500 Transaksi**
+  - Menguji dataset 600 transaksi sintetis.
+  - Memverifikasi berkas PDF membatasi rendering 500 baris pertama dan mencantumkan baris informasi total transaksi riil secara elegan tanpa membebani browser HP.
+
+---
+
+*Catatan: Seluruh pengujian Phase 2 telah selesai diverifikasi dan 100% lulus.*

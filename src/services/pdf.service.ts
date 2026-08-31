@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable';
 import type { IOrder, IIngredient, IShopConfig } from '../types';
 import type { ISalesSummary, ITopProduct, ISalesChartResult } from './report.service';
 import { formatRupiah } from '../utils/currency';
-import { formatShortDate, formatDateIndonesian } from '../utils/date';
+import { formatShortDate, formatDateIndonesian, toInputDateString } from '../utils/date';
 import { db } from '../database/db';
 
 export class PdfService {
@@ -23,8 +23,20 @@ export class PdfService {
     topProducts: ITopProduct[],
     orders: IOrder[],
     config: IShopConfig,
-    chartData?: ISalesChartResult | null
+    chartData?: ISalesChartResult | null,
+    onProgress?: (percent: number, message: string) => void
   ): Promise<void> {
+    onProgress?.(10, 'Menyiapkan halaman ringkasan eksekutif...');
+
+    let wakeLock: any = null;
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      try {
+        wakeLock = await (navigator as any).wakeLock.request('screen');
+      } catch {
+        // Ignore
+      }
+    }
+
     const doc = new jsPDF();
     const periodStr = `${formatShortDate(startDate)} - ${formatShortDate(endDate)}`;
 
@@ -147,10 +159,26 @@ export class PdfService {
           doc.circle(x, y, 0.9, 'F');
         }
 
-        const showLabel =
-          chartData.mode === 'hourly'
-            ? i % 4 === 0 || i === 23
-            : true;
+        let showLabel = false;
+        const totalPts = pts.length;
+        if (chartData.mode === 'hourly') {
+          showLabel = i % 4 === 0 || i === totalPts - 1;
+        } else if (chartData.mode === 'interval') {
+          showLabel = i % 3 === 0 || i === totalPts - 1;
+        } else if (chartData.mode === 'daily') {
+          if (totalPts > 20) {
+            showLabel = i % 5 === 0 || i === totalPts - 1;
+          } else if (totalPts > 10) {
+            showLabel = i % 2 === 0 || i === totalPts - 1;
+          } else {
+            showLabel = true;
+          }
+        } else if (chartData.mode === 'weekly') {
+          showLabel = i % 2 === 0 || i === totalPts - 1;
+        } else {
+          // monthly (max 12 labels)
+          showLabel = true;
+        }
 
         if (showLabel) {
           doc.setFontSize(6);
@@ -200,7 +228,12 @@ export class PdfService {
     doc.text(`Periode: ${periodStr}`, 14, 30);
     doc.setTextColor(0, 0, 0);
 
-    const ordersTableBody = orders.map((o) => [
+    onProgress?.(50, 'Memformat daftar transaksi...');
+
+    const isCapped = orders.length > 500;
+    const ordersToRender = isCapped ? orders.slice(0, 500) : orders;
+
+    const ordersTableBody: any[] = ordersToRender.map((o) => [
       o.sequenceNumber,
       o.orderNumber,
       o.processedBy || 'Kasir',
@@ -211,6 +244,19 @@ export class PdfService {
       o.status === 'completed' ? 'Sukses' : 'Batal/Void',
     ]);
 
+    if (isCapped) {
+      ordersTableBody.push([
+        'Info',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        `Menampilkan 500 dari total ${orders.length.toLocaleString('id-ID')} transaksi untuk efisiensi berkas`,
+      ]);
+    }
+
     autoTable(doc, {
       startY: 34,
       head: [['No', 'ID Transaksi', 'Kasir', 'Pelanggan', 'Waktu', 'Total', 'Bayar', 'Status']],
@@ -220,6 +266,8 @@ export class PdfService {
       bodyStyles: { fontSize: 7 },
       margin: { left: 14, right: 14 },
     });
+
+    onProgress?.(80, 'Memeriksa pengeluaran operasional...');
 
     // Check for operational expenses (petty cash) in closed shifts during period
     try {
@@ -244,30 +292,32 @@ export class PdfService {
       });
 
       if (allExpenses.length > 0) {
-        doc.addPage();
-        doc.setFontSize(14);
+        const lastTableEndY = (doc as any).lastAutoTable?.finalY || 34;
+        let expenseStartY = lastTableEndY + 12;
+
+        if (expenseStartY > 240) {
+          doc.addPage();
+          expenseStartY = 20;
+        }
+
+        doc.setFontSize(10.5);
         doc.setFont('helvetica', 'bold');
-        doc.text('Rincian Pembelian / Pengeluaran Operasional (Petty Cash)', 14, 18);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 100, 100);
-        const totalExp = allExpenses.reduce((sum, e) => sum + e.amount, 0);
-        doc.text(`Periode: ${periodStr} | Total Pengeluaran: ${formatRupiah(totalExp)}`, 14, 24);
+        doc.setTextColor(185, 28, 28);
+        doc.text('Pengeluaran Operasional Kasir (Kas Kecil)', 14, expenseStartY);
         doc.setTextColor(0, 0, 0);
 
-        const expenseTableBody: any[] = allExpenses.map((e, idx) => [
+        const expenseTableBody = allExpenses.map((exp, idx) => [
           idx + 1,
-          formatShortDate(e.date),
-          `#${e.shiftNo}`,
-          e.cashier,
-          e.desc,
-          formatRupiah(e.amount),
+          formatShortDate(exp.date),
+          exp.shiftNo,
+          exp.cashier,
+          exp.desc,
+          formatRupiah(exp.amount),
         ]);
-        expenseTableBody.push(['', '', '', '', 'TOTAL PEMBELIAN OPERASIONAL', formatRupiah(totalExp)]);
 
         autoTable(doc, {
-          startY: 28,
-          head: [['No', 'Tanggal', 'Shift', 'Kasir', 'Keterangan Barang / Keperluan', 'Nominal']],
+          startY: expenseStartY + 4,
+          head: [['No', 'Tanggal', 'Shift', 'Kasir', 'Keperluan Pengeluaran', 'Nominal']],
           body: expenseTableBody,
           theme: 'grid',
           headStyles: { fillColor: [185, 28, 28], fontSize: 8 },
@@ -286,7 +336,121 @@ export class PdfService {
       console.warn('Could not load shift expenses for sales report PDF:', err);
     }
 
+    onProgress?.(95, 'Mengunduh dokumen PDF...');
+
+    if (wakeLock) {
+      try {
+        await wakeLock.release();
+      } catch {
+        // Ignore
+      }
+    }
+
     doc.save(`Laporan_Penjualan_${periodStr.replace(/\//g, '-')}.pdf`);
+    onProgress?.(100, 'Selesai!');
+  }
+
+  /**
+   * Generates and downloads Stand-Alone Transaction History PDF
+   */
+  async exportTransactionHistoryReport(
+    startDate: Date,
+    endDate: Date,
+    orders: IOrder[],
+    config: IShopConfig,
+    onProgress?: (percent: number, message: string) => void
+  ): Promise<void> {
+    onProgress?.(10, 'Menyiapkan berkas riwayat transaksi...');
+
+    let wakeLock: any = null;
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      try {
+        wakeLock = await (navigator as any).wakeLock.request('screen');
+      } catch {
+        // Ignore
+      }
+    }
+
+    const doc = new jsPDF();
+    const periodStr = `${formatShortDate(startDate)} - ${formatShortDate(endDate)}`;
+
+    // ─── 1. Header Title ───
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(config.appName || 'Warkop Triwara', 14, 16);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Laporan Riwayat Transaksi Penjualan', 14, 22);
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Periode: ${periodStr}`, 14, 27);
+    doc.setTextColor(0, 0, 0);
+
+    onProgress?.(30, 'Memformat daftar transaksi...');
+
+    const isCapped = orders.length > 500;
+    const ordersToRender = isCapped ? orders.slice(0, 500) : orders;
+    const totalNominal = orders.filter((o) => o.status === 'completed').reduce((sum, o) => sum + (o.total || 0), 0);
+
+    // Summary box
+    doc.setDrawColor(220, 220, 225);
+    doc.setFillColor(250, 250, 252);
+    doc.roundedRect(14, 31, 182, 10, 1, 1, 'FD');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Total Transaksi: ${orders.length.toLocaleString('id-ID')} pesanan`, 18, 37.5);
+    doc.text(`Total Nominal Selesai: ${formatRupiah(totalNominal)}`, 110, 37.5);
+    doc.setTextColor(0, 0, 0);
+
+    const ordersTableBody: any[] = ordersToRender.map((o, idx) => [
+      idx + 1,
+      o.orderNumber,
+      o.processedBy || 'Kasir',
+      o.customerName || 'Umum',
+      formatDateIndonesian(o.createdAt),
+      formatRupiah(o.total),
+      o.paymentMethod === 'cash' ? 'Tunai' : 'QRIS',
+      o.status === 'completed' ? 'Sukses' : 'Batal/Void',
+    ]);
+
+    if (isCapped) {
+      ordersTableBody.push([
+        'Info',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        `Menampilkan 500 dari total ${orders.length.toLocaleString('id-ID')} transaksi untuk efisiensi berkas`,
+      ]);
+    }
+
+    autoTable(doc, {
+      startY: 44,
+      head: [['No', 'ID Transaksi', 'Kasir', 'Pelanggan', 'Waktu', 'Total', 'Bayar', 'Status']],
+      body: ordersTableBody.length > 0 ? ordersTableBody : [['-', '-', '-', '-', '-', '-', '-', 'Tidak ada data']],
+      theme: 'grid',
+      headStyles: { fillColor: [50, 50, 50], fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      margin: { left: 14, right: 14 },
+    });
+
+    onProgress?.(90, 'Menyimpan berkas PDF...');
+
+    const fileName = `riwayat_transaksi_${toInputDateString(startDate)}_${toInputDateString(endDate)}.pdf`;
+    doc.save(fileName);
+
+    if (wakeLock) {
+      try {
+        await wakeLock.release();
+      } catch {
+        // Ignore
+      }
+    }
+
+    onProgress?.(100, 'Selesai!');
   }
 
   /**
