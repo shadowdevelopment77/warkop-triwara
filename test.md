@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **29 File Lulus (100%)**
-- **Total Unit Tests**: **93 Tests Passed (100%)**
+- **Total Test Files**: **30 File Lulus (100%)**
+- **Total Unit Tests**: **98 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~22.8 detik (Vitest) + 2.3 detik (Vite build)
+- **Waktu Eksekusi**: ~23.7 detik (Vitest) + 2.6 detik (Vite build)
 
 ---
 
@@ -350,4 +350,22 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 20 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 21. Pengujian Performa Paginasi Riwayat Shift & Index B-Tree
+**File**: [`src/__tests__/paginated-shifts-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-shifts-perf.test.ts)
+- **Skenario 1: Penarikan Data Shift Melampaui Batas 100 Data**
+  - Mengambil 10 data dari total 120 shift uji (melebihi batas lama 100 shift).
+  - Memverifikasi total count 120, total pages 12, dan pengurutan kronologis terbalik (shift terbaru di baris pertama).
+- **Skenario 2: Filter Presisi Target Tanggal Lokal (Bebas Bug UTC)**
+  - Memfilter shift berdasarkan tanggal lokal `'2026-09-01'`.
+  - Memverifikasi shift pagi (jam 06:00 WIB) tetap masuk dalam filter tanggal yang benar tanpa salah tanggal akibat konversi UTC.
+- **Skenario 3: Serving Instan dari In-Memory LRU Cache (< 1ms)**
+  - Mengakses halaman shift yang sama dua kali.
+  - Memverifikasi request kedua dilayani langsung dari cache memori tanpa query database (`orderBy` tidak dipanggil).
+- **Skenario 4: Background Prefetching Halaman Shift Berikutnya**
+  - Mengakses Halaman 1, lalu memverifikasi data Halaman 2 telah disiapkan di buffer memori oleh background task.
+- **Skenario 5: Invalidation Cache Shift saat Mutasi**
+  - Memverifikasi cache dibersihkan otomatis saat shift dibuka atau ditutup melalui `clearShiftPaginationCache()`.
+
+---
+
+*Catatan: Seluruh 21 modul pengujian telah selesai diverifikasi dan 100% lulus.*

@@ -464,3 +464,28 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **29/29 test files passed (93/93 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.26 detik.
 
+---
+
+### 🚀 Phase 12: Optimasi Panel Shift, B-Tree Paginasi & Eliminasi Cap 100 Data
+- **Tujuan Teknis**:
+  - Mengeliminasi pembatasan permanen 100 data (`getShiftHistory(100)`) yang berpotensi menghilangkan riwayat shift bulan lalu setelah 35 hari operasional.
+  - Memperbaiki bug zona waktu UTC pada filter tanggal (`toISOString()`) sehingga shift pagi (06:00 WIB) tidak pernah salah tanggal atau hilang saat difilter.
+  - Menerapkan **B-Tree Indexing `openedAt`** dengan **LRU Page Cache terikat (< 30 KB RAM)** dan **Background Prefetching** untuk navigasi paginasi instan (< 1ms).
+  - Melindungi paginasi dari rapid-click (`isPageLoading`, button lock `disabled`, dan visual progress bar).
+  - Memastikan *immutability* jejak audit finansial laci kasir tetap terjaga 100%.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/shift.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/shift.service.ts):
+     - Ditambahkan interface `IPaginatedShiftsResult`, `shiftPaginatedCache`, `shiftTotalCountCache`, `clearShiftPaginationCache()`, dan method `getPaginatedShifts(date, page, pageSize)`.
+     - Invalidation cache otomatis dipanggil saat `openShift()` dan `closeShift()`.
+     - `getShiftHistory(limit)` dioptimasi langsung dari B-Tree `orderBy('openedAt').reverse()`.
+  2. [`src/components/master/ShiftHistoryPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/ShiftHistoryPanel.tsx):
+     - Terintegrasi dengan `getPaginatedShifts` berbasis tanggal lokal.
+     - Ditambahkan state `totalCount`, `isPageLoading`, subtle top progress bar, dan guard `handlePageChange` anti-rapid click.
+     - `PaginationBar` dilengkapi `disabled={isPageLoading}`.
+  3. [`src/__tests__/paginated-shifts-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-shifts-perf.test.ts):
+     - 5 skenario uji: penarikan data melampaui 100 limit, filter tanggal lokal bebas UTC bug, serving instan dari LRU cache, background prefetching, dan cache invalidation.
+- **Hasil Pengujian**:
+  - `vitest run`: **30/30 test files passed (98/98 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.67 detik.
+
+
