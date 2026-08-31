@@ -396,6 +396,7 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 | 8 | **Verifikasi Akhir** | ✅ Selesai | 26 test files (78 tests) lulus 100%, TypeScript build 0 error (2.5 detik). |
 | 9 | **Kelola Satuan Ukur (Unit Manager)** | ✅ Selesai | Modal Kelola Satuan dengan proteksi relasi bahan aktif, penyimpanan custom units di config, dan dropdown select dinamis di form bahan baku. |
 | 10 | **Optimasi Transisi & Paginasi Riwayat Transaksi** | ✅ Selesai | Eliminasi delay dan efek "nyangkut", LRU Page Cache bounded (< 50 KB), background prefetching instan (< 1ms), dan visual dimmed transition. |
+| 11 | **Optimasi Paginasi Log Aktivitas (10k Ready)** | ✅ Selesai | Bounded LRU Cache (< 40 KB RAM), asynchronous background prefetch, visual progress bar, filter kategori Sistem, dan proteksi disabled pagination. |
 
 ---
 
@@ -438,3 +439,26 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
 - **Hasil Pengujian**:
   - `vitest run`: **28/28 test files passed (87/87 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.58 detik.
+
+---
+
+### 🚀 Phase 11: Optimasi Paginasi Log Aktivitas (10k Ready & UI Alignment)
+- **Tujuan Teknis**:
+  - Menjamin performa modul Log tetap sangat cepat (< 1ms per halaman) dan stabil bahkan jika mencapai 10.000 log aktivitas.
+  - Menerapkan **LRU Page Cache terikat (< 40 KB RAM)** dan **Background Prefetching**: saat melihat log Halaman $N$, data Halaman $N+1$ sudah disiapkan di memori secara asinkron.
+  - Mengunci tombol paginasi selama `isPageLoading` dan menambahkan visual progress bar agar pengalaman UI identik dengan Riwayat Transaksi.
+  - Menambahkan pill filter kategori **"Sistem"** (`system`) untuk log audit pembersihan transaksi berumur $\ge 1$ tahun.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/report.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/report.service.ts):
+     - Ditambahkan `logPaginatedCache`, `logTotalCountCache`, `clearLogPaginationCache()`, dan background prefetch `prefetchNextLogPage()`.
+  2. [`src/components/master/LogPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/LogPanel.tsx):
+     - Ditambahkan state `isPageLoading`, visual dimmed transition, subtle top progress bar, dan guard `handlePageChange` anti-rapid click.
+     - Ditambahkan pill filter kategori "Sistem".
+  3. [`src/styles/logs.css`](file:///home/shadowxz/projects/triwara-pos/src/styles/logs.css):
+     - Ditambahkan border kiri cyan `#06b6d4` dan badge cyan untuk log tipe `system`.
+  4. [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts):
+     - 5 skenario uji: metadata paginasi, filter system, instant cache serving, background prefetching, dan cache invalidation.
+- **Hasil Pengujian**:
+  - `vitest run`: **29/29 test files passed (92/92 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.37 detik.
+

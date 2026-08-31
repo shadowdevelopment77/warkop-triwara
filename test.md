@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **28 File Lulus (100%)**
-- **Total Unit Tests**: **87 Tests Passed (100%)**
+- **Total Test Files**: **29 File Lulus (100%)**
+- **Total Unit Tests**: **92 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~22.4 detik (Vitest) + 2.4 detik (Vite build)
+- **Waktu Eksekusi**: ~23.2 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -330,4 +330,24 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 19 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 20. Pengujian Performa Paginasi Log Aktivitas & LRU Prefetch Cache
+**File**: [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts)
+- **Skenario 1: Integritas Metadata Paginasi Log Halaman Pertama**
+  - Mengambil 10 log dari 30 total log uji.
+  - Memverifikasi total count 30, total pages 3, current page 1, dan pengurutan kronologis terbalik (terbaru di atas).
+- **Skenario 2: Filter Presisi Kategori Sistem ('system')**
+  - Memfilter log dengan kategori `'system'`.
+  - Memverifikasi hanya log audit sistem yang dikembalikan dengan integritas tipe 100%.
+- **Skenario 3: Serving Paginasi Instan dari In-Memory Cache (< 1ms)**
+  - Mengakses halaman log yang sama dua kali.
+  - Memverifikasi panggilan kedua dilayani langsung dari cache memori tanpa query database (`toCollection` tidak dipanggil).
+- **Skenario 4: Background Prefetching Halaman Log Berikutnya**
+  - Mengakses Halaman 1 log, lalu menunggu siklus background prefetch.
+  - Mengakses Halaman 2 dan memverifikasi data Halaman 2 telah siap di buffer memori tanpa memicu query ke IndexedDB.
+- **Skenario 5: Invalidation Cache Log saat Mutasi**
+  - Memanggil `clearLogPaginationCache()`.
+  - Memverifikasi cache dibersihkan dan panggilan berikutnya kembali melakukan query segar ke database.
+
+---
+
+*Catatan: Seluruh 20 modul pengujian telah selesai diverifikasi dan 100% lulus.*

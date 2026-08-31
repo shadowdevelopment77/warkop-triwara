@@ -2,7 +2,7 @@
 // Triwara POS — Activity Logs Panel (Void & Restock Entries)
 // ═══════════════════════════════════════════════
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { ILog } from '../../types';
 import { reportService } from '../../services/report.service';
 import { formatDateIndonesian } from '../../utils/date';
@@ -10,15 +10,40 @@ import { PaginationBar } from '../common/PaginationBar';
 
 export const LogPanel: React.FC = () => {
   const [logs, setLogs] = useState<ILog[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'void' | 'menu' | 'inventory' | 'shift'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'void' | 'menu' | 'inventory' | 'shift' | 'system'>('all');
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
+
+  const loadLogs = useCallback(async () => {
+    try {
+      setIsPageLoading(true);
+      const result = await reportService.getPaginatedLogs(
+        selectedCategory,
+        selectedDate,
+        currentPage,
+        10
+      );
+      setLogs(result.logs);
+      setTotalCount(result.totalCount);
+    } catch (err) {
+      console.error('Failed to load paginated logs:', err);
+    } finally {
+      setIsPageLoading(false);
+    }
+  }, [selectedCategory, selectedDate, currentPage]);
 
   useEffect(() => {
-    reportService.getLogs(200).then(setLogs);
-  }, []);
+    loadLogs();
+  }, [loadLogs]);
 
-  const handleCategoryChange = (cat: 'all' | 'void' | 'menu' | 'inventory' | 'shift') => {
+  const handlePageChange = (newPage: number) => {
+    if (isPageLoading) return; // Prevent rapid-fire multi-click jump
+    setCurrentPage(newPage);
+  };
+
+  const handleCategoryChange = (cat: 'all' | 'void' | 'menu' | 'inventory' | 'shift' | 'system') => {
     setSelectedCategory(cat);
     setCurrentPage(1);
   };
@@ -27,20 +52,6 @@ export const LogPanel: React.FC = () => {
     setSelectedDate(date);
     setCurrentPage(1);
   };
-
-  // Filter logs locally without expensive database queries
-  const filteredLogs = logs.filter((log) => {
-    if (selectedCategory !== 'all' && log.type !== selectedCategory) {
-      return false;
-    }
-    if (selectedDate) {
-      const logDate = new Date(log.createdAt).toISOString().split('T')[0];
-      if (logDate !== selectedDate) {
-        return false;
-      }
-    }
-    return true;
-  });
 
   return (
     <div className="log-view-container">
@@ -88,6 +99,13 @@ export const LogPanel: React.FC = () => {
           >
             Buka/Tutup Toko
           </button>
+          <button
+            type="button"
+            className={`log-filter-pill ${selectedCategory === 'system' ? 'active' : ''}`}
+            onClick={() => handleCategoryChange('system')}
+          >
+            Sistem
+          </button>
         </div>
 
         <div className="log-date-filter-box">
@@ -111,32 +129,53 @@ export const LogPanel: React.FC = () => {
         </div>
       </div>
 
-      <div className="log-list-card">
-        {filteredLogs.length === 0 ? (
+      <div className="log-list-card" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Subtle Top Progress Bar during cold fetches */}
+        {isPageLoading && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              backgroundColor: '#3b82f6',
+              zIndex: 10,
+            }}
+          />
+        )}
+
+        {logs.length === 0 ? (
           <p className="empty-hint-text">
             Tidak ada riwayat aktivitas sistem untuk filter yang dipilih.
           </p>
         ) : (
           <>
-            <ul className="log-entries-list">
-              {filteredLogs
-                .slice((currentPage - 1) * 10, currentPage * 10)
-                .map((log) => (
-                  <li key={log.id} className={`log-entry-item ${log.type}`}>
-                    <div className="log-header-row">
-                      <span className="log-type-badge">{log.type.toUpperCase()}</span>
-                      <span className="log-time">{formatDateIndonesian(log.createdAt)}</span>
-                    </div>
-                    <p className="log-desc">{log.description}</p>
-                  </li>
-                ))}
+            <ul
+              className="log-entries-list"
+              style={{
+                opacity: isPageLoading ? 0.4 : 1,
+                transition: 'opacity 0.12s ease-in-out',
+                pointerEvents: isPageLoading ? 'none' : 'auto',
+              }}
+            >
+              {logs.map((log) => (
+                <li key={log.id} className={`log-entry-item ${log.type}`}>
+                  <div className="log-header-row">
+                    <span className="log-type-badge">{log.type.toUpperCase()}</span>
+                    <span className="log-time">{formatDateIndonesian(log.createdAt)}</span>
+                  </div>
+                  <p className="log-desc">{log.description}</p>
+                </li>
+              ))}
             </ul>
 
             <PaginationBar
               currentPage={currentPage}
-              totalItems={filteredLogs.length}
+              totalItems={totalCount}
               pageSize={10}
-              onPageChange={setCurrentPage}
+              disabled={isPageLoading}
+              onPageChange={handlePageChange}
             />
           </>
         )}
