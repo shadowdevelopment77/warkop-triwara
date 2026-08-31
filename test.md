@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **23 File Lulus (100%)**
-- **Total Unit Tests**: **68 Tests Passed (100%)**
+- **Total Test Files**: **24 File Lulus (100%)**
+- **Total Unit Tests**: **72 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~19.2 detik (Vitest) + 2.2 detik (Vite build)
+- **Waktu Eksekusi**: ~21.5 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -244,4 +244,21 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh pengujian Phase 4 telah selesai diverifikasi dan 100% lulus.*
+### 🔹 15. Pengujian Phase 5: Strict Menu & Recipe Validation
+**File**: [`src/__tests__/phase5-menu-validation.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase5-menu-validation.test.ts)
+- **Skenario 1: Penolakan Nama Menu Kosong**
+  - Menguji `productService.addProduct` dengan nama hanya spasi/kosong.
+  - Memverifikasi sistem melempar error 'Nama menu tidak boleh kosong'.
+- **Skenario 2: Penolakan Kategori Belum Dipilih**
+  - Menguji penambahan menu dengan `categoryId <= 0`.
+  - Memverifikasi sistem menolak dengan pesan 'Kategori menu wajib dipilih'.
+- **Skenario 3: Penolakan Harga Jual Rp 0 atau Negatif**
+  - Menguji penambahan menu dengan harga jual 0 atau kurang dari 0.
+  - Memverifikasi penolakan dengan pesan 'Harga jual wajib diisi dan harus lebih dari Rp 0'.
+- **Skenario 4: Pendaftaran Sukses Data Lengkap**
+  - Menguji pembuatan produk lengkap dengan kategori, harga, resep bahan baku, kemasan takeaway, dan deskripsi.
+  - Memverifikasi produk tersimpan dan dapat diambil kembali dengan integritas data 100%.
+
+---
+
+*Catatan: Seluruh pengujian Phase 5 telah selesai diverifikasi dan 100% lulus.*

@@ -159,9 +159,41 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       setErrorMsg('Nama menu tidak boleh kosong');
       return;
     }
-    if (price === '' || Number(price) < 0) {
-      setErrorMsg('Harga jual harus diisi (minimal 0)');
+    if (!categoryId || Number(categoryId) <= 0) {
+      setErrorMsg('Kategori menu wajib dipilih');
       return;
+    }
+    if (price === '' || Number(price) <= 0) {
+      setErrorMsg('Harga jual harus diisi dan lebih dari Rp 0');
+      return;
+    }
+    if (!description.trim()) {
+      setErrorMsg('Deskripsi menu wajib diisi (contoh: komposisi atau rasa)');
+      return;
+    }
+
+    // Validate mandatory base recipe
+    if (!recipe || recipe.length === 0) {
+      setErrorMsg('Bahan baku utama wajib diisi (minimal 1 bahan).');
+      return;
+    }
+    for (const r of recipe) {
+      if (!r.ingredientId || !r.amount || r.amount <= 0) {
+        setErrorMsg('Setiap bahan baku utama wajib dipilih dan memiliki takaran > 0.');
+        return;
+      }
+    }
+
+    // Validate mandatory takeaway packaging
+    if (!takeawayPackaging || takeawayPackaging.length === 0) {
+      setErrorMsg('Bahan kemasan takeaway wajib diisi (minimal 1 kemasan, misal Paper Cup / Dus).');
+      return;
+    }
+    for (const p of takeawayPackaging) {
+      if (!p.ingredientId || !p.amount || p.amount <= 0) {
+        setErrorMsg('Setiap bahan kemasan takeaway wajib dipilih dan memiliki jumlah > 0.');
+        return;
+      }
     }
 
     // Clean and validate mandatory additionals
@@ -318,6 +350,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                 placeholder="contoh: Espresso dengan susu segar dan sirup gula aren asli"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                required
               />
             </div>
 

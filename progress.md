@@ -289,6 +289,26 @@ Dokumen ini mencatat seluruh rekam jejak optimasi performa bertahap per scope, a
   - `vitest run`: **23/23 test files passed (68/68 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.24 detik.
 
+*Status Keseluruhan: Phase 4 Selesai 100%.*
+
 ---
 
-*Status Keseluruhan: Phase 4 Selesai 100%. Siap melanjutkan ke Phase 5 (Manajemen Menu & Validasi Ketat).*
+### 🚀 Phase 5: Manajemen Menu — Validasi Form Ketat (Zero Empty Submissions)
+- **Tujuan Teknis**:
+  - Memastikan formulir penambahan dan penyuntingan menu minuman memeriksa secara ketat seluruh kolom wajib (*zero empty fields*), mencegah kasir atau owner menyimpan produk dengan data yang tidak lengkap.
+  - Memastikan harga jual lebih dari Rp 0, deskripsi wajib terisi, serta bahan baku utama dan kemasan takeaway minimal 1 baris sebelum formulir dapat disubmit.
+- **Perubahan yang Diterapkan**:
+  1. [`src/components/master/RecipeEditor.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/RecipeEditor.tsx):
+     - Memperketat validasi `handleSubmit`: Nama menu, Kategori terpilih, Harga jual (> 0), Deskripsi menu (non-kosong), Bahan baku utama (minimal 1 bahan dengan takaran > 0), dan Kemasan takeaway (minimal 1 kemasan dengan takaran > 0).
+     - Menambahkan atribut `required` pada input HTML `description`.
+  2. [`src/services/product.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/product.service.ts):
+     - Memperkuat validasi service `addProduct` untuk memeriksa integritas data nama, kategori, dan batas nominal harga jual > Rp 0.
+  3. [`src/__tests__/phase5-menu-validation.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase5-menu-validation.test.ts):
+     - 4 pengujian unit: penolakan penambahan menu dengan nama kosong, penolakan kategori tidak valid, penolakan harga jual 0 atau negatif, dan keberhasilan pendaftaran menu ketika seluruh form lengkap.
+- **Hasil Pengujian**:
+  - `vitest run`: **24/24 test files passed (72/72 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.36 detik.
+
+---
+
+*Status Keseluruhan: Phase 5 Selesai 100%. Siap melanjutkan ke Phase 6 (Laporan Penjualan Stand-Alone Analytics).*

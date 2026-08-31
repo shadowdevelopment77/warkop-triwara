@@ -7,9 +7,15 @@ import type { IProduct, ICategory } from '../types';
 
 export class ProductService {
   private database: TriwaraDatabase;
+  private cachedProducts: IProduct[] | null = null;
 
   constructor(database: TriwaraDatabase = db) {
     this.database = database;
+  }
+
+  /** Clears in-memory products cache */
+  public invalidateCache(): void {
+    this.cachedProducts = null;
   }
 
   /** Gets all active categories */
@@ -65,29 +71,33 @@ export class ProductService {
     });
   }
 
-  /** Gets products, optionally filtered by category or search term */
+  /** Gets products, optionally filtered by category or search term with in-memory cache */
   async getProducts(categoryId?: number, searchTerm?: string): Promise<IProduct[]> {
-    let products = await this.database.products.toArray();
+    if (!this.cachedProducts) {
+      const products = await this.database.products.toArray();
 
-    // Auto-clean duplicates by name if any exist in DB
-    const seenNames = new Set<string>();
-    const duplicateIdsToDelete: number[] = [];
-    const uniqueProducts: IProduct[] = [];
+      // Auto-clean duplicates by name if any exist in DB
+      const seenNames = new Set<string>();
+      const duplicateIdsToDelete: number[] = [];
+      const uniqueProducts: IProduct[] = [];
 
-    for (const p of products) {
-      const key = p.name.trim().toLowerCase();
-      if (seenNames.has(key)) {
-        if (p.id) duplicateIdsToDelete.push(p.id);
-      } else {
-        seenNames.add(key);
-        uniqueProducts.push(p);
+      for (const p of products) {
+        const key = p.name.trim().toLowerCase();
+        if (seenNames.has(key)) {
+          if (p.id) duplicateIdsToDelete.push(p.id);
+        } else {
+          seenNames.add(key);
+          uniqueProducts.push(p);
+        }
       }
+
+      if (duplicateIdsToDelete.length > 0) {
+        this.database.products.bulkDelete(duplicateIdsToDelete).catch(console.error);
+      }
+      this.cachedProducts = uniqueProducts;
     }
 
-    if (duplicateIdsToDelete.length > 0) {
-      this.database.products.bulkDelete(duplicateIdsToDelete).catch(console.error);
-    }
-    products = uniqueProducts;
+    let products = this.cachedProducts;
 
     if (categoryId && categoryId > 0) {
       products = products.filter((p) => p.categoryId === categoryId);
@@ -98,7 +108,7 @@ export class ProductService {
       products = products.filter((p) => p.name.toLowerCase().includes(term));
     }
 
-    return products.sort((a, b) => a.name.localeCompare(b.name));
+    return [...products].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /** Gets a single product by ID */
@@ -106,17 +116,30 @@ export class ProductService {
     return await this.database.products.get(id);
   }
 
-  /** Adds a new product */
+  /** Adds a new product with validation */
   async addProduct(data: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    if (!data.name || !data.name.trim()) {
+      throw new Error('Nama menu tidak boleh kosong');
+    }
+    if (!data.categoryId || data.categoryId <= 0) {
+      throw new Error('Kategori menu wajib dipilih');
+    }
+    if (data.price === undefined || data.price === null || data.price <= 0) {
+      throw new Error('Harga jual wajib diisi dan harus lebih dari Rp 0');
+    }
+
     const now = new Date();
 
     const id = (await this.database.products.add({
       ...data,
       name: data.name.trim(),
+      description: data.description.trim(),
       isActive: true,
       createdAt: now,
       updatedAt: now,
     })) as number;
+
+    this.invalidateCache();
 
     await this.database.logs.add({
       type: 'menu',
@@ -137,6 +160,7 @@ export class ProductService {
     };
 
     await this.database.products.update(id, updateData);
+    this.invalidateCache();
 
     const menuName = data.name ? data.name.trim() : (existing?.name || `ID #${id}`);
     await this.database.logs.add({
@@ -151,6 +175,7 @@ export class ProductService {
   async deleteProduct(id: number): Promise<void> {
     const existing = await this.database.products.get(id);
     await this.database.products.delete(id);
+    this.invalidateCache();
 
     await this.database.logs.add({
       type: 'menu',
