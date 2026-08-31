@@ -42,7 +42,7 @@ describe('Paginated Logs Performance & LRU Prefetch Cache Tests', () => {
     expect(result.totalCount).toBe(30);
     expect(result.totalPages).toBe(3);
     expect(result.currentPage).toBe(1);
-    expect(result.logs[0].id).toBe(30); // newest first (reverse)
+    expect(result.logs[0].id).toBe(1); // newest timestamp first (reverse createdAt)
   });
 
   it('filters logs by system category successfully', async () => {
@@ -56,16 +56,16 @@ describe('Paginated Logs Performance & LRU Prefetch Cache Tests', () => {
   it('serves repeat log requests instantly from in-memory cache', async () => {
     const result1 = await reportService.getPaginatedLogs('all', undefined, 1, 10);
 
-    // Spy on database.logs.toCollection
-    const toCollectionSpy = vi.spyOn(testDb.logs, 'toCollection');
+    // Spy on database.logs.orderBy
+    const orderBySpy = vi.spyOn(testDb.logs, 'orderBy');
 
     const result2 = await reportService.getPaginatedLogs('all', undefined, 1, 10);
 
     // Exact cached object returned without DB collection query
     expect(result2).toBe(result1);
-    expect(toCollectionSpy).not.toHaveBeenCalled();
+    expect(orderBySpy).not.toHaveBeenCalled();
 
-    toCollectionSpy.mockRestore();
+    orderBySpy.mockRestore();
   });
 
   it('prefetches page 2 of logs in background when page 1 is accessed', async () => {
@@ -74,15 +74,15 @@ describe('Paginated Logs Performance & LRU Prefetch Cache Tests', () => {
     // Wait for background prefetch microtask
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const toCollectionSpy = vi.spyOn(testDb.logs, 'toCollection');
+    const orderBySpy = vi.spyOn(testDb.logs, 'orderBy');
     const resultPage2 = await reportService.getPaginatedLogs('all', undefined, 2, 10);
 
     expect(resultPage2.currentPage).toBe(2);
     expect(resultPage2.logs.length).toBe(10);
     // Page 2 was served from prefetch cache without re-querying collection!
-    expect(toCollectionSpy).not.toHaveBeenCalled();
+    expect(orderBySpy).not.toHaveBeenCalled();
 
-    toCollectionSpy.mockRestore();
+    orderBySpy.mockRestore();
   });
 
   it('clears log pagination cache when clearLogPaginationCache is invoked', async () => {
@@ -90,11 +90,22 @@ describe('Paginated Logs Performance & LRU Prefetch Cache Tests', () => {
 
     reportService.clearLogPaginationCache();
 
-    const toCollectionSpy = vi.spyOn(testDb.logs, 'toCollection');
+    const orderBySpy = vi.spyOn(testDb.logs, 'orderBy');
     await reportService.getPaginatedLogs('all', undefined, 1, 10);
 
     // Had to re-query because cache was cleared
-    expect(toCollectionSpy).toHaveBeenCalled();
-    toCollectionSpy.mockRestore();
+    expect(orderBySpy).toHaveBeenCalled();
+    orderBySpy.mockRestore();
+  });
+
+  it('supports date range filtering with startDate and endDate objects', async () => {
+    const now = new Date();
+    const start = new Date(now.getTime() - 15 * 60000); // last 15 minutes
+    const end = now;
+
+    const result = await reportService.getPaginatedLogs('all', start, end, 1, 10);
+    expect(result.logs.length).toBeGreaterThan(0);
+    expect(result.logs.length).toBeLessThanOrEqual(10);
+    expect(result.logs.every((l) => l.createdAt >= start && l.createdAt <= end)).toBe(true);
   });
 });

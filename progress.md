@@ -452,13 +452,12 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   1. [`src/services/report.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/report.service.ts):
      - Ditambahkan `logPaginatedCache`, `logTotalCountCache`, `clearLogPaginationCache()`, dan background prefetch `prefetchNextLogPage()`.
   2. [`src/components/master/LogPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/LogPanel.tsx):
-     - Ditambahkan state `isPageLoading`, visual dimmed transition, subtle top progress bar, dan guard `handlePageChange` anti-rapid click.
-     - Ditambahkan pill filter kategori "Sistem".
-  3. [`src/styles/logs.css`](file:///home/shadowxz/projects/triwara-pos/src/styles/logs.css):
-     - Ditambahkan border kiri cyan `#06b6d4` dan badge cyan untuk log tipe `system`.
-  4. [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts):
-     - 5 skenario uji: metadata paginasi, filter system, instant cache serving, background prefetching, dan cache invalidation.
+     - **Rekonstruksi Total Tabel Data**: Mengubah container dari list card lama menjadi struktur tabel data resmi (`report-section-card` + `report-table-wrapper` + `report-data-table`) dengan 4 kolom terstruktur (`Waktu`, `Kategori`, `Deskripsi Aktivitas`, `Referensi/ID`).
+     - **Penyelarasan Filter Bar Standar**: Menggunakan `report-period-filter-bar` dengan input tanggal Mulai & Sampai, tombol preset cepat (*Hari Ini*, *Bulan Ini*, *Kustom*), serta tombol filter kategori lengkap (Semua, Void, Restock, Inventori, Menu, Shift, Sistem).
+     - **Integrasi PaginationBar Rapat**: Menempatkan `PaginationBar` menyatu di bagian bawah pembungkus tabel (*flush bottom*), bebas dari efek terpotong.
+  3. [`src/__tests__/paginated-logs-perf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/paginated-logs-perf.test.ts):
+     - 6 skenario uji komprehensif termasuk pengurutan waktu kronologis terbalik (terbaru di baris pertama) dan range filtering dengan objek Date.
 - **Hasil Pengujian**:
-  - `vitest run`: **29/29 test files passed (92/92 tests passed 100%)**.
-  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.37 detik.
+  - `vitest run`: **29/29 test files passed (93/93 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.27 detik.
 

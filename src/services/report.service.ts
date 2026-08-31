@@ -882,6 +882,49 @@ export class ReportService {
       .toArray();
   }
 
+  private resolveLogDateRange(
+    startDateOrDate?: Date | string,
+    endDate?: Date
+  ): { start: Date | null; end: Date | null; dateKey: string } {
+    if (startDateOrDate instanceof Date) {
+      const start = startDateOrDate;
+      const end = endDate instanceof Date ? endDate : new Date(start.getTime() + 86400000 - 1);
+      const dateKey = `${toInputDateString(start)}_${toInputDateString(end)}`;
+      return { start, end, dateKey };
+    }
+    if (typeof startDateOrDate === 'string' && startDateOrDate.trim()) {
+      const [y, m, d] = startDateOrDate.split('-').map(Number);
+      const start = new Date(y, m - 1, d, 0, 0, 0);
+      const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+      return { start, end, dateKey: startDateOrDate.trim() };
+    }
+    return { start: null, end: null, dateKey: 'all' };
+  }
+
+  private getLogQuery(type?: string, start?: Date | null, end?: Date | null) {
+    const hasType = Boolean(type && type !== 'all');
+    let collection;
+
+    if (start && end) {
+      collection = this.database.logs
+        .where('createdAt')
+        .between(start, end, true, true)
+        .reverse();
+    } else {
+      collection = this.database.logs.orderBy('createdAt').reverse();
+    }
+
+    if (hasType) {
+      if (type === 'inventory') {
+        collection = collection.filter((l) => l.type === 'inventory' || l.type === 'restock');
+      } else {
+        collection = collection.filter((l) => l.type === type);
+      }
+    }
+
+    return collection;
+  }
+
   /**
    * Retrieves paginated activity logs using database-level B-Tree indexing,
    * LRU page cache (< 40 KB RAM), and background prefetching.
@@ -889,48 +932,45 @@ export class ReportService {
    */
   async getPaginatedLogs(
     type?: string,
-    date?: string,
-    page: number = 1,
-    pageSize: number = 20
+    startDateOrDate?: Date | string,
+    endDateOrPage?: Date | number,
+    pageOrPageSize: number = 1,
+    pageSizeArg: number = 10
   ): Promise<IPaginatedLogsResult> {
+    let endDate: Date | undefined;
+    let page = 1;
+    let pageSize = 10;
+
+    if (startDateOrDate instanceof Date) {
+      if (endDateOrPage instanceof Date) {
+        endDate = endDateOrPage;
+        page = pageOrPageSize;
+        pageSize = pageSizeArg;
+      } else if (typeof endDateOrPage === 'number') {
+        page = endDateOrPage;
+        pageSize = pageOrPageSize;
+      }
+    } else if (typeof endDateOrPage === 'number') {
+      page = endDateOrPage;
+      pageSize = pageOrPageSize;
+    }
+
+    const { start, end, dateKey } = this.resolveLogDateRange(startDateOrDate, endDate);
     const pageNum = Math.max(1, page);
     const size = Math.max(1, pageSize);
     const offset = (pageNum - 1) * size;
-
-    const hasType = Boolean(type && type !== 'all');
-    const hasDate = Boolean(date && date.trim());
-    const filterKey = `${type || 'all'}_${date || 'all'}`;
+    const filterKey = `${type || 'all'}_${dateKey}`;
     const cacheKey = `${filterKey}_p${pageNum}_s${size}`;
 
     // 1. Fast path: in-memory cache hit (< 1ms)
     if (this.logPaginatedCache.has(cacheKey)) {
       const cached = this.logPaginatedCache.get(cacheKey)!;
-      this.prefetchNextLogPage(type, date, pageNum + 1, size, cached.totalPages);
+      this.prefetchNextLogPage(type, start, end, filterKey, pageNum + 1, size, cached.totalPages);
       return cached;
     }
 
     // 2. Build collection query
-    let collection;
-    if (hasDate) {
-      const [y, m, d] = date!.split('-').map(Number);
-      const start = new Date(y, m - 1, d, 0, 0, 0);
-      const end = new Date(y, m - 1, d, 23, 59, 59, 999);
-
-      if (hasType) {
-        collection = this.database.logs
-          .where('createdAt')
-          .between(start, end, true, true)
-          .and((log) => log.type === type);
-      } else {
-        collection = this.database.logs
-          .where('createdAt')
-          .between(start, end, true, true);
-      }
-    } else if (hasType) {
-      collection = this.database.logs.where('type').equals(type!);
-    } else {
-      collection = this.database.logs.toCollection();
-    }
+    const collection = this.getLogQuery(type, start, end);
 
     // 3. Cached total count to avoid re-counting B-Tree on every page flip
     let totalCount = this.logTotalCountCache.get(filterKey);
@@ -941,7 +981,6 @@ export class ReportService {
 
     // 4. Query requested page
     const logs = await collection
-      .reverse()
       .offset(offset)
       .limit(size)
       .toArray();
@@ -962,53 +1001,29 @@ export class ReportService {
     this.logPaginatedCache.set(cacheKey, result);
 
     // 6. Intelligent Background Prefetch for next page
-    this.prefetchNextLogPage(type, date, pageNum + 1, size, totalPages);
+    this.prefetchNextLogPage(type, start, end, filterKey, pageNum + 1, size, totalPages);
 
     return result;
   }
 
   private prefetchNextLogPage(
     type: string | undefined,
-    date: string | undefined,
+    start: Date | null,
+    end: Date | null,
+    filterKey: string,
     nextPage: number,
     size: number,
     totalPages: number
   ): void {
     if (nextPage > totalPages) return;
-    const filterKey = `${type || 'all'}_${date || 'all'}`;
     const nextCacheKey = `${filterKey}_p${nextPage}_s${size}`;
     if (this.logPaginatedCache.has(nextCacheKey)) return;
 
     setTimeout(async () => {
       try {
         const nextOffset = (nextPage - 1) * size;
-        const hasType = Boolean(type && type !== 'all');
-        const hasDate = Boolean(date && date.trim());
-
-        let collection;
-        if (hasDate) {
-          const [y, m, d] = date!.split('-').map(Number);
-          const start = new Date(y, m - 1, d, 0, 0, 0);
-          const end = new Date(y, m - 1, d, 23, 59, 59, 999);
-
-          if (hasType) {
-            collection = this.database.logs
-              .where('createdAt')
-              .between(start, end, true, true)
-              .and((log) => log.type === type);
-          } else {
-            collection = this.database.logs
-              .where('createdAt')
-              .between(start, end, true, true);
-          }
-        } else if (hasType) {
-          collection = this.database.logs.where('type').equals(type!);
-        } else {
-          collection = this.database.logs.toCollection();
-        }
-
+        const collection = this.getLogQuery(type, start, end);
         const logs = await collection
-          .reverse()
           .offset(nextOffset)
           .limit(size)
           .toArray();
