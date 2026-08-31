@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **31 File Lulus (100%)**
-- **Total Unit Tests**: **101 Tests Passed (100%)**
+- **Total Test Files**: **32 File Lulus (100%)**
+- **Total Unit Tests**: **104 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~24.1 detik (Vitest) + 2.3 detik (Vite build)
+- **Waktu Eksekusi**: ~24.8 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -385,4 +385,18 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 22 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 23. Pengujian Fitur Backup & Restore Database Penuh
+**File**: [`src/__tests__/backup-restore.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/backup-restore.test.ts)
+- **Skenario 1: Ekspor Lengkap 11 Tabel Database & Metadata Terstruktur**
+  - Mengisi data uji pada tabel categories, products, ingredients, orders, dan shifts.
+  - Menjalankan `exportDatabase()` dan memverifikasi metadata versi 3, appName 'Triwara POS', statistik record, dan integritas array data.
+- **Skenario 2: Pemulihan Atomik (ACID) & Kebangkitan Native Date Objects**
+  - Mengimpor file backup JSON berisi tanggal format ISO string.
+  - Memverifikasi transaksi atomik Dexie mengosongkan dan mengisi ulang tabel dengan data baru.
+  - Memverifikasi seluruh properti tanggal (`createdAt`, `openedAt`, `closedAt`) di-revive menjadi objek JavaScript `Date` asli agar query filter tanggal dan B-Tree range query IndexedDB berfungsi normal.
+- **Skenario 3: Penolakan File Corrupt / Non-Triwara**
+  - Menguji penolakan file teks bukan JSON dan file JSON dari aplikasi POS lain dengan pesan error yang ramah dan jelas.
+
+---
+
+*Catatan: Seluruh 23 modul pengujian telah selesai diverifikasi dan 100% lulus.*

@@ -12,6 +12,7 @@ import { exportOrdersToExcel } from '../../utils/excel';
 import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
 import { StressTestModal } from './StressTestModal';
+import { BackupRestoreModal } from './BackupRestoreModal';
 
 type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
@@ -28,6 +29,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
   const [isStressTestModalOpen, setIsStressTestModalOpen] = useState<boolean>(false);
+  const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
 
   const receiptFileInputRef = useRef<HTMLInputElement>(null);
@@ -476,6 +478,26 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             {isOwner ? '🚀' : '🔒'}
           </span>
         </button>
+
+        {/* 7. Full Database Backup & Restore (Owner only) */}
+        <button
+          type="button"
+          className="settings-trigger-card"
+          style={{ borderColor: 'rgba(16, 185, 129, 0.4)' }}
+          onClick={() => guardOwnerAction(() => setIsBackupRestoreModalOpen(true))}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title" style={{ color: '#34d399' }}>
+              {isOwner ? '💾 Backup & Restore Database' : '💾 Backup & Restore Database (Owner)'}
+            </h3>
+            <p className="settings-card-desc">
+              Unduh cadangan seluruh data toko (.json) atau pulihkan database ke perangkat ini
+            </p>
+          </div>
+          <span className="settings-card-arrow" style={{ color: '#10b981' }}>
+            {isOwner ? '💾' : '🔒'}
+          </span>
+        </button>
       </div>
 
       {/* Modal 2: Koneksi Printer Thermal */}
@@ -849,6 +871,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <StressTestModal
         isOpen={isStressTestModalOpen}
         onClose={() => setIsStressTestModalOpen(false)}
+      />
+
+      {/* Full Database Backup & Restore Modal (Owner Only) */}
+      <BackupRestoreModal
+        isOpen={isBackupRestoreModalOpen}
+        onClose={() => setIsBackupRestoreModalOpen(false)}
       />
 
       {/* Reusable Dialog Modal */}

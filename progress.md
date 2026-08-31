@@ -528,5 +528,26 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **31/31 test files passed (101/101 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.32 detik.
 
+---
+
+### 🚀 Phase 15: Fitur Backup & Restore Database Penuh (JSON Export & Atomic Import)
+- **Tujuan Teknis**:
+  - Memberikan kemampuan mencadangkan dan memulihkan seluruh isi database toko secara utuh dan aman saat berganti perangkat (*device portability*).
+  - Melindungi data toko dari kehilangan fisik dengan format backup terenkripsi/JSON bertanggal.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/backup.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/backup.service.ts):
+     - `exportDatabase()` & `downloadBackupFile()`: Mengemas seluruh 11 tabel database (`categories`, `products`, `ingredients`, `orders`, `inventoryLogs`, `logs`, `shopConfig`, `notifications`, `staff`, `shifts`, `dailySummaries`) ke dalam file berkas JSON terstruktur bertanggal `TriwaraPOS_Backup_YYYYMMDD_HHmmss.json`.
+     - `importDatabase()`: Memvalidasi integritas file backup resmi Triwara POS, membangkitkan string tanggal ISO menjadi objek `Date` asli (agar query B-Tree Dexie tetap presisi), mengeksekusi penggantian tabel secara atomik (ACID Dexie transaction), dan membersihkan seluruh cache paginasi memori.
+  2. [`src/components/master/BackupRestoreModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/BackupRestoreModal.tsx):
+     - Modal interaktif dengan ringkasan statistik live (jumlah menu, bahan, transaksi, shift), tombol unduh backup satu klik, pratinjau file sebelum restore, dan konfirmasi bahaya sebelum menimpa data lokal.
+  3. [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Ditambahkan kartu pemicu **"💾 Backup & Restore Database (Owner)"** dengan proteksi PIN supervisor/owner.
+  4. [`src/__tests__/backup-restore.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/backup-restore.test.ts):
+     - 3 skenario uji lengkap: verifikasi ekspor 11 tabel, pemulihan atomik & kebangkitan objek native Date, serta penolakan file corrupt / non-Triwara.
+- **Hasil Pengujian**:
+  - `vitest run`: **32/32 test files passed (104/104 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.35 detik.
+
+
 
 
