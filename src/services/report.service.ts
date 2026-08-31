@@ -810,9 +810,14 @@ export class ReportService {
    * Real-time background rollup: adjusts daily summary when an order is voided.
    */
   async recordVoidToDailySummary(order: IOrder): Promise<void> {
-    const dateKey = toInputDateString(order.createdAt ? new Date(order.createdAt) : new Date());
+    const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
+    const dateKey = toInputDateString(orderDate);
     const existing = await this.database.dailySummaries.where('date').equals(dateKey).first();
-    if (!existing || !existing.id) return;
+    if (!existing || !existing.id) {
+      // Fail-safe: compile and sync summary for that day directly from raw orders
+      await this.syncDailySummary(orderDate);
+      return;
+    }
 
     const isCash = order.paymentMethod === 'cash';
     const isQris = order.paymentMethod === 'qris';

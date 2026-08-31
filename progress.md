@@ -506,5 +506,27 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **30/30 test files passed (98/98 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.47 detik.
 
+---
+
+### 🚀 Phase 14: Fail-Safe Void Transaksi Lampau & Integritas Omset Laporan
+- **Tujuan Teknis**:
+  - Menjamin omset pada Laporan Penjualan tidak akan pernah *miss* atau salah tanggal jika ada transaksi lampau (kemarin atau hari-hari sebelumnya) yang di-void hari ini.
+  - Memastikan rekap kas laci shift lampau yang sudah berstatus `closed` tetap sinkron (`expectedEndingCash` dan `cashDifference`).
+  - Menyediakan *auto-compile fail-safe* jika transaksi lampau yang di-void belum memiliki ringkasan di database.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/report.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/report.service.ts):
+     - Pada method `recordVoidToDailySummary(order)`: jika ringkasan tanggal transaksi lampau belum ada di IndexedDB (`!existing`), panggil `syncDailySummary(orderDate)` untuk mengompilasi rekap tanggal tersebut secara otomatis.
+  2. [`src/services/order.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/order.service.ts):
+     - Memperhitungkan `totalExpenses` saat menghitung ulang `expectedEndingCash` shift.
+     - Memperbarui `cashDifference` jika shift sudah berstatus `closed`.
+     - Memanggil `shiftService.clearShiftPaginationCache()` agar data tabel shift langsung terupdate.
+  3. [`src/services/hpp.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/hpp.service.ts):
+     - Menambahkan defensive check `if (!item.productId) continue;` pada `restoreInventoryForOrder` untuk mencegah `Table.get(undefined)` error pada item manual.
+  4. [`src/__tests__/historical-void-omset.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/historical-void-omset.test.ts):
+     - 3 skenario uji komprehensif memverifikasi omset kemarin terpotong bersih, omset hari ini tidak berkurang, fail-safe auto-sync bekerja, dan selisih shift closed terhitung presisi.
+- **Hasil Pengujian**:
+  - `vitest run`: **31/31 test files passed (101/101 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.32 detik.
+
 
 

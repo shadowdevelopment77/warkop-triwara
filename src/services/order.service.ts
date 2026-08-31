@@ -3,9 +3,10 @@
 // ═══════════════════════════════════════════════
 
 import { db, TriwaraDatabase } from '../database/db';
-import type { IOrder, ICartItem, IOrderItem } from '../types';
+import type { IOrder, ICartItem, IOrderItem, IShift } from '../types';
 import { hppService, HppService } from './hpp.service';
 import { ReportService } from './report.service';
+import { shiftService } from './shift.service';
 import { startOfDay, endOfDay } from '../utils/date';
 
 export interface IPaginatedOrdersResult {
@@ -215,16 +216,22 @@ export class OrderService {
         const newCashCount = Math.max(0, (shift.cashTransactions || 0) - (isCash ? 1 : 0));
         const newQrisCount = Math.max(0, (shift.qrisTransactions || 0) - (!isCash ? 1 : 0));
         const newVoided = shift.totalVoided + 1;
-        const newExpected = shift.startingCash + newCash;
+        const newExpected = shift.startingCash + newCash - (shift.totalExpenses || 0);
 
-        await this.database.shifts.update(shift.id, {
+        const updateData: Partial<IShift> = {
           totalCashSales: newCash,
           totalQrisSales: newQris,
           cashTransactions: newCashCount,
           qrisTransactions: newQrisCount,
           totalVoided: newVoided,
           expectedEndingCash: newExpected,
-        });
+        };
+
+        if (shift.status === 'closed' && shift.actualEndingCash !== undefined) {
+          updateData.cashDifference = shift.actualEndingCash - newExpected;
+        }
+
+        await this.database.shifts.update(shift.id, updateData);
       }
     }
 
@@ -247,8 +254,9 @@ export class OrderService {
       createdAt: now,
     });
 
-    // Invalidate pagination cache
+    // Invalidate pagination caches
     this.clearPaginationCache();
+    shiftService.clearShiftPaginationCache();
   }
 
   /**

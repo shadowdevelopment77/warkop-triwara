@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **30 File Lulus (100%)**
-- **Total Unit Tests**: **98 Tests Passed (100%)**
+- **Total Test Files**: **31 File Lulus (100%)**
+- **Total Unit Tests**: **101 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~23.7 detik (Vitest) + 2.6 detik (Vite build)
+- **Waktu Eksekusi**: ~24.1 detik (Vitest) + 2.3 detik (Vite build)
 
 ---
 
@@ -368,4 +368,21 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 21 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 22. Pengujian Integritas Omset & Fail-Safe Void Transaksi Lampau
+**File**: [`src/__tests__/historical-void-omset.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/historical-void-omset.test.ts)
+- **Skenario 1: Pengurangan Omset Tepat pada Rekap Kemarin saat Void Dilakukan Hari Ini**
+  - Membuat order pada tanggal kemarin (`createdAt: yesterday`).
+  - Mengonfirmasi omset kemarin tercatat Rp 30.000.
+  - Melakukan void pada order kemarin tersebut hari ini.
+  - Memverifikasi omset tanggal kemarin terpotong bersih menjadi Rp 0, voided count kemarin bertambah 1, dan omset hari ini tetap 0 (tidak salah tanggal).
+- **Skenario 2: Auto-Sync Fail-Safe pada Void Transaksi Lampau yang Belum Memiliki Summary**
+  - Membuat pesanan pada tanggal lampau yang belum memiliki ringkasan harian di database.
+  - Melakukan void terhadap pesanan tersebut.
+  - Memverifikasi sistem secara otomatis mengompilasi dan men-generate ringkasan harian tanggal tersebut secara akurat langsung dari raw database.
+- **Skenario 3: Sinkronisasi Kas & Selisih Laci pada Shift yang Sudah Ditutup**
+  - Menguji void pada order yang terikat dengan shift yang sudah berstatus `closed`.
+  - Memverifikasi `expectedEndingCash` dihitung ulang dengan pengeluaran operasional dan `cashDifference` diperbarui sesuai uang fisik.
+
+---
+
+*Catatan: Seluruh 22 modul pengujian telah selesai diverifikasi dan 100% lulus.*
