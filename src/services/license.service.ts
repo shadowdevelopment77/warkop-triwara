@@ -52,12 +52,16 @@ class StorageAdapter {
   }
 }
 
+import { sha256 } from '../utils/hash';
+
 const licenseStorage = new StorageAdapter();
 
-// Secret Activation Keys (Offline Verification)
-export const ACTIVATION_KEYS = {
-  STAGE_1_EXTEND: 'TRW1-7B8E-92AF-41CD',   // Perpanjangan Cicilan 1 s/d 5 November 2026
-  STAGE_2_LIFETIME: 'TRWL-89F3-48B1-29E7', // Pelunasan Lisensi Permanen (Lifetime)
+// Secret License Verification (Offline SHA-256 One-Way Hashes)
+// Plaintext keys are NEVER stored in production bundle.
+export const LICENSE_SALT = 'TRW_SALT_WARKOP_2026';
+export const LICENSE_HASHES = {
+  STAGE_1_EXTEND: '669950e7d41b3cd8346852aca512441391e5da28129f7a5600faedf02dced118',   // Hash for Cicilan 1
+  STAGE_2_LIFETIME: '9b9b65eb446cf2492dae660806185137561051eeabab7cec4ae189ffbe334f96', // Hash for Lifetime
 };
 
 export class LicenseService {
@@ -133,11 +137,16 @@ export class LicenseService {
   /**
    * Activates a license key (Stage 1 extension or Stage 2 lifetime)
    */
-  activateCode(rawCode: string): { success: boolean; message: string; stage?: LicenseStage } {
+  async activateCode(rawCode: string): Promise<{ success: boolean; message: string; stage?: LicenseStage }> {
     const code = rawCode.trim().toUpperCase();
-    const current = this.getLicenseInfo();
+    if (!code) {
+      return { success: false, message: 'Kode aktivasi tidak boleh kosong.' };
+    }
 
-    if (code === ACTIVATION_KEYS.STAGE_2_LIFETIME) {
+    const current = this.getLicenseInfo();
+    const inputHash = await sha256(code + LICENSE_SALT);
+
+    if (inputHash === LICENSE_HASHES.STAGE_2_LIFETIME) {
       const updated: ILicenseInfo = {
         stage: 'lifetime',
         expiresAt: null,
@@ -153,7 +162,7 @@ export class LicenseService {
       };
     }
 
-    if (code === ACTIVATION_KEYS.STAGE_1_EXTEND) {
+    if (inputHash === LICENSE_HASHES.STAGE_1_EXTEND) {
       if (current.stage === 'lifetime') {
         return {
           success: true,

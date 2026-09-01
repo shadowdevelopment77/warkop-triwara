@@ -647,7 +647,32 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   5. [`src/__tests__/phase2-transaction-history-pdf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase2-transaction-history-pdf.test.ts): Disesuaikan timeout untuk test beban berat PDF 600 transaksi.
 - **Hasil Pengujian**:
   - `vitest run`: **35/35 test files passed (118/118 tests passed 100%)**.
-  - `tsc -b && vite build`: **Sukses 100% (0 error)** dalam 2.50 detik.
+---
+
+### 📅 Phase 20: Pengamanan Lisensi Kriptografis SHA-256 One-Way Hash & Proteksi Repositori
+
+- **Status**: **SUCCESS (100% Passed)**
+- **Tujuan Teknis**:
+  - Mengeliminasi risiko kebocoran kunci lisensi saat aplikasi dibungkus ke APK native Capacitor Android.
+  - Menghapus teks polos kunci aktivasi (`TRW1-7B8E-92AF-41CD` & `TRWL-89F3-48B1-29E7`) dari seluruh bundle source code produksi.
+  - Menerapkan verifikasi sidik jari kriptografis **SHA-256 One-Way Hash + Salt Rahasia Toko** (`TRW_SALT_WARKOP_2026`).
+  - Mengisolasi file catatan pengembang [`DEV_LICENSE_KEYS.md`](file:///home/shadowxz/projects/triwara-pos/DEV_LICENSE_KEYS.md) ke dalam `.gitignore` sehingga tidak pernah terunggah ke repositori GitHub.
+- **Perubahan yang Diterapkan**:
+  1. [`src/utils/hash.ts`](file:///home/shadowxz/projects/triwara-pos/src/utils/hash.ts):
+     - Menambahkan fungsi umum `sha256(text: string): Promise<string>` menggunakan Web Cryptography API bawaan modern.
+  2. [`src/services/license.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/license.service.ts):
+     - Mengganti teks polos kunci dengan hash: `LICENSE_HASHES.STAGE_1_EXTEND` dan `LICENSE_HASHES.STAGE_2_LIFETIME`.
+     - Method `activateCode(rawCode)` menghitung hash input kasir dan mencocokkannya dengan hash tersimpan.
+  3. [`src/components/auth/LockdownScreen.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/auth/LockdownScreen.tsx) & [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Menyesuaikan event handler aktivasi menjadi `async/await`.
+  4. [`.gitignore`](file:///home/shadowxz/projects/triwara-pos/.gitignore):
+     - Menambahkan `DEV_LICENSE_KEYS.md` dan menghapus file dari git tracking.
+  5. [`src/__tests__/license-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/license-service.test.ts):
+     - Memverifikasi validasi hash bekerja sempurna dengan kunci master resmi.
+- **Hasil Pengujian**:
+  - `pnpm vitest run src/__tests__/license-service.test.ts`: **6/6 tests passed (100%)** dalam **1.32 detik**.
+  - `tsc -b && vite build`: **Sukses 100% (0 error)** dalam 2.29 detik.
+
 
 
 

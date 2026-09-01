@@ -7,7 +7,7 @@ import { shiftService } from '../services/shift.service';
 import { reportService } from '../services/report.service';
 import { backupService } from '../services/backup.service';
 import { receiptService } from '../services/receipt.service';
-import { licenseService, ACTIVATION_KEYS } from '../services/license.service';
+import { licenseService } from '../services/license.service';
 import { hashPin } from '../utils/hash';
 import type { IShopConfig, ICartItem } from '../types';
 
@@ -209,11 +209,16 @@ describe('Full System End-to-End (E2E) Integration Flow', () => {
     expect(initialLic.expiresAt).toBe('2026-10-05T00:00:00.000Z');
 
     // Reject wrong key
-    const invalidRes = licenseService.activateCode('WRONG-RANDOM-KEY');
+    const invalidRes = await licenseService.activateCode('WRONG-RANDOM-KEY');
     expect(invalidRes.success).toBe(false);
 
+    const MASTER_KEYS = {
+      STAGE_1: 'TRW1-7B8E-92AF-41CD',
+      STAGE_2: 'TRWL-89F3-48B1-29E7',
+    };
+
     // Activate Stage 1 with official master key
-    const stage1Res = licenseService.activateCode(ACTIVATION_KEYS.STAGE_1_EXTEND);
+    const stage1Res = await licenseService.activateCode(MASTER_KEYS.STAGE_1);
     expect(stage1Res.success).toBe(true);
     expect(stage1Res.stage).toBe('tempo_2');
 
@@ -222,7 +227,7 @@ describe('Full System End-to-End (E2E) Integration Flow', () => {
     expect(stage1Lic.expiresAt).toBe('2026-11-05T00:00:00.000Z');
 
     // Activate Stage 2 Lifetime with official master key
-    const lifetimeRes = licenseService.activateCode(ACTIVATION_KEYS.STAGE_2_LIFETIME);
+    const lifetimeRes = await licenseService.activateCode(MASTER_KEYS.STAGE_2);
     expect(lifetimeRes.success).toBe(true);
     expect(lifetimeRes.stage).toBe('lifetime');
 

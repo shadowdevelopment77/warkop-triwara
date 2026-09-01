@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { licenseService, ACTIVATION_KEYS } from '../services/license.service';
+import { licenseService } from '../services/license.service';
 
-describe('Offline Multi-Stage Tempo License Service Tests', () => {
+const TEST_KEYS = {
+  STAGE_1_EXTEND: 'TRW1-7B8E-92AF-41CD',
+  STAGE_2_LIFETIME: 'TRWL-89F3-48B1-29E7',
+};
+
+describe('Offline Multi-Stage Tempo License Service (SHA-256 Hashed)', () => {
   beforeEach(() => {
     licenseService.resetToDefault();
   });
@@ -13,8 +18,8 @@ describe('Offline Multi-Stage Tempo License Service Tests', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('rejects invalid activation codes safely', () => {
-    const res = licenseService.activateCode('WRONG-CODE-1234');
+  it('rejects invalid activation codes safely', async () => {
+    const res = await licenseService.activateCode('WRONG-CODE-1234');
     expect(res.success).toBe(false);
     expect(res.message).toContain('Kode aktivasi tidak valid');
 
@@ -22,8 +27,8 @@ describe('Offline Multi-Stage Tempo License Service Tests', () => {
     expect(info.stage).toBe('tempo_1');
   });
 
-  it('activates Stage 1 (Cicilan 1) and extends deadline to 5 November 2026', () => {
-    const res = licenseService.activateCode(ACTIVATION_KEYS.STAGE_1_EXTEND);
+  it('activates Stage 1 (Cicilan 1) and extends deadline to 5 November 2026', async () => {
+    const res = await licenseService.activateCode(TEST_KEYS.STAGE_1_EXTEND);
     expect(res.success).toBe(true);
     expect(res.stage).toBe('tempo_2');
     expect(res.message).toContain('Cicilan 1 terverifikasi');
@@ -34,12 +39,12 @@ describe('Offline Multi-Stage Tempo License Service Tests', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('activates Stage 2 (Pelunasan Akhir / Lifetime) permanently removing expiration', () => {
+  it('activates Stage 2 (Pelunasan Akhir / Lifetime) permanently removing expiration', async () => {
     // First activate stage 1
-    licenseService.activateCode(ACTIVATION_KEYS.STAGE_1_EXTEND);
+    await licenseService.activateCode(TEST_KEYS.STAGE_1_EXTEND);
 
     // Then activate lifetime
-    const res = licenseService.activateCode(ACTIVATION_KEYS.STAGE_2_LIFETIME);
+    const res = await licenseService.activateCode(TEST_KEYS.STAGE_2_LIFETIME);
     expect(res.success).toBe(true);
     expect(res.stage).toBe('lifetime');
     expect(res.message).toContain('Lisensi Permanen');
@@ -50,9 +55,9 @@ describe('Offline Multi-Stage Tempo License Service Tests', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('supports direct lifetime activation bypassing stage 1', () => {
+  it('supports direct lifetime activation bypassing stage 1', async () => {
     // Client pays in full upfront
-    const res = licenseService.activateCode(ACTIVATION_KEYS.STAGE_2_LIFETIME);
+    const res = await licenseService.activateCode(TEST_KEYS.STAGE_2_LIFETIME);
     expect(res.success).toBe(true);
     expect(res.stage).toBe('lifetime');
 
@@ -61,14 +66,14 @@ describe('Offline Multi-Stage Tempo License Service Tests', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('toggles simulation lock and unlocks instantly when valid code is entered', () => {
+  it('toggles simulation lock and unlocks instantly when valid code is entered', async () => {
     // Simulate lock for localhost testing
     const lockedInfo = licenseService.toggleSimulatedLock(true);
     expect(lockedInfo.isLocked).toBe(true);
     expect(lockedInfo.lockReason).toBe('simulated');
 
     // Entering stage 1 code unlocks it
-    const res = licenseService.activateCode(ACTIVATION_KEYS.STAGE_1_EXTEND);
+    const res = await licenseService.activateCode(TEST_KEYS.STAGE_1_EXTEND);
     expect(res.success).toBe(true);
 
     const unlockedInfo = licenseService.getLicenseInfo();

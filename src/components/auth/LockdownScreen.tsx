@@ -53,11 +53,11 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
     }
   };
 
-  const handleActivate = (e: React.FormEvent) => {
+  const handleActivate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activationCode.trim()) return;
 
-    const res = licenseService.activateCode(activationCode);
+    const res = await licenseService.activateCode(activationCode);
     if (res.success) {
       setFeedback({ type: 'success', text: res.message });
       setIsInputModalOpen(false);

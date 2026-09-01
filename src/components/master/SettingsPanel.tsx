@@ -1006,10 +1006,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
               {licenseInfo.stage !== 'lifetime' && (
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     if (!activationInput.trim()) return;
-                    const res = licenseService.activateCode(activationInput);
+                    const res = await licenseService.activateCode(activationInput);
                     if (res.success) {
                       setFeedbackMsg(res.message);
                       setActivationInput('');
