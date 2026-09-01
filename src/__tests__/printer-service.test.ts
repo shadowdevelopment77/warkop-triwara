@@ -197,5 +197,19 @@ describe('Thermal Printer Service & ESC/POS Formatting Tests', () => {
     const testPrintRes = await printerService.testPrint(sampleConfig);
     expect(testPrintRes.success).toBe(true);
     expect(testPrintRes.bytesSent).toBeGreaterThan(50);
+
+    // Shift receipt execution via printerService
+    const shiftPrintRes = await printerService.printShiftReceipt(sampleShift, sampleConfig);
+    expect(shiftPrintRes.success).toBe(true);
+    expect(shiftPrintRes.bytesSent).toBeGreaterThan(100);
+
+    // Shift receipt rejection if unconfigured
+    const unconfiguredConfig: IShopConfig = {
+      ...sampleConfig,
+      printerMacAddress: '',
+    };
+    const failedShiftRes = await printerService.printShiftReceipt(sampleShift, unconfiguredConfig);
+    expect(failedShiftRes.success).toBe(false);
+    expect(failedShiftRes.errorCode).toBe('PRINTER_NOT_CONFIGURED');
   });
 });

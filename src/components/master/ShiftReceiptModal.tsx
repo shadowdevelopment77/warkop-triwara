@@ -6,8 +6,9 @@ import React, { useState } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { formatRupiah } from '../../utils/currency';
 import { formatDateIndonesian } from '../../utils/date';
-import { receiptService } from '../../services/receipt.service';
 import { pdfService } from '../../services/pdf.service';
+import { printerService } from '../../services/printer.service';
+import { DialogModal } from '../common/DialogModal';
 
 interface ShiftReceiptModalProps {
   shift: IShift;
@@ -21,6 +22,17 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
   onClose,
 }) => {
   const [isPrinted, setIsPrinted] = useState<boolean>(false);
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    type?: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    isDanger?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
 
   const config = shopConfig || {
     appName: 'Triwara POS',
@@ -47,10 +59,30 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
         ? 1
         : 0;
 
-  const handlePrintReceipt = () => {
-    const text = receiptService.generateShiftReceiptText(shift, config);
-    console.log('[PRINTING SHIFT RECEIPT]\n' + text);
-    setIsPrinted(true);
+  const handlePrintReceipt = async () => {
+    if (!config.printerMacAddress || config.printerMacAddress.trim() === '') {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Printer Belum Tersambung',
+        message:
+          'Printer thermal belum dihubungkan. Silakan pasangkan printer Bluetooth Anda melalui menu Pengaturan.',
+      });
+      return;
+    }
+
+    const result = await printerService.printShiftReceipt(shift, config);
+    if (result.success) {
+      setIsPrinted(true);
+    } else {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Pencetakan Gagal',
+        message: result.error || 'Gagal mengirim data ke printer thermal.',
+        isDanger: true,
+      });
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -303,6 +335,16 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
           </button>
         </div>
       </div>
+
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type={dialogConfig.type || 'alert'}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        isDanger={dialogConfig.isDanger}
+        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
