@@ -669,9 +669,25 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
      - Menambahkan `DEV_LICENSE_KEYS.md` dan menghapus file dari git tracking.
   5. [`src/__tests__/license-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/license-service.test.ts):
      - Memverifikasi validasi hash bekerja sempurna dengan kunci master resmi.
+---
+
+### 📅 Phase 21: Integrasi Logo Resmi Warkop Triwara & Setup GitHub Actions CI Workflow
+
+- **Status**: **SUCCESS (100% Passed)**
+- **Tujuan Teknis**:
+  - Mengintegrasikan logo asli Warkop Triwara (834x834 px RGBA, ilustrasi retro kartun 3 karakter) ke dalam sistem POS dan aset web.
+  - Memperbarui icon favicon dan judul aplikasi di `index.html` menjadi `"Warkop Triwara POS"`.
+  - Mengonfigurasi fallback logo toko default di `src/App.tsx` dan `src/components/layout/AppShell.tsx` ke `/logo-triwara.png`.
+  - Mempersiapkan workflow continuous integration otomatis di GitHub Actions ([`.github/workflows/ci.yml`](file:///home/shadowxz/projects/triwara-pos/.github/workflows/ci.yml)) untuk menjalankan unit test dan build verification pada setiap push/PR di branch `main`, `staging`, dan `production`.
+- **File yang Ditambahkan / Diubah**:
+  1. [`public/logo-triwara.png`](file:///home/shadowxz/projects/triwara-pos/public/logo-triwara.png): **[NEW]** (aset web logo resmi).
+  2. [`index.html`](file:///home/shadowxz/projects/triwara-pos/index.html): Favicon dan title diperbarui.
+  3. [`src/App.tsx`](file:///home/shadowxz/projects/triwara-pos/src/App.tsx) & [`src/components/layout/AppShell.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/layout/AppShell.tsx): Fallback logo diarahkan ke `/logo-triwara.png`.
+  4. [`.github/workflows/ci.yml`](file:///home/shadowxz/projects/triwara-pos/.github/workflows/ci.yml): **[NEW]** (GitHub Actions CI).
 - **Hasil Pengujian**:
-  - `pnpm vitest run src/__tests__/license-service.test.ts`: **6/6 tests passed (100%)** dalam **1.32 detik**.
-  - `tsc -b && vite build`: **Sukses 100% (0 error)** dalam 2.29 detik.
+  - `pnpm vitest run src/__tests__/thermal-receipt-logo.test.ts`: **3/3 tests passed (100%)** dalam **2.52 detik**.
+  - `tsc -b && vite build`: **Sukses 100% (0 error)** dalam 2.48 detik.
+
 
 
 
