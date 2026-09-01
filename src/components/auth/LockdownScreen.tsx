@@ -137,18 +137,14 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
             {appName} — Akses Terbatas
           </span>
           <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#ffffff', margin: '6px 0 0 0' }}>
-            Masa Aktif Aplikasi Berakhir
+            Aplikasi Memerlukan Aktivasi
           </h2>
         </div>
 
         <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
-          {licenseInfo.lockReason === 'clock_rollback' ? (
-            'Terdeteksi ketidaksesuaian tanggal perangkat. Harap periksa dan sesuaikan jam perangkat Anda ke waktu sebenarnya.'
-          ) : licenseInfo.stage === 'tempo_1' ? (
-            'Masa tenggang pembayaran Cicilan 1 telah berakhir. Harap selesaikan pembayaran cicilan Anda ke pihak pengembang agar aplikasi dapat kembali beroperasi.'
-          ) : (
-            'Masa tenggang pembayaran Pelunasan telah berakhir. Harap selesaikan pelunasan akhir Anda ke pihak pengembang agar aplikasi dapat kembali beroperasi.'
-          )}
+          {licenseInfo.lockReason === 'clock_rollback'
+            ? 'Terdeteksi ketidaksesuaian tanggal perangkat. Harap periksa dan sesuaikan jam perangkat Anda ke waktu sebenarnya.'
+            : 'Aplikasi memerlukan kode aktivasi untuk melanjutkan operasional sistem. Silakan hubungi pihak pengembang untuk mendapatkan kode aktivasi.'}
         </p>
 
         {feedback && (
@@ -248,13 +244,13 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               Verifikasi Kode Aktivasi
             </h3>
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-              Masukkan kode perpanjangan atau pelunasan yang diberikan oleh pihak pengembang Triwara POS.
+              Masukkan kode aktivasi yang diberikan oleh pihak pengembang untuk melanjutkan operasional sistem.
             </p>
 
             <form onSubmit={handleActivate} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 type="text"
-                placeholder="Masukkan kode lisensi..."
+                placeholder="Masukkan kode aktivasi..."
                 value={activationCode}
                 onChange={(e) => setActivationCode(e.target.value)}
                 autoFocus

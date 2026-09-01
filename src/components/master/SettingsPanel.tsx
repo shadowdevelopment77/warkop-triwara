@@ -512,7 +512,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
 
-        {/* 7. Lisensi & Aktivasi Aplikasi (Owner only) */}
+        {/* 7. Lisensi (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
@@ -520,14 +520,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         >
           <div className="settings-card-info">
             <h3 className="settings-card-title">
-              {isOwner ? 'Lisensi & Aktivasi Aplikasi' : 'Lisensi & Aktivasi Aplikasi (Owner)'}
+              {isOwner ? 'Lisensi' : 'Lisensi (Owner)'}
             </h3>
             <p className="settings-card-desc">
               {licenseInfo.stage === 'lifetime'
-                ? 'Lisensi Permanen (Aktif Selamanya)'
-                : licenseInfo.stage === 'tempo_1'
-                ? 'Tempo Cicilan 1 (Batas: 5 Okt 2026)'
-                : 'Tempo Cicilan 2 (Batas: 5 Nov 2026)'}
+                ? 'Aktif Permanen'
+                : 'Status aktivasi sistem'}
             </p>
           </div>
           <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
@@ -941,67 +939,58 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
       )}
 
-      {/* Modal 5: Lisensi & Aktivasi Aplikasi */}
+      {/* Modal 5: Lisensi */}
       {activeModal === 'license' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
             <div className="settings-modal-header">
-              <h3 className="settings-modal-title">Lisensi &amp; Aktivasi Aplikasi</h3>
+              <h3 className="settings-modal-title">Lisensi</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
                 ✕
               </button>
             </div>
 
-            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div
                 style={{
                   backgroundColor: '#f8fafc',
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: `1px solid ${licenseInfo.stage === 'lifetime' ? '#86efac' : '#fde047'}`,
+                  padding: '16px',
+                  borderRadius: '10px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                {/* Row 1: Aktivasi Pertama */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span
-                    style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    style={{ fontSize: '13px', color: '#475569', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
                     onClick={handleSecretDevTap}
-                    title="Informasi Status Lisensi"
                   >
-                    Status Lisensi:
+                    Aktivasi Pertama
                   </span>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '999px',
-                      fontWeight: 700,
-                      backgroundColor: licenseInfo.stage === 'lifetime' ? '#dcfce7' : '#fef9c3',
-                      color: licenseInfo.stage === 'lifetime' ? '#15803d' : '#a16207',
-                    }}
-                  >
-                    {licenseInfo.stage === 'lifetime'
-                      ? '● Permanen (Lifetime)'
-                      : licenseInfo.stage === 'tempo_1'
-                      ? '● Tempo Cicilan 1'
-                      : '● Tempo Cicilan 2'}
-                  </span>
+                  {licenseInfo.stage === 'tempo_2' || licenseInfo.stage === 'lifetime' ? (
+                    <span style={{ color: '#16a34a', fontWeight: 800, fontSize: '18px' }} title="Aktif">✓</span>
+                  ) : (
+                    <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '18px' }} title="Belum">✕</span>
+                  )}
                 </div>
 
-                <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>
-                  {licenseInfo.stage === 'lifetime'
-                    ? 'Aplikasi Terverifikasi Penuh'
-                    : licenseInfo.stage === 'tempo_1'
-                    ? 'Tenggat Waktu: 5 Oktober 2026'
-                    : 'Tenggat Waktu: 5 November 2026'}
-                </strong>
+                {/* Divider */}
+                <div style={{ height: '1px', backgroundColor: '#f1f5f9' }} />
 
-                <p style={{ fontSize: '12px', color: '#475569', margin: '6px 0 0 0', lineHeight: '1.5' }}>
-                  {licenseInfo.stage === 'lifetime'
-                    ? 'Aplikasi ini telah memiliki lisensi permanen aktif selamanya tanpa batas waktu.'
-                    : licenseInfo.stage === 'tempo_1'
-                    ? 'Aplikasi beroperasi dalam masa tempo cicilan 1. Masukkan kode aktivasi cicilan 1 untuk memperpanjang hingga 5 November 2026.'
-                    : 'Cicilan 1 Terverifikasi! Silakan masukkan Kode Pelunasan Akhir untuk mengaktifkan lisensi permanen selamanya.'}
-                </p>
+                {/* Row 2: Aktivasi Kedua */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>
+                    Aktivasi Kedua
+                  </span>
+                  {licenseInfo.stage === 'lifetime' ? (
+                    <span style={{ color: '#16a34a', fontWeight: 800, fontSize: '18px' }} title="Aktif">✓</span>
+                  ) : (
+                    <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '18px' }} title="Belum">✕</span>
+                  )}
+                </div>
               </div>
 
               {licenseInfo.stage !== 'lifetime' && (
@@ -1024,16 +1013,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       });
                     }
                   }}
-                  style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
                 >
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                    {licenseInfo.stage === 'tempo_1' ? 'Kode Aktivasi Cicilan 1:' : 'Kode Pelunasan Akhir:'}
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+                    Kode Aktivasi
                   </label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="text"
                       className="settings-input"
-                      placeholder="Masukkan kode lisensi..."
+                      placeholder="Masukkan kode aktivasi..."
                       value={activationInput}
                       onChange={(e) => setActivationInput(e.target.value)}
                       style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}
