@@ -256,18 +256,37 @@ export class ReceiptService {
   }
 
   /**
+     * Strips/replaces characters that are valid UTF-8 (from Intl.NumberFormat,
+     * typographic dashes, smart quotes, etc.) but are NOT understood by
+     * budget ESC/POS thermal printers, which read single-byte codepages
+     * (CP437/PC850) — not UTF-8. Left unhandled, these bytes print as garbage
+     * glyphs/boxes on real hardware (Xprinter/Xantri 58mm included).
+     */
+    private sanitizeForPrinter(text: string): string {
+      return text
+        .replace(/\u00A0/g, ' ')      // non-breaking space (from Intl.NumberFormat id-ID)
+        .replace(/[\u2013\u2014]/g, '-') // en-dash / em-dash → plain hyphen
+        .replace(/[\u2018\u2019]/g, "'") // smart single quotes
+        .replace(/[\u201C\u201D]/g, '"') // smart double quotes
+        .replace(/\u2026/g, '...')    // ellipsis
+        .replace(/[^\x00-\x7E\n]/g, '?'); // any other non-ASCII → '?' (safe fallback, never garbled bytes)
+    }
+
+  /**
    * Converts a receipt string into standard ESC/POS binary command buffer
    * Configured for 58mm thermal paper (print area = 384 dots @ 203 DPI)
    */
   convertToEscPosBuffer(receiptText: string): Uint8Array {
     const encoder = new TextEncoder();
-    const textBytes = encoder.encode(receiptText);
+    const textBytes = encoder.encode(this.sanitizeForPrinter(receiptText));
 
     // ESC @ — Initialize printer (clears previous settings)
     const initCmd = new Uint8Array([0x1b, 0x40]);
 
     // GS L 0 0 — Set left margin = 0
     const setLeftMargin = new Uint8Array([0x1d, 0x4c, 0x00, 0x00]);
+
+     const setCodepage = new Uint8Array([0x1b, 0x74, 0x00]);
 
     // GS W 384 — Set print area width = 384 dots (58mm @ 203 DPI standard)
     // 384 decimal = 0x0180 → nL = 0x80, nH = 0x01
@@ -284,22 +303,25 @@ export class ReceiptService {
 
     const totalLength =
       initCmd.length +
-      setLeftMargin.length +
-      setPaperWidth.length +
-      setFontA.length +
-      textBytes.length +
-      feedCmd.length +
-      cutCmd.length;
+            setCodepage.length +
+            setLeftMargin.length +
+            setPaperWidth.length +
+            setFontA.length +
+            textBytes.length +
+            feedCmd.length +
+            cutCmd.length;
 
     const buffer = new Uint8Array(totalLength);
-    let offset = 0;
-    buffer.set(initCmd, offset);       offset += initCmd.length;
-    buffer.set(setLeftMargin, offset); offset += setLeftMargin.length;
-    buffer.set(setPaperWidth, offset); offset += setPaperWidth.length;
-    buffer.set(setFontA, offset);      offset += setFontA.length;
-    buffer.set(textBytes, offset);     offset += textBytes.length;
-    buffer.set(feedCmd, offset);       offset += feedCmd.length;
-    buffer.set(cutCmd, offset);
+       let offset = 0;
+       buffer.set(initCmd, offset);       offset += initCmd.length;
+       buffer.set(setCodepage, offset);   offset += setCodepage.length;
+       buffer.set(setLeftMargin, offset); offset += setLeftMargin.length;
+       buffer.set(setPaperWidth, offset); offset += setPaperWidth.length;
+       buffer.set(setFontA, offset);      offset += setFontA.length;
+       buffer.set(textBytes, offset);     offset += textBytes.length;
+       buffer.set(feedCmd, offset);       offset += feedCmd.length;
+       buffer.set(cutCmd, offset);
+
 
     return buffer;
   }

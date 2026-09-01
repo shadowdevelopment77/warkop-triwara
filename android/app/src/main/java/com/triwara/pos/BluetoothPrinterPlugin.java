@@ -6,19 +6,32 @@ import android.bluetooth.BluetoothSocket;
 import android.util.Base64;
 import android.util.Log;
 
+import android.Manifest;
+
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
-@CapacitorPlugin(name = "BluetoothPrinter")
+@CapacitorPlugin(
+    name = "BluetoothPrinter",
+    permissions = {
+        @Permission(
+            strings = { Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN },
+            alias = "bluetooth"
+        )
+    }
+)
 public class BluetoothPrinterPlugin extends Plugin {
 
     private static final String TAG = "BluetoothPrinter";
@@ -34,6 +47,14 @@ public class BluetoothPrinterPlugin extends Plugin {
      */
     @PluginMethod
     public void getPairedDevices(PluginCall call) {
+        if (getPermissionState("bluetooth") != PermissionState.GRANTED) {
+            requestPermissionForAlias("bluetooth", call, "bluetoothPermsCallback");
+            return;
+        }
+        getPairedDevicesInternal(call);
+    }
+
+    private void getPairedDevicesInternal(PluginCall call) {
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter == null) {
@@ -70,6 +91,28 @@ public class BluetoothPrinterPlugin extends Plugin {
      */
     @PluginMethod
     public void connect(PluginCall call) {
+        if (getPermissionState("bluetooth") != PermissionState.GRANTED) {
+            requestPermissionForAlias("bluetooth", call, "bluetoothPermsCallback");
+            return;
+        }
+        connectInternal(call);
+    }
+
+    @PermissionCallback
+    private void bluetoothPermsCallback(PluginCall call) {
+        if (getPermissionState("bluetooth") != PermissionState.GRANTED) {
+            call.reject("PERMISSION_DENIED", "Izin Bluetooth ditolak. Aktifkan izin Bluetooth untuk aplikasi ini di Pengaturan HP.");
+            return;
+        }
+        // Resume whichever method originally triggered the permission request
+        if ("getPairedDevices".equals(call.getMethodName())) {
+            getPairedDevicesInternal(call);
+        } else if ("connect".equals(call.getMethodName())) {
+            connectInternal(call);
+        }
+    }
+
+    private void connectInternal(PluginCall call) {
         String mac = call.getString("mac");
         if (mac == null || mac.isEmpty()) {
             call.reject("INVALID_MAC", "Alamat MAC printer tidak valid.");
