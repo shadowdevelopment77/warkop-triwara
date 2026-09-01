@@ -21,6 +21,19 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [exitTapCount, setExitTapCount] = useState<number>(0);
+
+  const handleSecretExitTap = () => {
+    if (!licenseInfo.isSimulatedLock) return;
+    const next = exitTapCount + 1;
+    if (next >= 5) {
+      setExitTapCount(0);
+      licenseService.toggleSimulatedLock(false);
+    } else {
+      setExitTapCount(next);
+      setTimeout(() => setExitTapCount(0), 3000);
+    }
+  };
 
   const handleExportBackup = async () => {
     setIsExporting(true);
@@ -94,10 +107,12 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
           <img
             src={appLogo}
             alt={appName}
-            style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'contain' }}
+            onClick={handleSecretExitTap}
+            style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'contain', cursor: 'pointer' }}
           />
         ) : (
           <div
+            onClick={handleSecretExitTap}
             style={{
               width: '56px',
               height: '56px',
@@ -107,6 +122,7 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
+              cursor: 'pointer',
             }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

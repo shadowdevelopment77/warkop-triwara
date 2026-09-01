@@ -33,6 +33,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
   const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
   const [activationInput, setActivationInput] = useState<string>('');
+  const [devTapCount, setDevTapCount] = useState<number>(0);
+
+  const handleSecretDevTap = () => {
+    const next = devTapCount + 1;
+    if (next >= 5) {
+      setDevTapCount(0);
+      setActiveModal(null);
+      licenseService.toggleSimulatedLock(true);
+    } else {
+      setDevTapCount(next);
+      setTimeout(() => setDevTapCount(0), 3000);
+    }
+  };
 
   useEffect(() => {
     return licenseService.subscribe((info) => setLicenseInfo(info));
@@ -949,7 +962,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Status Lisensi:</span>
+                  <span
+                    style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={handleSecretDevTap}
+                    title="Informasi Status Lisensi"
+                  >
+                    Status Lisensi:
+                  </span>
                   <span
                     style={{
                       fontSize: '11px',
