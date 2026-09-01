@@ -1,0 +1,54 @@
+name: Build Android APK                                                                                      
+                                                                                                                 
+    on:                                                                                                          
+      push:                                                                                                      
+        branches: [ staging, main, production ]                                                                  
+      workflow_dispatch:                                                                                         
+                                                                                                                 
+    jobs:                                                                                                        
+      build-apk:                                                                                                 
+        runs-on: ubuntu-latest                                                                                   
+        steps:                                                                                                   
+          - name: Checkout Code                                                                                  
+            uses: actions/checkout@v4                                                                            
+                                                                                                                 
+          - name: Install pnpm                                                                                   
+            uses: pnpm/action-setup@v4                                                                           
+            with:                                                                                                
+              run_install: false                                                                                 
+                                                                                                                 
+          - name: Setup Node.js                                                                                  
+            uses: actions/setup-node@v4                                                                          
+            with:                                                                                                
+              node-version: 22                                                                                   
+              cache: 'pnpm'                                                                                      
+                                                                                                                 
+          - name: Setup Java JDK 21                                                                              
+            uses: actions/setup-java@v4                                                                          
+            with:                                                                                                
+              distribution: 'zulu'                                                                               
+              java-version: '21'                                                                                 
+                                                                                                                 
+          - name: Setup Android SDK                                                                              
+            uses: android-actions/setup-android@v3                                                               
+                                                                                                                 
+          - name: Install Dependencies                                                                           
+            run: pnpm install --frozen-lockfile                                                                  
+                                                                                                                 
+          - name: Build Web App                                                                                  
+            run: pnpm run build                                                                                  
+                                                                                                                 
+          - name: Sync Capacitor                                                                                 
+            run: npx cap sync android                                                                            
+                                                                                                                 
+          - name: Build Debug APK with Gradle                                                                    
+            run: |                                                                                               
+              cd android                                                                                         
+              chmod +x gradlew                                                                                   
+              ./gradlew assembleDebug --stacktrace                                                               
+                                                                                                                 
+          - name: Upload APK Artifact                                                                            
+            uses: actions/upload-artifact@v4                                                                     
+            with:                                                                                                
+              name: triwara-pos-debug-apk                                                                        
+              path: android/app/build/outputs/apk/debug/app-debug.apk
