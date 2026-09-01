@@ -397,7 +397,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
       {/* Top Header with Notification Flyout */}
       <Header
         appName={shopConfig?.appName || 'Triwara POS'}
-        appLogo={shopConfig?.appLogoBase64 || '/logo-triwara.png'}
+        appLogo={shopConfig?.appLogoBase64}
         unreadCount={unreadCount}
         isNotificationOpen={isNotificationOpen}
         currentUserName={currentUser.name}

@@ -42,7 +42,7 @@ export function App() {
       <LockdownScreen
         licenseInfo={licenseInfo}
         appName={shopConfig?.appName}
-        appLogo={shopConfig?.appLogoBase64 || '/logo-triwara.png'}
+        appLogo={shopConfig?.appLogoBase64}
       />
     );
   }
@@ -52,7 +52,7 @@ export function App() {
       {!currentUser ? (
         <PinLock
           appName={shopConfig?.appName || 'Triwara POS'}
-          appLogo={shopConfig?.appLogoBase64 || '/logo-triwara.png'}
+          appLogo={shopConfig?.appLogoBase64}
           onUnlocked={(staff) => setCurrentUser(staff)}
         />
       ) : (
