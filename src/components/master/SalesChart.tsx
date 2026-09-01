@@ -121,6 +121,32 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
       // Show every 3 hours: 00, 03, 06, 09, 12, 15, 18, 21, and last (23)
       return idx % 3 === 0 || idx === 23;
     }
+    if (mode === 'interval') {
+      // Interval has 6 slots per day.
+      if (totalPoints > 24) {
+        return idx % 3 === 0 || idx === totalPoints - 1;
+      }
+      if (totalPoints > 12) {
+        return idx % 2 === 0 || idx === totalPoints - 1;
+      }
+      return true;
+    }
+    if (mode === 'daily') {
+      // If days > 15, show every 2nd or 3rd day to avoid crowding
+      if (totalPoints > 20) {
+        return idx % 3 === 0 || idx === totalPoints - 1;
+      }
+      if (totalPoints > 10) {
+        return idx % 2 === 0 || idx === totalPoints - 1;
+      }
+      return true;
+    }
+    if (mode === 'weekly') {
+      return true;
+    }
+    if (mode === 'monthly') {
+      return true;
+    }
     return true;
   };
 
@@ -146,16 +172,16 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
       <div className="sales-chart-tooltip-bar">
         {activePoint ? (
           <span>
-            <strong style={{ color: activePoint.pt.isPeak ? '#4ade80' : '#60a5fa' }}>
+            <strong style={{ color: activePoint.pt.isPeak ? '#16a34a' : '#2563eb' }}>
               {activePoint.pt.fullLabel}
             </strong>
             : <strong>{formatRupiah(activePoint.pt.omset)}</strong> ({activePoint.pt.orderCount} pesanan)
             {activePoint.pt.isPeak && (
-              <span style={{ color: '#4ade80', marginLeft: '6px', fontWeight: 700 }}>(🔥 Puncak)</span>
+              <span style={{ color: '#16a34a', marginLeft: '6px', fontWeight: 700 }}>(🔥 Puncak)</span>
             )}
           </span>
         ) : (
-          <span style={{ color: '#71717a' }}>
+          <span style={{ color: '#64748b' }}>
             Geser kursor / sentuh titik kurva untuk melihat rincian omset.
           </span>
         )}
@@ -288,7 +314,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                     cy={coord.y}
                     r={isHovered ? 8 : 6}
                     fill="none"
-                    stroke={isPeak ? '#4ade80' : '#60a5fa'}
+                    stroke={isPeak ? '#16a34a' : '#2563eb'}
                     strokeWidth="2"
                     opacity={isHovered ? 1 : 0.6}
                     style={{ transition: 'all 0.15s ease' }}
@@ -301,8 +327,8 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                     cx={coord.x}
                     cy={coord.y}
                     r={isHovered ? 5 : isPeak ? 4.5 : 3}
-                    fill={isPeak ? '#4ade80' : isHovered ? '#ffffff' : '#3b82f6'}
-                    stroke="#09090b"
+                    fill={isPeak ? '#16a34a' : isHovered ? '#1d4ed8' : '#2563eb'}
+                    stroke="#ffffff"
                     strokeWidth="1.5"
                     style={{ transition: 'all 0.15s ease' }}
                   />
@@ -314,9 +340,9 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                     x={coord.x}
                     y={baselineY + 18}
                     textAnchor="middle"
-                    fill={isPeak ? '#4ade80' : isHovered ? '#fafafa' : '#a1a1aa'}
+                    fill={isPeak ? '#16a34a' : isHovered ? '#0f172a' : '#64748b'}
                     fontWeight={isPeak || isHovered ? 700 : 400}
-                    fontSize={mode === 'hourly' ? '10' : '11'}
+                    fontSize={mode === 'hourly' || mode === 'interval' ? '10' : '11'}
                     fontFamily="sans-serif"
                   >
                     {coord.pt.label}

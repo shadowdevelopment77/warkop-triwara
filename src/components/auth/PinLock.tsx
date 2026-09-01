@@ -2,7 +2,7 @@
 // Triwara POS — 4-Digit Security PIN Lock Screen
 // ═══════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { IStaff } from '../../types';
 import { configService } from '../../services/config.service';
 import { staffService } from '../../services/staff.service';
@@ -69,6 +69,21 @@ export const PinLock: React.FC<PinLockProps> = ({ appName, appLogo, onUnlocked }
     setTimeout(() => setIsShaking(false), 500);
     setPin('');
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+        handleKeyPress(e.key);
+      } else if (e.key === 'Backspace') {
+        handleDelete();
+      } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+        handleClear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pin]);
 
   return (
     <div className="pin-lock-overlay">

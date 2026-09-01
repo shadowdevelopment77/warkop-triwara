@@ -25,13 +25,7 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
   useEffect(() => {
     let isMounted = true;
     const checkAllStocks = async () => {
-      const statusMap: Record<number, IAvailabilityInfo> = {};
-      for (const prod of products) {
-        if (prod.id) {
-          const avail = await hppService.checkStockAvailability(prod, 'dine_in', 1);
-          statusMap[prod.id] = avail;
-        }
-      }
+      const statusMap = await hppService.checkBatchStockAvailability(products, 'dine_in', 1);
       if (isMounted) {
         setStockStatus(statusMap);
       }

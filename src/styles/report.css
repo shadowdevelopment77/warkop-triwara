@@ -75,11 +75,17 @@
 .report-date-input-group input[type="date"] {
   height: 36px;
   padding: 0 10px;
-  background-color: var(--bg-surface);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 13px;
+  font-weight: 600;
+  color-scheme: light;
+}
+.report-date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 .report-preset-btn {
@@ -87,19 +93,21 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 .report-preset-btn:hover {
-  background-color: var(--bg-surface-hover);
-  color: var(--text-main);
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 .report-preset-btn.active {
-  background-color: #09090b;
+  background-color: #0f172a;
   color: #ffffff;
-  border-color: #09090b;
+  border-color: #0f172a;
 }
 
 /* Summary Omset & Stats Cards (Compact Adjustment) */
