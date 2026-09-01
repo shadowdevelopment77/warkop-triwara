@@ -33,19 +33,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
   const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
   const [activationInput, setActivationInput] = useState<string>('');
-  const [devTapCount, setDevTapCount] = useState<number>(0);
-
-  const handleSecretDevTap = () => {
-    const next = devTapCount + 1;
-    if (next >= 5) {
-      setDevTapCount(0);
-      setActiveModal(null);
-      licenseService.toggleSimulatedLock(true);
-    } else {
-      setDevTapCount(next);
-      setTimeout(() => setDevTapCount(0), 3000);
-    }
-  };
 
   useEffect(() => {
     return licenseService.subscribe((info) => setLicenseInfo(info));
@@ -964,10 +951,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               >
                 {/* Row 1: Aktivasi Pertama */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span
-                    style={{ fontSize: '13px', color: '#475569', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
-                    onClick={handleSecretDevTap}
-                  >
+                  <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>
                     Aktivasi Pertama
                   </span>
                   {licenseInfo.stage === 'tempo_2' || licenseInfo.stage === 'lifetime' ? (

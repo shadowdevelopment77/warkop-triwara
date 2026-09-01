@@ -66,18 +66,16 @@ describe('Offline Multi-Stage Tempo License Service (SHA-256 Hashed)', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('toggles simulation lock and unlocks instantly when valid code is entered', async () => {
-    // Simulate lock for localhost testing
-    const lockedInfo = licenseService.toggleSimulatedLock(true);
-    expect(lockedInfo.isLocked).toBe(true);
-    expect(lockedInfo.lockReason).toBe('simulated');
+  it('successfully transitions stages with official activation keys in production', async () => {
+    const info = licenseService.getLicenseInfo();
+    expect(info.isLocked).toBe(false);
 
-    // Entering stage 1 code unlocks it
+    // Entering stage 1 code advances stage to tempo_2
     const res = await licenseService.activateCode(TEST_KEYS.STAGE_1_EXTEND);
     expect(res.success).toBe(true);
 
-    const unlockedInfo = licenseService.getLicenseInfo();
-    expect(unlockedInfo.isLocked).toBe(false);
-    expect(unlockedInfo.stage).toBe('tempo_2');
+    const updatedInfo = licenseService.getLicenseInfo();
+    expect(updatedInfo.isLocked).toBe(false);
+    expect(updatedInfo.stage).toBe('tempo_2');
   });
 });

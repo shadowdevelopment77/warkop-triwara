@@ -638,30 +638,36 @@ export async function resetAndSeedDatabase(database: TriwaraDatabase = db, total
 
 export async function seedDatabaseIfEmpty(): Promise<void> {
   if (isSeedingInProgress) return;
-  const count = await db.products.count();
-  if (count === 0) {
-    await resetAndSeedDatabase(db, 0);
-    return;
+
+  // 1. Ensure ShopConfig exists
+  const configCount = await db.shopConfig.count();
+  if (configCount === 0) {
+    const defaultPinHash = await hashPin('0000');
+    await db.shopConfig.add({
+      appName: 'Warkop Triwara',
+      receiptHeaderLines: [
+        'Warkop Triwara Coffee',
+        'Jl. Sunset Road No. 88, Kuta, Bali',
+        'Telp: 0812-3456-7890',
+      ],
+      receiptFooterLines: [
+        'Terima Kasih Atas Kunjungan Anda!',
+        'Follow IG: @warkoptriwara',
+        'WiFi: Triwara_Guest | Pass: kopienakbanget',
+      ],
+      pinHash: defaultPinHash,
+    });
   }
 
-  // Ensure default staff exists for existing databases upgrading to v2
+  // 2. Ensure default Owner staff exists (PIN: 0000)
   const staffCount = await db.staff.count();
   if (staffCount === 0) {
-    await db.staff.bulkAdd([
-      {
-        name: 'Owner Toko',
-        pin: '0000',
-        role: 'owner',
-        active: true,
-        createdAt: new Date(),
-      },
-      {
-        name: 'Budi (Kasir)',
-        pin: '1234',
-        role: 'cashier',
-        active: true,
-        createdAt: new Date(),
-      },
-    ]);
+    await db.staff.add({
+      name: 'Owner Toko',
+      pin: '0000',
+      role: 'owner',
+      active: true,
+      createdAt: new Date(),
+    });
   }
 }

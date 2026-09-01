@@ -9,7 +9,6 @@ export interface ILicenseInfo {
   expiresAt: string | null; // ISO string or null for lifetime
   isLocked: boolean;
   lockReason?: string;
-  isSimulatedLock?: boolean;
 }
 
 const STORAGE_KEY = 'triwara_license_data';
@@ -75,7 +74,6 @@ export class LicenseService {
       stage: 'tempo_1',
       expiresAt: '2026-10-05T00:00:00.000Z',
       isLocked: false,
-      isSimulatedLock: false,
     };
 
     let info: ILicenseInfo;
@@ -90,13 +88,6 @@ export class LicenseService {
     if (info.stage === 'lifetime') {
       info.isLocked = false;
       info.expiresAt = null;
-      return info;
-    }
-
-    // 2. Simulated lock for dev/test purposes
-    if (info.isSimulatedLock) {
-      info.isLocked = true;
-      info.lockReason = 'simulated';
       return info;
     }
 
@@ -151,7 +142,6 @@ export class LicenseService {
         stage: 'lifetime',
         expiresAt: null,
         isLocked: false,
-        isSimulatedLock: false,
       };
       this.saveLicenseInfo(updated);
       this.notifyListeners(updated);
@@ -175,7 +165,6 @@ export class LicenseService {
         stage: 'tempo_2',
         expiresAt: '2026-11-05T00:00:00.000Z',
         isLocked: false,
-        isSimulatedLock: false,
       };
       this.saveLicenseInfo(updated);
       this.notifyListeners(updated);
@@ -192,22 +181,6 @@ export class LicenseService {
     };
   }
 
-  /**
-   * Developer simulator: Toggles lock screen in localhost environment
-   */
-  toggleSimulatedLock(force?: boolean): ILicenseInfo {
-    const current = this.getLicenseInfo();
-    const isSimulated = force !== undefined ? force : !current.isSimulatedLock;
-    const updated: ILicenseInfo = {
-      ...current,
-      isSimulatedLock: isSimulated,
-      isLocked: isSimulated || (current.stage !== 'lifetime' && current.isLocked),
-      lockReason: isSimulated ? 'simulated' : undefined,
-    };
-    this.saveLicenseInfo(updated);
-    this.notifyListeners(updated);
-    return updated;
-  }
 
   /**
    * Resets license state to default (For automated tests or fresh demo)
