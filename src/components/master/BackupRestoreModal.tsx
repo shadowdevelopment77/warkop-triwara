@@ -166,7 +166,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
         >
           {/* Header */}
           <div className="settings-modal-header">
-            <h3 className="settings-modal-title">💾 Backup &amp; Restore Database</h3>
+            <h3 className="settings-modal-title">Backup &amp; Restore Database</h3>
             <button
               type="button"
               className="modal-close-btn-red"
@@ -275,7 +275,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                   backgroundColor: '#0284c7',
                 }}
               >
-                {isExporting ? '⏳ Menyiapkan File Backup...' : '📥 Unduh File Backup (.json)'}
+                {isExporting ? 'Menyiapkan File Backup...' : 'Unduh File Backup (.json)'}
               </button>
             </div>
 
@@ -324,7 +324,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                     gap: '6px',
                   }}
                 >
-                  📁 {selectedFile ? selectedFile.name : 'Pilih File Backup (.json)'}
+                  {selectedFile ? selectedFile.name : 'Pilih File Backup (.json)'}
                 </button>
                 {selectedFile && (
                   <button
@@ -411,7 +411,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                   cursor: !selectedFile || !parsedPreview ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isRestoring ? '⏳ Memulihkan Database...' : '🔄 Pulihkan Database Sekarang'}
+                {isRestoring ? '⏳ Memulihkan Database...' : 'Pulihkan Database Sekarang'}
               </button>
             </div>
           </div>
