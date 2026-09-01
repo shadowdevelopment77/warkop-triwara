@@ -25,10 +25,10 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
   const handleExportBackup = async () => {
     setIsExporting(true);
     try {
-      await backupService.exportDatabase();
+      const fileName = await backupService.downloadBackupFile();
       setFeedback({
         type: 'success',
-        text: 'Berkas cadangan data (.json) berhasil diunduh ke perangkat Anda.',
+        text: `Berkas cadangan data "${fileName}" berhasil diunduh ke perangkat Anda.`,
       });
     } catch (err) {
       setFeedback({
@@ -52,10 +52,6 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
     } else {
       setFeedback({ type: 'error', text: res.message });
     }
-  };
-
-  const handleExitSimulation = () => {
-    licenseService.toggleSimulatedLock(false);
   };
 
   return (
@@ -110,10 +106,13 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '28px',
+              color: '#ffffff',
             }}
           >
-            🔒
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
           </div>
         )}
 
@@ -171,10 +170,9 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
             }}
           >
-            🔑 Masukkan Kode Aktivasi
+            Masukkan Kode Aktivasi
           </button>
 
           <button
@@ -194,31 +192,11 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
             }}
           >
-            {isExporting ? '⏳ Mengunduh...' : '💾 Unduh Cadangan Data (.json)'}
+            {isExporting ? 'Mengunduh Cadangan...' : 'Unduh Cadangan Data (.json)'}
           </button>
         </div>
-
-        {/* Developer simulation exit button */}
-        {licenseInfo.isSimulatedLock && (
-          <button
-            type="button"
-            onClick={handleExitSimulation}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94a3b8',
-              fontSize: '11px',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              marginTop: '4px',
-            }}
-          >
-            🧪 Keluar dari Mode Simulasi Uji Coba (Dev Mode)
-          </button>
-        )}
       </div>
 
       {/* Activation Input Modal */}
@@ -254,13 +232,13 @@ export const LockdownScreen: React.FC<LockdownScreenProps> = ({
               Verifikasi Kode Aktivasi
             </h3>
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-              Masukkan kode perpanjangan atau pelunasan yang diberikan oleh pihak developer pengembang Triwara POS.
+              Masukkan kode perpanjangan atau pelunasan yang diberikan oleh pihak pengembang Triwara POS.
             </p>
 
             <form onSubmit={handleActivate} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 type="text"
-                placeholder="Contoh: TRW-OKT-2026"
+                placeholder="Masukkan kode lisensi..."
                 value={activationCode}
                 onChange={(e) => setActivationCode(e.target.value)}
                 autoFocus

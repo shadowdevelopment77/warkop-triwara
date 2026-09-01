@@ -131,7 +131,7 @@ export const MenuPanel: React.FC = () => {
                 className="menu-btn-primary"
                 onClick={() => setIsEditorOpen(true)}
               >
-                ✏️ Edit Resep &amp; Menu
+                Edit Resep &amp; Menu
               </button>
             </div>
 

@@ -11,7 +11,6 @@ import { compressImage } from '../../utils/image';
 import { exportOrdersToExcel } from '../../utils/excel';
 import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
-import { StressTestModal } from './StressTestModal';
 import { BackupRestoreModal } from './BackupRestoreModal';
 import { printerService } from '../../services/printer.service';
 import { licenseService, type ILicenseInfo } from '../../services/license.service';
@@ -30,7 +29,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [config, setConfig] = useState<IShopConfig | null>(null);
   const [activeModal, setActiveModal] = useState<SettingModalType>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
-  const [isStressTestModalOpen, setIsStressTestModalOpen] = useState<boolean>(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
   const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
@@ -333,31 +331,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (oldOrders.length === 0) {
           setDialogConfig({
             isOpen: true,
-            type: 'confirm',
-            title: 'Belum Ada Transaksi ≥ 1 Tahun',
-            message:
-              'Saat ini seluruh transaksi di database masih berumur < 1 tahun.\n\nApakah Anda ingin membuat 10 transaksi simulasi (bertanggal 400 hari lalu) untuk langsung menguji unduh arsip Excel dan pembersihan database ini?',
-            confirmText: '⚡ Buat 10 Data Uji (400 Hari Lalu)',
-            onConfirm: async () => {
-              try {
-                const count = await orderService.generateOldOrdersForTesting(10);
-                setDialogConfig({
-                  isOpen: true,
-                  type: 'alert',
-                  title: 'Data Simulasi Siap Diuji',
-                  message: `${count} transaksi simulasi berumur 400 hari lalu berhasil dibuat!\n\nSilakan klik lagi tombol "Bersihkan Transaksi (≥ 1 Tahun)" untuk menguji unduh arsip Excel dan pembersihannya.`,
-                  onConfirm: () => {},
-                });
-              } catch (e) {
-                setDialogConfig({
-                  isOpen: true,
-                  type: 'alert',
-                  title: 'Gagal Membuat Data Uji',
-                  message: (e as Error).message,
-                  onConfirm: () => {},
-                });
-              }
-            },
+            type: 'alert',
+            title: 'Tidak Ada Transaksi Lama',
+            message: 'Saat ini belum ada data transaksi yang berumur 1 tahun atau lebih untuk dibersihkan.',
+            onConfirm: () => {},
           });
           return;
         }
@@ -489,84 +466,58 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <button
           type="button"
           className="settings-trigger-card"
-          style={{ borderColor: 'rgba(234, 179, 8, 0.4)' }}
+          style={{ borderColor: 'rgba(239, 68, 68, 0.4)', backgroundColor: 'rgba(239, 68, 68, 0.03)' }}
           onClick={handleCleanOldOrders}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title" style={{ color: '#facc15' }}>
+            <h3 className="settings-card-title" style={{ color: '#ef4444' }}>
               {isOwner ? 'Bersihkan Transaksi (≥ 1 Tahun)' : 'Bersihkan Transaksi (≥ 1 Tahun) (Owner)'}
             </h3>
             <p className="settings-card-desc">
-              Download arsip Excel transaksi lama ≥ 1 tahun lalu bersihkan dari database
+              Unduh arsip Excel transaksi lama ≥ 1 tahun lalu bersihkan dari database
             </p>
           </div>
-          <span className="settings-card-arrow" style={{ color: '#eab308' }}>
-            {isOwner ? '🧹' : '🔒'}
+          <span className="settings-card-arrow" style={{ color: '#ef4444' }}>
+            {isOwner ? '➔' : '🔒'}
           </span>
         </button>
 
-        {/* 6. Stress Test & Benchmark Generator */}
+        {/* 6. Full Database Backup & Restore (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
-          style={{ borderColor: 'rgba(59, 130, 246, 0.4)' }}
-          onClick={() => guardOwnerAction(() => setIsStressTestModalOpen(true))}
-        >
-          <div className="settings-card-info">
-            <h3 className="settings-card-title" style={{ color: '#60a5fa' }}>
-              {isOwner ? '⚡ Stress Test & Benchmark' : '⚡ Stress Test & Benchmark (Owner)'}
-            </h3>
-            <p className="settings-card-desc">
-              Uji ketahanan 10.000 s/d 1.000.000 transaksi dummy + live stopwatch latensi
-            </p>
-          </div>
-          <span className="settings-card-arrow" style={{ color: '#3b82f6' }}>
-            {isOwner ? '🚀' : '🔒'}
-          </span>
-        </button>
-
-        {/* 7. Full Database Backup & Restore (Owner only) */}
-        <button
-          type="button"
-          className="settings-trigger-card"
-          style={{ borderColor: 'rgba(16, 185, 129, 0.4)' }}
           onClick={() => guardOwnerAction(() => setIsBackupRestoreModalOpen(true))}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title" style={{ color: '#34d399' }}>
-              {isOwner ? '💾 Backup & Restore Database' : '💾 Backup & Restore Database (Owner)'}
+            <h3 className="settings-card-title">
+              {isOwner ? 'Backup & Restore Database' : 'Backup & Restore Database (Owner)'}
             </h3>
             <p className="settings-card-desc">
               Unduh cadangan seluruh data toko (.json) atau pulihkan database ke perangkat ini
             </p>
           </div>
-          <span className="settings-card-arrow" style={{ color: '#10b981' }}>
-            {isOwner ? '💾' : '🔒'}
-          </span>
+          <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
 
-        {/* 8. Lisensi & Aktivasi Aplikasi (Owner only) */}
+        {/* 7. Lisensi & Aktivasi Aplikasi (Owner only) */}
         <button
           type="button"
           className="settings-trigger-card"
-          style={{ borderColor: licenseInfo.stage === 'lifetime' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)' }}
           onClick={() => guardOwnerAction(() => setActiveModal('license'))}
         >
           <div className="settings-card-info">
-            <h3 className="settings-card-title" style={{ color: licenseInfo.stage === 'lifetime' ? '#4ade80' : '#facc15' }}>
-              🔑 Lisensi &amp; Aktivasi Aplikasi
+            <h3 className="settings-card-title">
+              {isOwner ? 'Lisensi & Aktivasi Aplikasi' : 'Lisensi & Aktivasi Aplikasi (Owner)'}
             </h3>
             <p className="settings-card-desc">
               {licenseInfo.stage === 'lifetime'
-                ? '✓ Lisensi Permanen (Aktif Selamanya)'
+                ? 'Lisensi Permanen (Aktif Selamanya)'
                 : licenseInfo.stage === 'tempo_1'
                 ? 'Tempo Cicilan 1 (Batas: 5 Okt 2026)'
                 : 'Tempo Cicilan 2 (Batas: 5 Nov 2026)'}
             </p>
           </div>
-          <span className="settings-card-arrow" style={{ color: licenseInfo.stage === 'lifetime' ? '#22c55e' : '#eab308' }}>
-            {licenseInfo.stage === 'lifetime' ? '✓' : '🔑'}
-          </span>
+          <span className="settings-card-arrow">{isOwner ? '➔' : '🔒'}</span>
         </button>
       </div>
 
@@ -628,7 +579,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
                       onClick={handleTestPrint}
                     >
-                      🧪 Uji Cetak Thermal
+                      Uji Cetak Thermal
                     </button>
                     <button
                       type="button"
@@ -646,7 +597,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     style={{ flex: 1 }}
                     onClick={handleConnectDefaultPrinter}
                   >
-                    ⚡ Pasangkan Xantri BT-58D
+                    Pasangkan Xantri BT-58D
                   </button>
                 )}
               </div>
@@ -1030,7 +981,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     ? 'Aplikasi ini telah memiliki lisensi permanen aktif selamanya tanpa batas waktu.'
                     : licenseInfo.stage === 'tempo_1'
                     ? 'Aplikasi beroperasi dalam masa tempo cicilan 1. Masukkan kode aktivasi cicilan 1 untuk memperpanjang hingga 5 November 2026.'
-                    : '✓ Cicilan 1 Terverifikasi! Silakan masukkan Kode Pelunasan Akhir untuk mengaktifkan lisensi permanen selamanya.'}
+                    : 'Cicilan 1 Terverifikasi! Silakan masukkan Kode Pelunasan Akhir untuk mengaktifkan lisensi permanen selamanya.'}
                 </p>
               </div>
 
@@ -1063,7 +1014,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     <input
                       type="text"
                       className="settings-input"
-                      placeholder={licenseInfo.stage === 'tempo_1' ? 'TRW-OKT-2026' : 'TRW-LIFETIME-PASS'}
+                      placeholder="Masukkan kode lisensi..."
                       value={activationInput}
                       onChange={(e) => setActivationInput(e.target.value)}
                       style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}
@@ -1074,43 +1025,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   </div>
                 </form>
               )}
-
-              {/* Developer / Owner Manual Test Tool */}
-              <div
-                style={{
-                  backgroundColor: '#f1f5f9',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px dashed #cbd5e1',
-                  marginTop: '6px',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                    🧪 Alat Uji Coba Penguncian (Localhost Test):
-                  </span>
-                </div>
-                <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 8px 0', lineHeight: '1.4' }}>
-                  Simulasikan tampilan layar terkunci saat jatuh tempo untuk memastikan alur backup dan aktivasi berfungsi dengan baik.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => licenseService.toggleSimulatedLock(true)}
-                  style={{
-                    width: '100%',
-                    height: '34px',
-                    backgroundColor: '#dc2626',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  🔒 Uji Tampilan Terkunci Sekarang
-                </button>
-              </div>
             </div>
 
             <div className="settings-modal-footer">
@@ -1126,12 +1040,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <StaffManagerModal
         isOpen={isStaffModalOpen}
         onClose={() => setIsStaffModalOpen(false)}
-      />
-
-      {/* Stress Test & Benchmark Modal (Owner Only) */}
-      <StressTestModal
-        isOpen={isStressTestModalOpen}
-        onClose={() => setIsStressTestModalOpen(false)}
       />
 
       {/* Full Database Backup & Restore Modal (Owner Only) */}
