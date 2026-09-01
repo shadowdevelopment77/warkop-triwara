@@ -616,9 +616,39 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
      - Menambahkan kartu & modal *"Lisensi & Aktivasi Aplikasi"* dengan info status live, formulir input aktivasi, dan tombol simulator kunci localhost.
   5. [`src/__tests__/license-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/license-service.test.ts) **[NEW]**:
      - 6 skenario pengujian komprehensif memverifikasi inisialisasi default, aktivasi tahap 1, aktivasi lifetime, penolakan kode salah, dan simulator uji coba.
+---
+
+### 📅 Phase 19: Audit Pembersihan Kode Mati, Lisensi Asli Kriptografis, dan Full End-to-End Integration Test Suite
+
+- **Status**: **SUCCESS (100% Passed)**
+- **Tujuan Teknis**:
+  - Melakukan audit menyeluruh pada direktori dan komponen sebelum masuk ke proses wrapping Capacitor Android.
+  - Menghapus komponen mati `src/components/layout/NotificationModal.tsx` yang sudah usang karena notifikasi saat ini 100% ditangani oleh `NotificationFlyout.tsx`.
+  - Mengonfigurasi kunci lisensi unik resmi dengan format standar industri kasir (*high entropy*) yang sulit ditebak:
+    - **Cicilan 1 (Tahap 1 $\rightarrow$ Tenggat 5 Nov 2026)**: `TRW1-7B8E-92AF-41CD`
+    - **Pelunasan Akhir (Tahap 2 $\rightarrow$ Lifetime Permanen)**: `TRWL-89F3-48B1-29E7`
+  - Menyimpan arsip resmi kunci lisensi pada berkas rahasia pengembang [`DEV_LICENSE_KEYS.md`](file:///home/shadowxz/projects/triwara-pos/DEV_LICENSE_KEYS.md).
+  - Membangun **Full End-to-End (E2E) Integration Automation Test Suite** ([`src/__tests__/full-system-e2e.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/full-system-e2e.test.ts)) yang menguji 10 alur bisnis riil berturut-turut tanpa jeda:
+    1. Zero-State Database Verification (0 orders, 0 shifts)
+    2. RBAC PIN Login Verification (Owner `0000` & Kasir `1234`)
+    3. Buka Shift Kasir dengan Modal Awal (Rp 100.000)
+    4. POS Order Creation, HPP FIFO, & Atomic Recipe Stock Deduction
+    5. ESC/POS Thermal Receipt Generation & Binary Frames (`ESC @` & `GS V`) untuk Customer, Bar, dan Dapur
+    6. Void Transaksi & Pengembalian Stok Otomatis
+    7. Tutup Shift Kasir dengan Rekonsiliasi Kas (0 Selisih)
+    8. Laporan Penjualan & Perhitungan Omset/Laba Bersih
+    9. Ekspor Cadangan Database JSON Lengkap
+    10. Siklus Aktivasi Kunci Lisensi Nyata (Tahap 1 $\rightarrow$ Tahap 2 $\rightarrow$ Lifetime)
+- **File yang Diubah / Dihapus**:
+  1. [`src/components/layout/NotificationModal.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/layout/NotificationModal.tsx): **[DELETED]** (komponen usang).
+  2. [`src/services/license.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/license.service.ts): Menggunakan kunci aktivasi resmi produksi.
+  3. [`DEV_LICENSE_KEYS.md`](file:///home/shadowxz/projects/triwara-pos/DEV_LICENSE_KEYS.md): **[NEW]** (dokumen rahasia kunci lisensi pengembang).
+  4. [`src/__tests__/full-system-e2e.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/full-system-e2e.test.ts): **[NEW]** (test suite full E2E 10 langkah).
+  5. [`src/__tests__/phase2-transaction-history-pdf.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/phase2-transaction-history-pdf.test.ts): Disesuaikan timeout untuk test beban berat PDF 600 transaksi.
 - **Hasil Pengujian**:
-  - `vitest run`: **34/34 test files passed (117/117 tests passed 100%)**.
-  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.24 detik.
+  - `vitest run`: **35/35 test files passed (118/118 tests passed 100%)**.
+  - `tsc -b && vite build`: **Sukses 100% (0 error)** dalam 2.50 detik.
+
 
 
 

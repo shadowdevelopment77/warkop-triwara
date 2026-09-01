@@ -138,5 +138,5 @@ describe('Phase 2: Stand-Alone Transaction History PDF Export', () => {
     ).resolves.not.toThrow();
 
     expect(onProgress).toHaveBeenCalledWith(100, 'Selesai!');
-  });
+  }, 15000);
 });

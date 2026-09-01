@@ -438,4 +438,21 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 25 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 26. Pengujian Full System End-to-End (E2E) Integration Flow
+**File**: [`src/__tests__/full-system-e2e.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/full-system-e2e.test.ts)
+- **Skenario Komprehensif: 10 Alur Siklus Toko Berkesinambungan**
+  1. **Zero-State DB**: Memverifikasi 0 order, 0 shift, dan stok awal bahan baku utuh.
+  2. **RBAC PIN Login**: Verifikasi akun Owner (`0000`) dan Kasir (`1234`).
+  3. **Buka Shift Kasir**: Kasir membuka shift dengan uang modal awal Rp 100.000.
+  4. **POS Order & Resep Atomik**: Membuat pesanan Kopi Susu Aren dengan pemotongan stok bahan baku Espresso Blend, Susu UHT, dan Gula Aren secara atomik, serta kalkulasi kembalian tunai.
+  5. **ESC/POS Thermal Receipts**: Men-generate struktur teks dan buffer byte biner untuk struk Customer, Bar, dan Dapur dengan inisialisasi `ESC @` dan pemotong kertas `GS V`.
+  6. **Void Transaksi & Restorasi**: Melakukan void terhadap pesanan dan memverifikasi stok bahan baku dikembalikan utuh ke gudang.
+  7. **Tutup Shift & Rekonsiliasi Kas**: Kasir menutup shift dengan kas fisik sesuai transaksi, memverifikasi selisih kas Rp 0 (PAS).
+  8. **Laporan & Omset**: Menghitung omset bersih, jumlah transaksi, dan laba kotor melalui `reportService.getReportBundle()`.
+  9. **Backup Database JSON**: Memverifikasi pembuatan payload cadangan data mencakup seluruh tabel database.
+  10. **Aktivasi Lisensi Resmi**: Menguji penolakan kode salah, aktivasi tahap 1 dengan kunci resmi `TRW1-7B8E-92AF-41CD` (memperpanjang ke 5 Nov 2026), dan aktivasi pelunasan permanen dengan kunci resmi `TRWL-89F3-48B1-29E7` (Lifetime tanpa tanggal kedaluwarsa).
+
+---
+
+*Catatan: Seluruh 26 modul pengujian (35 test files, 118 unit & integration tests) telah selesai diverifikasi dan 100% lulus.*
+

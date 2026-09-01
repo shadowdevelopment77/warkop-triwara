@@ -56,8 +56,8 @@ const licenseStorage = new StorageAdapter();
 
 // Secret Activation Keys (Offline Verification)
 export const ACTIVATION_KEYS = {
-  STAGE_1_EXTEND: 'TRW-OKT-2026',      // Extends deadline to Nov 5, 2026
-  STAGE_2_LIFETIME: 'TRW-LIFETIME-PASS', // Permanently unlocks lifetime license
+  STAGE_1_EXTEND: 'TRW1-7B8E-92AF-41CD',   // Perpanjangan Cicilan 1 s/d 5 November 2026
+  STAGE_2_LIFETIME: 'TRWL-89F3-48B1-29E7', // Pelunasan Lisensi Permanen (Lifetime)
 };
 
 export class LicenseService {
