@@ -298,13 +298,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleConnectDefaultPrinter = async () => {
     try {
       await configService.updateConfig({
-        printerName: 'Xantri Thermal BT-58D',
-        printerMacAddress: '00:11:22:33:44:55',
+        printerName: 'Printer Thermal (RawBT)',
+        printerMacAddress: 'RAWBT_BLUETOOTH',
       });
       const fresh = await configService.getConfig();
       setConfig(fresh);
-      setFeedbackMsg('Printer Xantri BT-58D berhasil dipasangkan.');
+      setFeedbackMsg('Layanan Cetak RawBT berhasil diaktifkan.');
       setTimeout(() => setFeedbackMsg(''), 3000);
+      if (typeof window !== 'undefined') {
+        window.location.href = 'rawbt:';
+      }
     } catch (err) {
       setDialogConfig({
         isOpen: true,
@@ -582,43 +585,41 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
 
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {config?.printerMacAddress ? (
-                  <>
-                    <button
-                      type="button"
-                      className="settings-btn-primary"
-                      style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
-                      onClick={handleTestPrint}
-                    >
-                      Uji Cetak Thermal
-                    </button>
-                    <button
-                      type="button"
-                      className="settings-btn-danger"
-                      style={{ padding: '0 16px' }}
-                      onClick={handleDisconnectPrinter}
-                    >
-                      Putuskan Printer
-                    </button>
-                  </>
-                ) : (
+                <button
+                  type="button"
+                  className="settings-btn-primary"
+                  style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                  onClick={handleTestPrint}
+                >
+                  Uji Cetak Thermal (58mm)
+                </button>
+                <button
+                  type="button"
+                  className="settings-btn-secondary"
+                  style={{ padding: '0 14px' }}
+                  onClick={handleConnectDefaultPrinter}
+                >
+                  Buka RawBT
+                </button>
+                {config?.printerMacAddress && (
                   <button
                     type="button"
-                    className="settings-btn-primary"
-                    style={{ flex: 1 }}
-                    onClick={handleConnectDefaultPrinter}
+                    className="settings-btn-danger"
+                    style={{ padding: '0 12px' }}
+                    onClick={handleDisconnectPrinter}
                   >
-                    Pasangkan Xantri BT-58D
+                    Reset
                   </button>
                 )}
               </div>
 
               <div style={{ backgroundColor: '#f1f5f9', padding: '12px', borderRadius: '6px', fontSize: '12px', color: '#475569', lineHeight: '1.5' }}>
-                <strong>Panduan Printer Kasir (Xantri BT-58D 58mm):</strong>
+                <strong>Panduan Koneksi Printer Kasir (RawBT Service 58mm):</strong>
                 <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
-                  <li>Nyalakan tombol power printer hingga lampu indikator biru/hijau menyala.</li>
-                  <li>Di menu Bluetooth HP/Tablet, lakukan pairing perangkat (PIN default: <code>0000</code> atau <code>1234</code>).</li>
-                  <li>Klik tombol uji cetak di atas untuk memastikan kertas mencetak dengan benar.</li>
+                  <li>Nyalakan tombol power printer thermal Bluetooth kasir Anda.</li>
+                  <li>Buka aplikasi <strong>RawBT</strong> di HP (atau ketuk tombol <em>Buka RawBT</em> di atas).</li>
+                  <li>Di RawBT, pilih koneksi <strong>Bluetooth</strong> dan pilih printer Anda (Panda, Xprinter, Iware, Mini POS, dll).</li>
+                  <li>Ketuk tombol <strong>Uji Cetak Thermal (58mm)</strong> di atas untuk memverifikasi kertas struk keluar langsung dari mesin printer Anda!</li>
                 </ol>
               </div>
             </div>

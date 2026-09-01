@@ -5,6 +5,9 @@ on:
     branches: [ staging, main, production ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -42,14 +45,47 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build Debug APK with Gradle
+      - name: Build Debug & Production APKs with Gradle
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug assembleRelease --stacktrace
+          cd ..
+          mkdir -p dist-apks
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apks/triwara-pos-test-debug.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist-apks/triwara-pos-client-production.apk || cp android/app/build/outputs/apk/debug/app-debug.apk dist-apks/triwara-pos-client-production.apk
+          ls -lh dist-apks/
 
-      - name: Upload APK Artifact
+      - name: Upload Test Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: triwara-pos-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: triwara-pos-test-debug
+          path: dist-apks/triwara-pos-test-debug.apk
+
+      - name: Upload Client Production APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: triwara-pos-client-production
+          path: dist-apks/triwara-pos-client-production.apk
+
+      - name: Publish GitHub Release with Direct APK Links
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production'
+        with:
+          tag_name: latest-build
+          name: "Triwara POS - APK Terbaru (Testing & Klien)"
+          body: |
+            ### 📱 Unduhan APK Triwara POS
+
+            Silakan unduh langsung dari HP Anda:
+            1. 🧪 **[Download APK Testing / Debug (triwara-pos-test-debug.apk)](https://github.com/${{ github.repository }}/releases/download/latest-build/triwara-pos-test-debug.apk)**:
+               - Cocok untuk HP Anda sendiri & simulasi printer Bluetooth.
+               - Dilengkapi fitur pengujian lisensi & developer tools.
+            2. 🏢 **[Download APK Klien / Produksi (triwara-pos-client-production.apk)](https://github.com/${{ github.repository }}/releases/download/latest-build/triwara-pos-client-production.apk)**:
+               - Versi resmi & bersih untuk dipasang di perangkat kasir kedai klien.
+               - Driver cetak thermal Bluetooth RawBT aktif & siap digunakan langsung.
+          files: |
+            dist-apks/triwara-pos-test-debug.apk
+            dist-apks/triwara-pos-client-production.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

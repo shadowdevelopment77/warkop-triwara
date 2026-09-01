@@ -67,6 +67,8 @@ export class PrinterService {
       };
     }
 
+    const printerAddress = config.printerMacAddress;
+
     // 2. Prevent overlapping prints
     if (this.isPrinting) {
       return {
@@ -90,17 +92,31 @@ export class PrinterService {
         };
       }
 
-      // 4. Native Capacitor vs Browser/Dev Fallback
-      // When wrapped with Capacitor native Android, this interfaces with Bluetooth Serial / RFCOMM socket.
-      // In web/desktop development mode, it logs cleanly and validates byte generation.
-      const isNativeAndroid = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+      // 4. Convert ESC/POS Uint8Array to Base64
+      let binary = '';
+      const len = buffer.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(buffer[i]);
+      }
+      const base64 = typeof btoa !== 'undefined' ? btoa(binary) : '';
+      const rawbtUri = `rawbt:base64,${base64}`;
 
-      if (isNativeAndroid) {
-        // Native Bluetooth execution will be hooked via Capacitor plugin
-        // Placeholder for BluetoothSerial.write(buffer)
+      // 5. Transmit via RawBT Protocol
+      if (typeof window !== 'undefined') {
+        const isNativeAndroid = !!(window as any).Capacitor?.isNativePlatform?.();
+        console.log(`[PRINTER DRIVER] Transmitting ${buffer.length} ESC/POS bytes to ${config.printerName || 'Printer Thermal'} via RawBT (Native: ${isNativeAndroid})`);
+        
+        if (isNativeAndroid) {
+          window.location.href = rawbtUri;
+        } else {
+          try {
+            window.location.href = rawbtUri;
+          } catch {
+            // Fallback / ignored in jsdom test runner
+          }
+        }
       } else {
-        // Development / Browser simulation
-        console.log(`[THERMAL 58MM EMULATOR] Transmitting ${buffer.length} bytes to ${config.printerName || 'Xantri BT-58D'} (${config.printerMacAddress})`);
+        console.log(`[THERMAL 58MM EMULATOR] Transmitting ${buffer.length} bytes to ${config.printerName || 'Xantri BT-58D'} (${printerAddress})`);
       }
 
       return {

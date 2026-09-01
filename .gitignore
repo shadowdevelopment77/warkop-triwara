@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 *.pdf
 DEV_LICENSE_KEYS.md
+*.apk
+dist-apks
