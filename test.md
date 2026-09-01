@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **33 File Lulus (100%)**
-- **Total Unit Tests**: **111 Tests Passed (100%)**
+- **Total Test Files**: **34 File Lulus (100%)**
+- **Total Unit Tests**: **117 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~32.2 detik (Vitest) + 3.0 detik (Vite build)
+- **Waktu Eksekusi**: ~24.3 detik (Vitest) + 2.2 detik (Vite build)
 
 ---
 
@@ -418,4 +418,24 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 24 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 25. Pengujian Sistem Lisensi Tempo 2-Tahap & Lockdown Offline
+**File**: [`src/__tests__/license-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/license-service.test.ts)
+- **Skenario 1: Inisialisasi Default Tempo Tahap 1 (5 Oktober 2026)**
+  - Memverifikasi saat aplikasi pertama kali dijalankan, status terdaftar sebagai `tempo_1` dengan batas kedaluwarsa 5 Oktober 2026 dan status terkunci bernilai `false`.
+- **Skenario 2: Penolakan Kode Aktivasi Salah Secara Aman**
+  - Menguji input kode acak/salah ditolak dengan pesan error yang jelas tanpa mengubah status lisensi.
+- **Skenario 3: Aktivasi Cicilan 1 (Perpanjangan ke 5 November 2026)**
+  - Memasukkan kode cicilan 1 (`TRW-OKT-2026`).
+  - Memverifikasi status berubah menjadi `tempo_2` dan batas waktu diperpanjang ke 5 November 2026.
+- **Skenario 4: Aktivasi Pelunasan Akhir (Lisensi Permanen / Lifetime)**
+  - Memasukkan kode pelunasan (`TRW-LIFETIME-PASS`).
+  - Memverifikasi status berubah menjadi `lifetime`, `expiresAt` dihapus (null), dan proteksi tanggal dimatikan selamanya.
+- **Skenario 5: Dukungan Aktivasi Lifetime Langsung (Bypass Tahap 1)**
+  - Menguji klien yang melunasi pembayaran di awal dapat langsung diaktivasi permanen tanpa harus memasukkan kode tahap 1.
+- **Skenario 6: Simulator Kunci & Buka Kunci Seketika**
+  - Mengaktifkan mode simulasi kunci (`isSimulatedLock: true`) untuk pengujian localhost.
+  - Memverifikasi aplikasi langsung terkunci, dan kembali terbuka normal saat kode valid dimasukkan.
+
+---
+
+*Catatan: Seluruh 25 modul pengujian telah selesai diverifikasi dan 100% lulus.*

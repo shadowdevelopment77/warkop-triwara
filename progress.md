@@ -594,6 +594,33 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **33/33 test files passed (111/111 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.03 detik.
 
+---
+
+### 🚀 Phase 18: Sistem Lisensi Tempo 2-Tahap, Layanan Lockdown Offline & Pengujian Localhost
+- **Tujuan Teknis**:
+  - Memberikan perlindungan bagi developer untuk transaksi penjualan aplikasi offline dengan sistem tempo/cicilan 2 tahap (DP, Cicilan 1 akhir September, dan Pelunasan akhir Oktober).
+  - Mengimplementasikan **Batas Waktu Otomatis**:
+    - Tahap 1 (Awal): Tenggat 5 Oktober 2026.
+    - Tahap 2 (Cicilan 1 Lunas): Tenggat diperpanjang otomatis hingga 5 November 2026.
+    - Tahap 3 (Pelunasan): Lisensi berubah permanen (Lifetime) dan pengecekan tanggal dimatikan selamanya.
+  - Membangun **Layar Penguncian Total (*Lockdown Screen*)**: memblokir penuh operasional kasir saat jatuh tempo, sambil tetap menyediakan tombol **"💾 Unduh Cadangan Data (.json)"** agar data bisnis toko tidak hilang.
+  - Menyediakan **Alat Uji Coba Simulasi Kunci di Localhost** di menu Pengaturan sehingga developer dapat menguji tampilan terkunci, unduhan backup, dan input kode aktivasi secara langsung.
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/license.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/license.service.ts) **[NEW]**:
+     - Manajemen status lisensi, storage adapter universal, deteksi anti-rollback jam perangkat, kode aktivasi rahasia (`TRW-OKT-2026`, `TRW-LIFETIME-PASS`), dan simulator kunci dev mode.
+  2. [`src/components/auth/LockdownScreen.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/auth/LockdownScreen.tsx) **[NEW]**:
+     - Tampilan layar kunci bertema gelap-merah dengan pesan peringatan jatuh tempo, tombol ekspor cadangan database JSON instan, dan form input verifikasi kode aktivasi.
+  3. [`src/App.tsx`](file:///home/shadowxz/projects/triwara-pos/src/App.tsx):
+     - Memeriksa status lisensi saat inisialisasi dan me-render `LockdownScreen` jika aplikasi terkunci.
+  4. [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Menambahkan kartu & modal *"Lisensi & Aktivasi Aplikasi"* dengan info status live, formulir input aktivasi, dan tombol simulator kunci localhost.
+  5. [`src/__tests__/license-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/license-service.test.ts) **[NEW]**:
+     - 6 skenario pengujian komprehensif memverifikasi inisialisasi default, aktivasi tahap 1, aktivasi lifetime, penolakan kode salah, dan simulator uji coba.
+- **Hasil Pengujian**:
+  - `vitest run`: **34/34 test files passed (117/117 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.24 detik.
+
+
 
 
 

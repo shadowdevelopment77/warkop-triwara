@@ -14,8 +14,9 @@ import { StaffManagerModal } from './StaffManagerModal';
 import { StressTestModal } from './StressTestModal';
 import { BackupRestoreModal } from './BackupRestoreModal';
 import { printerService } from '../../services/printer.service';
+import { licenseService, type ILicenseInfo } from '../../services/license.service';
 
-type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
+type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | 'license' | null;
 
 interface SettingsPanelProps {
   currentUser: IStaff;
@@ -32,6 +33,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [isStressTestModalOpen, setIsStressTestModalOpen] = useState<boolean>(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
+  const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
+  const [activationInput, setActivationInput] = useState<string>('');
+
+  useEffect(() => {
+    return licenseService.subscribe((info) => setLicenseInfo(info));
+  }, []);
 
   const receiptFileInputRef = useRef<HTMLInputElement>(null);
   const appFileInputRef = useRef<HTMLInputElement>(null);
@@ -537,6 +544,30 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             {isOwner ? '💾' : '🔒'}
           </span>
         </button>
+
+        {/* 8. Lisensi & Aktivasi Aplikasi (Owner only) */}
+        <button
+          type="button"
+          className="settings-trigger-card"
+          style={{ borderColor: licenseInfo.stage === 'lifetime' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)' }}
+          onClick={() => guardOwnerAction(() => setActiveModal('license'))}
+        >
+          <div className="settings-card-info">
+            <h3 className="settings-card-title" style={{ color: licenseInfo.stage === 'lifetime' ? '#4ade80' : '#facc15' }}>
+              🔑 Lisensi &amp; Aktivasi Aplikasi
+            </h3>
+            <p className="settings-card-desc">
+              {licenseInfo.stage === 'lifetime'
+                ? '✓ Lisensi Permanen (Aktif Selamanya)'
+                : licenseInfo.stage === 'tempo_1'
+                ? 'Tempo Cicilan 1 (Batas: 5 Okt 2026)'
+                : 'Tempo Cicilan 2 (Batas: 5 Nov 2026)'}
+            </p>
+          </div>
+          <span className="settings-card-arrow" style={{ color: licenseInfo.stage === 'lifetime' ? '#22c55e' : '#eab308' }}>
+            {licenseInfo.stage === 'lifetime' ? '✓' : '🔑'}
+          </span>
+        </button>
       </div>
 
       {/* Modal 2: Koneksi Printer Thermal */}
@@ -942,6 +973,151 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 5: Lisensi & Aktivasi Aplikasi */}
+      {activeModal === 'license' && (
+        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">Lisensi &amp; Aktivasi Aplikasi</h3>
+              <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
+                ✕
+              </button>
+            </div>
+
+            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  padding: '14px',
+                  borderRadius: '8px',
+                  border: `1px solid ${licenseInfo.stage === 'lifetime' ? '#86efac' : '#fde047'}`,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Status Lisensi:</span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      backgroundColor: licenseInfo.stage === 'lifetime' ? '#dcfce7' : '#fef9c3',
+                      color: licenseInfo.stage === 'lifetime' ? '#15803d' : '#a16207',
+                    }}
+                  >
+                    {licenseInfo.stage === 'lifetime'
+                      ? '● Permanen (Lifetime)'
+                      : licenseInfo.stage === 'tempo_1'
+                      ? '● Tempo Cicilan 1'
+                      : '● Tempo Cicilan 2'}
+                  </span>
+                </div>
+
+                <strong style={{ fontSize: '14px', color: '#0f172a', display: 'block' }}>
+                  {licenseInfo.stage === 'lifetime'
+                    ? 'Aplikasi Terverifikasi Penuh'
+                    : licenseInfo.stage === 'tempo_1'
+                    ? 'Tenggat Waktu: 5 Oktober 2026'
+                    : 'Tenggat Waktu: 5 November 2026'}
+                </strong>
+
+                <p style={{ fontSize: '12px', color: '#475569', margin: '6px 0 0 0', lineHeight: '1.5' }}>
+                  {licenseInfo.stage === 'lifetime'
+                    ? 'Aplikasi ini telah memiliki lisensi permanen aktif selamanya tanpa batas waktu.'
+                    : licenseInfo.stage === 'tempo_1'
+                    ? 'Aplikasi beroperasi dalam masa tempo cicilan 1. Masukkan kode aktivasi cicilan 1 untuk memperpanjang hingga 5 November 2026.'
+                    : '✓ Cicilan 1 Terverifikasi! Silakan masukkan Kode Pelunasan Akhir untuk mengaktifkan lisensi permanen selamanya.'}
+                </p>
+              </div>
+
+              {licenseInfo.stage !== 'lifetime' && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!activationInput.trim()) return;
+                    const res = licenseService.activateCode(activationInput);
+                    if (res.success) {
+                      setFeedbackMsg(res.message);
+                      setActivationInput('');
+                    } else {
+                      setDialogConfig({
+                        isOpen: true,
+                        type: 'alert',
+                        title: 'Aktivasi Gagal',
+                        message: res.message,
+                        isDanger: true,
+                        onConfirm: () => {},
+                      });
+                    }
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+                >
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
+                    {licenseInfo.stage === 'tempo_1' ? 'Kode Aktivasi Cicilan 1:' : 'Kode Pelunasan Akhir:'}
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="settings-input"
+                      placeholder={licenseInfo.stage === 'tempo_1' ? 'TRW-OKT-2026' : 'TRW-LIFETIME-PASS'}
+                      value={activationInput}
+                      onChange={(e) => setActivationInput(e.target.value)}
+                      style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}
+                    />
+                    <button type="submit" className="settings-btn-primary" style={{ padding: '0 16px' }}>
+                      Aktifkan
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Developer / Owner Manual Test Tool */}
+              <div
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px dashed #cbd5e1',
+                  marginTop: '6px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                    🧪 Alat Uji Coba Penguncian (Localhost Test):
+                  </span>
+                </div>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 8px 0', lineHeight: '1.4' }}>
+                  Simulasikan tampilan layar terkunci saat jatuh tempo untuk memastikan alur backup dan aktivasi berfungsi dengan baik.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => licenseService.toggleSimulatedLock(true)}
+                  style={{
+                    width: '100%',
+                    height: '34px',
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🔒 Uji Tampilan Terkunci Sekarang
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-modal-footer">
+              <button type="button" className="settings-btn-primary" onClick={() => setActiveModal(null)}>
+                Selesai
+              </button>
+            </div>
           </div>
         </div>
       )}
