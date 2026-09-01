@@ -13,6 +13,7 @@ import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
 import { BackupRestoreModal } from './BackupRestoreModal';
 import { printerService } from '../../services/printer.service';
+import { BluetoothPrinter, type BluetoothDevice } from '../../plugins/bluetooth-printer';
 import { licenseService, type ILicenseInfo } from '../../services/license.service';
 
 type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | 'license' | null;
@@ -34,6 +35,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
   const [activationInput, setActivationInput] = useState<string>('');
   const [devTapCount, setDevTapCount] = useState<number>(0);
+  const [pairedDevices, setPairedDevices] = useState<BluetoothDevice[]>([]);
+  const [btScanning, setBtScanning] = useState<boolean>(false);
+  const [btConnecting, setBtConnecting] = useState<string | null>(null); // MAC being connected
 
   const handleSecretDevTap = () => {
     const next = devTapCount + 1;
@@ -295,27 +299,56 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
-  const handleConnectDefaultPrinter = async () => {
+  const handleScanBluetoothDevices = async () => {
+    setBtScanning(true);
+    setPairedDevices([]);
+    try {
+      const result = await BluetoothPrinter.getPairedDevices();
+      setPairedDevices(result.devices);
+      if (result.devices.length === 0) {
+        setDialogConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Tidak Ada Printer Ditemukan',
+          message: 'Tidak ada perangkat Bluetooth yang ter-pair. Silakan pair printer thermal Anda terlebih dahulu melalui Pengaturan → Bluetooth di HP, lalu coba lagi.',
+          onConfirm: () => {},
+        });
+      }
+    } catch (err) {
+      const errMsg = (err as Error).message || String(err);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Scan Bluetooth',
+        message: `Gagal mendapatkan daftar perangkat Bluetooth. Pastikan Bluetooth aktif.\n\nDetail: ${errMsg}`,
+        onConfirm: () => {},
+      });
+    } finally {
+      setBtScanning(false);
+    }
+  };
+
+  const handleSelectPrinter = async (device: BluetoothDevice) => {
+    setBtConnecting(device.address);
     try {
       await configService.updateConfig({
-        printerName: 'Printer Thermal (RawBT)',
-        printerMacAddress: 'RAWBT_BLUETOOTH',
+        printerName: device.name,
+        printerMacAddress: device.address,
       });
       const fresh = await configService.getConfig();
       setConfig(fresh);
-      setFeedbackMsg('Layanan Cetak RawBT berhasil diaktifkan.');
+      setFeedbackMsg(`Printer "${device.name}" berhasil dipilih.`);
       setTimeout(() => setFeedbackMsg(''), 3000);
-      if (typeof window !== 'undefined') {
-        window.location.href = 'rawbt:';
-      }
     } catch (err) {
       setDialogConfig({
         isOpen: true,
         type: 'alert',
-        title: 'Gagal Memasangkan Printer',
+        title: 'Gagal Menyimpan Printer',
         message: (err as Error).message,
         onConfirm: () => {},
       });
+    } finally {
+      setBtConnecting(null);
     }
   };
 
@@ -547,6 +580,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
 
             <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Status card */}
               <div
                 style={{
                   backgroundColor: '#f8fafc',
@@ -571,7 +605,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   </span>
                 </div>
                 <strong style={{ fontSize: '15px', color: '#0f172a', display: 'block' }}>
-                  {config?.printerName || 'Xantri Thermal BT-58D'}
+                  {config?.printerName || 'Belum ada printer dipilih'}
                 </strong>
                 {config?.printerMacAddress ? (
                   <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
@@ -579,27 +613,74 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   </p>
                 ) : (
                   <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-                    Belum ada printer yang tersimpan untuk kasir ini.
+                    Tap "Cari Printer Bluetooth" untuk melihat daftar printer yang ter-pair.
                   </p>
                 )}
               </div>
 
+              {/* Scan button */}
+              <button
+                type="button"
+                className="settings-btn-primary"
+                style={{ backgroundColor: '#0891b2', borderColor: '#0891b2' }}
+                onClick={handleScanBluetoothDevices}
+                disabled={btScanning}
+              >
+                {btScanning ? '🔍 Mencari Printer...' : '🔵 Cari Printer Bluetooth'}
+              </button>
+
+              {/* Paired devices list */}
+              {pairedDevices.length > 0 && (
+                <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <div style={{ padding: '8px 12px', backgroundColor: '#e2e8f0', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Pilih Printer ({pairedDevices.length} perangkat ter-pair)
+                  </div>
+                  {pairedDevices.map((device) => (
+                    <button
+                      key={device.address}
+                      type="button"
+                      onClick={() => handleSelectPrinter(device)}
+                      disabled={btConnecting === device.address}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: config?.printerMacAddress === device.address ? '#dbeafe' : 'white',
+                        border: 'none',
+                        borderBottom: '1px solid #e2e8f0',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        color: '#0f172a',
+                      }}
+                    >
+                      <span>
+                        <span style={{ fontSize: '14px', fontWeight: 600, display: 'block' }}>
+                          {device.name}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
+                          {device.address}
+                        </span>
+                      </span>
+                      <span style={{ fontSize: '12px', color: config?.printerMacAddress === device.address ? '#1d4ed8' : '#94a3b8', flexShrink: 0, marginLeft: '8px' }}>
+                        {btConnecting === device.address ? '⏳' : config?.printerMacAddress === device.address ? '✓ Aktif' : 'Pilih →'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Action buttons */}
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="settings-btn-primary"
                   style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
                   onClick={handleTestPrint}
+                  disabled={!config?.printerMacAddress}
                 >
-                  Uji Cetak Thermal (58mm)
-                </button>
-                <button
-                  type="button"
-                  className="settings-btn-secondary"
-                  style={{ padding: '0 14px' }}
-                  onClick={handleConnectDefaultPrinter}
-                >
-                  Buka RawBT
+                  🖨️ Uji Cetak Thermal (58mm)
                 </button>
                 {config?.printerMacAddress && (
                   <button
@@ -613,13 +694,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 )}
               </div>
 
+              {/* Info guide */}
               <div style={{ backgroundColor: '#f1f5f9', padding: '12px', borderRadius: '6px', fontSize: '12px', color: '#475569', lineHeight: '1.5' }}>
-                <strong>Panduan Koneksi Printer Kasir (RawBT Service 58mm):</strong>
+                <strong>Panduan Koneksi Printer (Bluetooth Langsung):</strong>
                 <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
-                  <li>Nyalakan tombol power printer thermal Bluetooth kasir Anda.</li>
-                  <li>Buka aplikasi <strong>RawBT</strong> di HP (atau ketuk tombol <em>Buka RawBT</em> di atas).</li>
-                  <li>Di RawBT, pilih koneksi <strong>Bluetooth</strong> dan pilih printer Anda (Panda, Xprinter, Iware, Mini POS, dll).</li>
-                  <li>Ketuk tombol <strong>Uji Cetak Thermal (58mm)</strong> di atas untuk memverifikasi kertas struk keluar langsung dari mesin printer Anda!</li>
+                  <li>Nyalakan printer thermal Bluetooth Anda.</li>
+                  <li>Di HP, buka <strong>Pengaturan → Bluetooth</strong> dan pair printer (sekali saja).</li>
+                  <li>Kembali ke sini, tap <strong>"Cari Printer Bluetooth"</strong>.</li>
+                  <li>Pilih nama printer dari daftar → tap <strong>"Uji Cetak Thermal (58mm)"</strong>.</li>
                 </ol>
               </div>
             </div>
@@ -632,6 +714,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
         </div>
       )}
+
 
       {/* Modal 3: Konfigurasi Struk Pelanggan */}
       {activeModal === 'receipt' && (

@@ -1,9 +1,12 @@
 // ═══════════════════════════════════════════════
-// Triwara POS — 58mm Thermal Printer Service (Zero-Queue & Fail-Safe)
+// Triwara POS — 58mm Thermal Printer Service
+// Direct Bluetooth Classic (SPP) — No RawBT required
+// Zero-Queue & Fail-Safe Policy
 // ═══════════════════════════════════════════════
 
 import type { IOrder, IShift, IShopConfig } from '../types';
 import { receiptService, type ReceiptType } from './receipt.service';
+import { BluetoothPrinter } from '../plugins/bluetooth-printer';
 
 export type PrinterErrorCode =
   | 'PRINTER_NOT_CONFIGURED'
@@ -37,11 +40,11 @@ export class PrinterService {
   formatErrorMessage(code: PrinterErrorCode, customMsg?: string): string {
     switch (code) {
       case 'PRINTER_NOT_CONFIGURED':
-        return 'Printer thermal belum tersambung. Silakan pasangkan printer thermal Bluetooth Anda terlebih dahulu melalui menu Pengaturan.';
+        return 'Printer thermal belum dipilih. Silakan pilih printer dari daftar Bluetooth di menu Pengaturan.';
       case 'BLUETOOTH_DISABLED':
         return 'Bluetooth perangkat tidak aktif. Silakan nyalakan Bluetooth di HP Anda terlebih dahulu.';
       case 'DEVICE_UNREACHABLE':
-        return 'Printer thermal tidak ditemukan atau di luar jangkauan. Pastikan printer Xantri BT-58D dalam keadaan menyala dan dekat dengan perangkat.';
+        return 'Printer thermal tidak ditemukan atau di luar jangkauan. Pastikan printer dalam keadaan menyala dan dekat dengan perangkat.';
       case 'CONNECTION_LOST':
         return 'Koneksi printer terputus di tengah proses cetak. Silakan periksa baterai/kertas printer lalu cetak ulang.';
       case 'PRINTING_IN_PROGRESS':
@@ -69,7 +72,7 @@ export class PrinterService {
 
     const printerAddress = config.printerMacAddress;
 
-    // 2. Prevent overlapping prints
+    // 2. Prevent overlapping prints (zero-queue policy)
     if (this.isPrinting) {
       return {
         success: false,
@@ -99,35 +102,36 @@ export class PrinterService {
         binary += String.fromCharCode(buffer[i]);
       }
       const base64 = typeof btoa !== 'undefined' ? btoa(binary) : '';
-      const rawbtUri = `rawbt:base64,${base64}`;
 
-      // 5. Transmit via RawBT Protocol
-      if (typeof window !== 'undefined') {
-        const isNativeAndroid = !!(window as any).Capacitor?.isNativePlatform?.();
-        console.log(`[PRINTER DRIVER] Transmitting ${buffer.length} ESC/POS bytes to ${config.printerName || 'Printer Thermal'} via RawBT (Native: ${isNativeAndroid})`);
-        
-        if (isNativeAndroid) {
-          window.location.href = rawbtUri;
-        } else {
-          try {
-            window.location.href = rawbtUri;
-          } catch {
-            // Fallback / ignored in jsdom test runner
-          }
-        }
-      } else {
-        console.log(`[THERMAL 58MM EMULATOR] Transmitting ${buffer.length} bytes to ${config.printerName || 'Xantri BT-58D'} (${printerAddress})`);
-      }
+      console.log(`[PRINTER DRIVER] Transmitting ${buffer.length} ESC/POS bytes to ${config.printerName || 'Printer Thermal'} (${printerAddress}) via Direct Bluetooth SPP`);
+
+      // 5. Direct Bluetooth SPP Transmission (no RawBT required)
+      await BluetoothPrinter.connect({ mac: printerAddress });
+      const printResult = await BluetoothPrinter.printBytes({ base64 });
+      await BluetoothPrinter.disconnect();
 
       return {
         success: true,
-        bytesSent: buffer.length,
+        bytesSent: printResult.bytesSent ?? buffer.length,
       };
     } catch (err) {
+      // Ensure we always disconnect on error
+      try { await BluetoothPrinter.disconnect(); } catch { /* ignore */ }
+
+      const errMsg = (err as Error).message || String(err);
+
+      // Map common Android BT errors to user-friendly codes
+      if (errMsg.includes('BLUETOOTH_DISABLED') || errMsg.includes('tidak aktif')) {
+        return { success: false, errorCode: 'BLUETOOTH_DISABLED', error: this.formatErrorMessage('BLUETOOTH_DISABLED') };
+      }
+      if (errMsg.includes('CONNECTION_FAILED') || errMsg.includes('ECONNREFUSED') || errMsg.includes('tersambung')) {
+        return { success: false, errorCode: 'DEVICE_UNREACHABLE', error: this.formatErrorMessage('DEVICE_UNREACHABLE') };
+      }
+
       return {
         success: false,
         errorCode: 'CONNECTION_LOST',
-        error: this.formatErrorMessage('CONNECTION_LOST', (err as Error).message),
+        error: this.formatErrorMessage('CONNECTION_LOST', errMsg),
       };
     } finally {
       this.isPrinting = false;

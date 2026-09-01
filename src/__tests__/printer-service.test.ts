@@ -94,7 +94,7 @@ describe('Thermal Printer Service & ESC/POS Formatting Tests', () => {
     const res = await printerService.printReceipt(sampleOrder, 'customer', unconfiguredConfig);
     expect(res.success).toBe(false);
     expect(res.errorCode).toBe('PRINTER_NOT_CONFIGURED');
-    expect(res.error).toContain('Printer thermal belum tersambung');
+    expect(res.error).toContain('Printer thermal belum dipilih');
   });
 
   it('enforces zero-queue fail-fast policy when communication fails', async () => {
