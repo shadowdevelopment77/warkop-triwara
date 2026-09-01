@@ -21,10 +21,10 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ## 📊 Ringkasan Hasil Pengujian Saat Ini
 
-- **Total Test Files**: **32 File Lulus (100%)**
-- **Total Unit Tests**: **105 Tests Passed (100%)**
+- **Total Test Files**: **33 File Lulus (100%)**
+- **Total Unit Tests**: **111 Tests Passed (100%)**
 - **Build Status**: **Sukses 100% (0 Error)**
-- **Waktu Eksekusi**: ~25.3 detik (Vitest) + 2.4 detik (Vite build)
+- **Waktu Eksekusi**: ~32.2 detik (Vitest) + 3.0 detik (Vite build)
 
 ---
 
@@ -399,4 +399,23 @@ npx vitest run src/__tests__/scope1-database-rollup.test.ts
 
 ---
 
-*Catatan: Seluruh 23 modul pengujian telah selesai diverifikasi dan 100% lulus.*
+### 🔹 24. Pengujian Layanan Printer Thermal Xantri BT-58D & Format ESC/POS
+**File**: [`src/__tests__/printer-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/printer-service.test.ts)
+- **Skenario 1: Pre-flight Check Koneksi Printer**
+  - Menguji penolakan pencetakan dengan pesan ramah jika printer belum disambungkan di menu Pengaturan.
+- **Skenario 2: Kebijakan Zero-Queue & Fail-Fast**
+  - Mensimulasikan kegagalan koneksi di tengah pengiriman data.
+  - Memverifikasi proses langsung dibatalkan seketika tanpa ada antrean tersembunyi yang berisiko mencetak tiba-tiba, serta permintaan cetak berikutnya dapat berjalan normal tanpa crash.
+- **Skenario 3: Format Struk Customer 58mm (32 Karakter)**
+  - Memverifikasi header toko, rincian pembayaran, uang kembali, dan footer tidak melebihi batas 32 karakter per baris.
+- **Skenario 4: Format Struk Bar (Item, Harga, Total Bar, Tanpa Header/Footer Toko)**
+  - Memverifikasi tiket Bar memuat nama item, opsi racikan, subtotal harga, dan TOTAL BAR tanpa memuat deskripsi toko.
+- **Skenario 5: Format Struk Dapur (Murni Racikan Tanpa Harga)**
+  - Memverifikasi tiket Dapur hanya memuat nama menu, qty, dan catatan racikan dengan 0% informasi harga.
+- **Skenario 6: Format Rekap Shift & Konversi Byte Binary ESC/POS**
+  - Mengonversi teks rekap shift menjadi binary buffer dengan perintah inisialisasi `ESC @` dan potong kertas `GS V`.
+  - Menguji fungsi `testPrint()` berhasil mengirim paket data uji koneksi.
+
+---
+
+*Catatan: Seluruh 24 modul pengujian telah selesai diverifikasi dan 100% lulus.*

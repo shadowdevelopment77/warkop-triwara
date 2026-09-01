@@ -32,7 +32,8 @@ import { LogPanel } from '../master/LogPanel';
 import { productService } from '../../services/product.service';
 import { configService } from '../../services/config.service';
 import { orderService } from '../../services/order.service';
-import { receiptService, type ReceiptType } from '../../services/receipt.service';
+import type { ReceiptType } from '../../services/receipt.service';
+import { printerService } from '../../services/printer.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 import type { IAppNotification, IStaff, IShift } from '../../types';
@@ -303,21 +304,55 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
 
   const handleConfirmPrint = async (selectedTypes: ReceiptType[]) => {
     if (!completedOrder || !shopConfig) return;
-    try {
-      for (const type of selectedTypes) {
-        const text = receiptService.generateReceiptText(completedOrder, shopConfig, type);
-        console.log(`[PRINTING ${type.toUpperCase()}]\n` + text);
-      }
+
+    // 1. Connection Pre-flight Check
+    if (!shopConfig.printerMacAddress || shopConfig.printerMacAddress.trim() === '') {
       setDialogConfig({
         isOpen: true,
-        title: 'Pencetakan Terkirim',
-        message: `Struk (${selectedTypes.join(', ')}) berhasil dikirim ke printer.`,
+        type: 'alert',
+        title: 'Printer Belum Tersambung',
+        message:
+          'Printer thermal belum dihubungkan. Silakan pasangkan printer Bluetooth Anda melalui menu Pengaturan.',
+        onConfirm: () => {},
+      });
+      return;
+    }
+
+    try {
+      const printedLabels: string[] = [];
+
+      for (const type of selectedTypes) {
+        const result = await printerService.printReceipt(completedOrder, type, shopConfig);
+        if (!result.success) {
+          // Zero-queue policy: fail immediately, do not queue
+          setDialogConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Pencetakan Gagal',
+            message: result.error || 'Gagal mengirim data ke printer thermal.',
+            isDanger: true,
+            onConfirm: () => {},
+          });
+          return;
+        }
+        const label = type === 'customer' ? 'Pelanggan' : type === 'bar' ? 'Bar' : 'Dapur';
+        printedLabels.push(label);
+      }
+
+      setDialogConfig({
+        isOpen: true,
+        title: 'Pencetakan Berhasil',
+        message: `Struk (${printedLabels.join(', ')}) berhasil dicetak ke ${shopConfig.printerName || 'Xantri BT-58D'}.`,
+        onConfirm: () => {},
       });
     } catch (err) {
       setDialogConfig({
         isOpen: true,
+        type: 'alert',
         title: 'Gagal Cetak Struk',
         message: 'Gagal mencetak struk: ' + (err as Error).message,
+        isDanger: true,
+        onConfirm: () => {},
       });
     }
   };

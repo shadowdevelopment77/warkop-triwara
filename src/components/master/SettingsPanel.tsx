@@ -13,6 +13,7 @@ import { DialogModal } from '../common/DialogModal';
 import { StaffManagerModal } from './StaffManagerModal';
 import { StressTestModal } from './StressTestModal';
 import { BackupRestoreModal } from './BackupRestoreModal';
+import { printerService } from '../../services/printer.service';
 
 type SettingModalType = 'printer' | 'receipt' | 'bluetooth' | 'branding' | null;
 
@@ -253,6 +254,71 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     });
   };
 
+  const handleTestPrint = async () => {
+    if (!config) return;
+    const res = await printerService.testPrint(config);
+    if (res.success) {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Uji Cetak Terkirim',
+        message: `Perintah uji cetak 58mm (${res.bytesSent} bytes) berhasil dikirim ke ${config.printerName || 'Xantri BT-58D'}.`,
+        onConfirm: () => {},
+      });
+    } else {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Uji Cetak Gagal',
+        message: res.error || 'Gagal mengirim data ke printer thermal.',
+        isDanger: true,
+        onConfirm: () => {},
+      });
+    }
+  };
+
+  const handleConnectDefaultPrinter = async () => {
+    try {
+      await configService.updateConfig({
+        printerName: 'Xantri Thermal BT-58D',
+        printerMacAddress: '00:11:22:33:44:55',
+      });
+      const fresh = await configService.getConfig();
+      setConfig(fresh);
+      setFeedbackMsg('Printer Xantri BT-58D berhasil dipasangkan.');
+      setTimeout(() => setFeedbackMsg(''), 3000);
+    } catch (err) {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Memasangkan Printer',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
+    }
+  };
+
+  const handleDisconnectPrinter = async () => {
+    try {
+      await configService.updateConfig({
+        printerName: undefined,
+        printerMacAddress: undefined,
+      });
+      const fresh = await configService.getConfig();
+      setConfig(fresh);
+      setFeedbackMsg('Printer berhasil diputuskan.');
+      setTimeout(() => setFeedbackMsg(''), 3000);
+    } catch (err) {
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Gagal Memutuskan Printer',
+        message: (err as Error).message,
+        onConfirm: () => {},
+      });
+    }
+  };
+
   const handleCleanOldOrders = () => {
     guardOwnerAction(async () => {
       try {
@@ -476,7 +542,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (
         <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="settings-modal-header">
               <h3 className="settings-modal-title">Koneksi Printer Thermal</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
@@ -484,38 +550,84 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </button>
             </div>
 
-            <div className="settings-modal-body">
-              <div style={{ backgroundColor: '#f1f5f9', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status Koneksi:</p>
-                <strong style={{ fontSize: '15px', color: '#0f172a' }}>
-                  {config?.printerMacAddress ? `Terhubung (${config.printerName || 'Xantri BT-58D'})` : 'Belum Dihubungkan'}
+            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  padding: '14px',
+                  borderRadius: '8px',
+                  border: `1px solid ${config?.printerMacAddress ? '#86efac' : '#cbd5e1'}`,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Status Koneksi:</span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      backgroundColor: config?.printerMacAddress ? '#dcfce7' : '#fef3c7',
+                      color: config?.printerMacAddress ? '#15803d' : '#b45309',
+                    }}
+                  >
+                    {config?.printerMacAddress ? '● Terhubung' : '○ Belum Dihubungkan'}
+                  </span>
+                </div>
+                <strong style={{ fontSize: '15px', color: '#0f172a', display: 'block' }}>
+                  {config?.printerName || 'Xantri Thermal BT-58D'}
                 </strong>
-                {config?.printerMacAddress && (
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                {config?.printerMacAddress ? (
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
                     MAC: {config.printerMacAddress}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+                    Belum ada printer yang tersimpan untuk kasir ini.
                   </p>
                 )}
               </div>
 
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                Triwara POS mendukung printer kasir thermal Bluetooth 58mm dengan command set ESC/POS.
-              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {config?.printerMacAddress ? (
+                  <>
+                    <button
+                      type="button"
+                      className="settings-btn-primary"
+                      style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                      onClick={handleTestPrint}
+                    >
+                      🧪 Uji Cetak Thermal
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-btn-danger"
+                      style={{ padding: '0 16px' }}
+                      onClick={handleDisconnectPrinter}
+                    >
+                      Putuskan Printer
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="settings-btn-primary"
+                    style={{ flex: 1 }}
+                    onClick={handleConnectDefaultPrinter}
+                  >
+                    ⚡ Pasangkan Xantri BT-58D
+                  </button>
+                )}
+              </div>
 
-              <button
-                type="button"
-                className="settings-btn-primary"
-                onClick={() =>
-                  setDialogConfig({
-                    isOpen: true,
-                    type: 'alert',
-                    title: 'Pencarian Bluetooth',
-                    message: 'Pastikan Bluetooth perangkat menyala dan printer thermal BT-58D dalam mode pairing.',
-                    onConfirm: () => {},
-                  })
-                }
-              >
-                Scan &amp; Pasangkan Printer
-              </button>
+              <div style={{ backgroundColor: '#f1f5f9', padding: '12px', borderRadius: '6px', fontSize: '12px', color: '#475569', lineHeight: '1.5' }}>
+                <strong>Panduan Printer Kasir (Xantri BT-58D 58mm):</strong>
+                <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
+                  <li>Nyalakan tombol power printer hingga lampu indikator biru/hijau menyala.</li>
+                  <li>Di menu Bluetooth HP/Tablet, lakukan pairing perangkat (PIN default: <code>0000</code> atau <code>1234</code>).</li>
+                  <li>Klik tombol uji cetak di atas untuk memastikan kertas mencetak dengan benar.</li>
+                </ol>
+              </div>
             </div>
 
             <div className="settings-modal-footer">

@@ -569,6 +569,32 @@ Seluruh 7 butir instruksi pada dokumen [`optimize.md`](file:///home/shadowxz/pro
   - `vitest run`: **32/32 test files passed (105/105 tests passed 100%)**.
   - `pnpm run build`: **Sukses 100% (0 error)** dalam 2.48 detik.
 
+---
+
+### 🚀 Phase 17: Integrasi Printer Thermal Xantri BT-58D, Zero-Queue Policy & ESC/POS Binary Buffer (Tahap 1)
+- **Tujuan Teknis**:
+  - Mempersiapkan layanan printer thermal 58mm (Xantri BT-58D) yang tangguh, kompatibel, dan aman digunakan kasir.
+  - Menerapkan kebijakan **Zero-Queue (Tanpa Antrean)**: kegagalan transmisi langsung membatalkan proses dan memberi instruksi cetak ulang, mencegah struk tercetak tiba-tiba di kemudian waktu.
+  - Melindungi kasir dengan **Pre-flight Connection Guard**: menolak eksekusi cetak jika printer belum terkonfigurasi dan mengarahkan ke menu Pengaturan.
+  - Menyediakan formatting struk Bar (dengan subtotal & total tanpa branding toko) dan struk Dapur (murni tiket racikan tanpa harga).
+- **Perubahan yang Diterapkan**:
+  1. [`src/services/printer.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/printer.service.ts) **[NEW]**:
+     - Manajemen status cetak (`isPrinting`), penanganan zero-queue, pemeriksaan pre-flight `printerMacAddress`, translasi kode error ramah kasir, serta simulator emulator transmisi byte.
+  2. [`src/services/receipt.service.ts`](file:///home/shadowxz/projects/triwara-pos/src/services/receipt.service.ts):
+     - Menambahkan helper `wrapIndent` untuk pembungkusan otomatis detail opsi & catatan racikan agar tidak melebihi 32 karakter.
+     - Menambahkan generator struk uji 58mm (`generateTestReceiptText`).
+     - Menambahkan konversi buffer binary ESC/POS (`convertToEscPosBuffer`) dengan perintah inisialisasi printer `ESC @` dan potong kertas `GS V`.
+  3. [`src/components/layout/AppShell.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/layout/AppShell.tsx):
+     - Mengintegrasikan `handleConfirmPrint` dengan validasi pra-koneksi dan penanganan error fail-fast dari `printerService`.
+  4. [`src/components/master/SettingsPanel.tsx`](file:///home/shadowxz/projects/triwara-pos/src/components/master/SettingsPanel.tsx):
+     - Memperbarui modal Koneksi Printer Thermal dengan indikator status live, tombol **"🧪 Uji Cetak Thermal"**, tombol **"Putuskan Printer"**, dan tombol cepat **"⚡ Pasangkan Xantri BT-58D"**.
+  5. [`src/__tests__/printer-service.test.ts`](file:///home/shadowxz/projects/triwara-pos/src/__tests__/printer-service.test.ts) **[NEW]**:
+     - 6 skenario pengujian komprehensif mengonfirmasi pre-flight check, zero-queue fail-fast, format 3 struk (Customer, Bar, Kitchen), serta konversi binary ESC/POS.
+- **Hasil Pengujian**:
+  - `vitest run`: **33/33 test files passed (111/111 tests passed 100%)**.
+  - `pnpm run build`: **Sukses 100% (0 error)** dalam 3.03 detik.
+
+
 
 
 

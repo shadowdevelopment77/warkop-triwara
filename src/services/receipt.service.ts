@@ -32,6 +32,25 @@ export class ReceiptService {
     return char.repeat(this.LINE_WIDTH);
   }
 
+  /** Wraps long detail/note text so lines strictly do not exceed 32 characters */
+  private wrapIndent(text: string, maxLen: number = 30, indent: string = '  '): string[] {
+    if (text.length <= maxLen) return [indent + text];
+    const words = text.split(' ');
+    const result: string[] = [];
+    let current = '';
+    for (const w of words) {
+      const candidate = current ? current + ' ' + w : w;
+      if (candidate.length <= maxLen) {
+        current = candidate;
+      } else {
+        if (current) result.push(indent + current);
+        current = w;
+      }
+    }
+    if (current) result.push(indent + current);
+    return result;
+  }
+
   /**
    * Generates formatted text receipt for 58mm thermal printer (BT-58D)
    */
@@ -66,10 +85,10 @@ export class ReceiptService {
         });
 
         if (details.length > 0) {
-          lines.push(`  (${details.join(', ')})`);
+          this.wrapIndent(`(${details.join(', ')})`).forEach((dl) => lines.push(dl));
         }
         if (item.notes) {
-          lines.push(`  * ${item.notes}`);
+          this.wrapIndent(`* ${item.notes}`).forEach((nl) => lines.push(nl));
         }
       });
 
@@ -113,9 +132,11 @@ export class ReceiptService {
         item.toppings.forEach((t) => details.push(`+${t.name}`));
 
         if (details.length > 0) {
-          lines.push(`  (${details.join(', ')})`);
+          this.wrapIndent(`(${details.join(', ')})`).forEach((dl) => lines.push(dl));
         }
-        if (item.notes) lines.push(`  * ${item.notes}`);
+        if (item.notes) {
+          this.wrapIndent(`* ${item.notes}`).forEach((nl) => lines.push(nl));
+        }
       });
 
       lines.push(this.lineDivider('-'));
@@ -139,9 +160,11 @@ export class ReceiptService {
         item.toppings.forEach((t) => details.push(`+${t.name}`));
 
         if (details.length > 0) {
-          lines.push(`  (${details.join(', ')})`);
+          this.wrapIndent(`(${details.join(', ')})`).forEach((dl) => lines.push(dl));
         }
-        if (item.notes) lines.push(`  * ${item.notes}`);
+        if (item.notes) {
+          this.wrapIndent(`* ${item.notes}`).forEach((nl) => lines.push(nl));
+        }
       });
 
       lines.push(this.lineDivider('='));
@@ -207,6 +230,52 @@ export class ReceiptService {
     lines.push('\n\n\n');
 
     return lines.join('\n');
+  }
+
+  /**
+   * Generates a 58mm test print receipt to verify printer connectivity and paper feed
+   */
+  generateTestReceiptText(config: IShopConfig): string {
+    const lines: string[] = [];
+    lines.push(this.lineDivider('='));
+    lines.push(this.centerLine(config.appName || 'WARKOP TRIWARA'));
+    lines.push(this.centerLine('UJI CETAK THERMAL 58MM'));
+    lines.push(this.lineDivider('='));
+    lines.push(`Printer : ${config.printerName || 'Xantri BT-58D'}`);
+    if (config.printerMacAddress) {
+      lines.push(`MAC     : ${config.printerMacAddress}`);
+    }
+    lines.push(`Waktu   : ${formatDateIndonesian(new Date())}`);
+    lines.push(`Lebar   : 58mm (32 Karakter)`);
+    lines.push(this.lineDivider('-'));
+    lines.push(this.centerLine('STATUS: KONEKSI BERHASIL!'));
+    lines.push(this.centerLine('Printer siap digunakan kasir.'));
+    lines.push(this.lineDivider('='));
+    lines.push('\n\n\n');
+    return lines.join('\n');
+  }
+
+  /**
+   * Converts a receipt string into standard ESC/POS binary command buffer
+   * including ESC @ (Init), text encoding, and GS V (paper cut command)
+   */
+  convertToEscPosBuffer(receiptText: string): Uint8Array {
+    const encoder = new TextEncoder();
+    const textBytes = encoder.encode(receiptText);
+
+    // ESC @ (Initialize printer: 0x1B, 0x40)
+    const initCmd = new Uint8Array([0x1b, 0x40]);
+    // GS V 66 0 (Partial paper cut: 0x1D, 0x56, 0x42, 0x00)
+    const cutCmd = new Uint8Array([0x1d, 0x56, 0x42, 0x00]);
+
+    const totalLength = initCmd.length + textBytes.length + cutCmd.length;
+    const buffer = new Uint8Array(totalLength);
+
+    buffer.set(initCmd, 0);
+    buffer.set(textBytes, initCmd.length);
+    buffer.set(cutCmd, initCmd.length + textBytes.length);
+
+    return buffer;
   }
 }
 

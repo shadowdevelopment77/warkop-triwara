@@ -80,7 +80,7 @@ describe('Paginated Orders Performance & LRU Prefetch Cache Tests', () => {
     await orderService.getPaginatedOrders(today, today, 1, 10);
 
     // Wait for background prefetch microtask (10ms setTimeout in prefetchNextPage)
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Access page 2
     const whereSpy = vi.spyOn(testDb.orders, 'where');
