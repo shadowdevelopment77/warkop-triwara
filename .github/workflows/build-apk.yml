@@ -36,6 +36,9 @@ jobs:
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Run tests
+        run: pnpm test
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -43,7 +46,7 @@ jobs:
         run: pnpm run build
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: npx exec cap sync android
 
       - name: Build Debug APK with Gradle
         run: |
@@ -74,7 +77,7 @@ jobs:
 
             Silakan unduh langsung dari HP:
             🧪 **[Download APK Testing / Debug (triwara-pos-test-debug.apk)](https://github.com/${{ github.repository }}/releases/download/latest-build/triwara-pos-test-debug.apk)**
-            
+
             - Siap untuk pengujian fitur transaksi & koneksi printer thermal Bluetooth.
           files: |
             dist-apks/triwara-pos-test-debug.apk
