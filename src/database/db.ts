@@ -15,6 +15,7 @@ import type {
   IStaff,
   IShift,
   IDailySummary,
+  IHeldOrder,
 } from '../types';
 
 export class TriwaraDatabase extends Dexie {
@@ -29,6 +30,7 @@ export class TriwaraDatabase extends Dexie {
   staff!: EntityTable<IStaff, 'id'>;
   shifts!: EntityTable<IShift, 'id'>;
   dailySummaries!: EntityTable<IDailySummary, 'id'>;
+  heldOrders!: EntityTable<IHeldOrder, 'id'>;
 
   constructor(dbName = 'TriwaraPOS') {
     super(dbName);
@@ -55,6 +57,10 @@ export class TriwaraDatabase extends Dexie {
       dailySummaries: '++id, &date, createdAt',
       logs: '++id, type, createdAt, [type+createdAt]',
       inventoryLogs: '++id, ingredientId, type, createdAt, [ingredientId+createdAt]',
+    });
+
+    this.version(4).stores({
+      heldOrders: '++id, createdAt',
     });
   }
 }

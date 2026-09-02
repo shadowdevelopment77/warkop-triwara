@@ -10,6 +10,7 @@ import type {
   IShopConfig,
   PaymentMethod,
   IOrder,
+  IHeldOrder,
 } from '../../types';
 
 import { Header } from './Header';
@@ -45,6 +46,9 @@ import { ShiftHistoryPanel } from '../master/ShiftHistoryPanel';
 import { TransactionHistoryPanel } from '../master/TransactionHistoryPanel';
 import { SupervisorPinModal } from '../auth/SupervisorPinModal';
 import { PostCloseStoreModal } from '../master/PostCloseStoreModal';
+import { SaveHeldOrderModal } from '../pos/SaveHeldOrderModal';
+import { HeldOrdersModal } from '../pos/HeldOrdersModal';
+import { heldOrderService } from '../../services/heldOrder.service';
 
 interface AppShellProps {
   currentUser: IStaff;
@@ -141,6 +145,18 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   const [customizingProduct, setCustomizingProduct] = useState<IProduct | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [completedOrder, setCompletedOrder] = useState<IOrder | null>(null);
+  const [heldOrders, setHeldOrders] = useState<IHeldOrder[]>([]);
+  const [isSaveHeldOrderOpen, setIsSaveHeldOrderOpen] = useState(false);
+  const [isHeldOrdersOpen, setIsHeldOrdersOpen] = useState(false);
+  const [paymentCustomerName, setPaymentCustomerName] = useState('');
+
+  const refreshHeldOrders = useCallback(async () => {
+    try {
+      setHeldOrders(await heldOrderService.getHeldOrders());
+    } catch (err) {
+      console.error('Failed to load held orders:', err);
+    }
+  }, []);
 
   const refreshNotifications = useCallback(async () => {
     try {
@@ -170,6 +186,10 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   useEffect(() => {
     loadPosData();
   }, [loadPosData]);
+
+  useEffect(() => {
+    refreshHeldOrders();
+  }, [refreshHeldOrders]);
 
   // Subscribe to real-time notification events
   useEffect(() => {
@@ -230,6 +250,60 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   const handleClearCart = () => {
     setCartItems([]);
     setDiscountPercent(0);
+    setPaymentCustomerName('');
+  };
+
+  const handleSaveHeldOrder = async (customerName: string) => {
+    await heldOrderService.holdOrder(cartItems, customerName, discountPercent);
+    handleClearCart();
+    setIsSaveHeldOrderOpen(false);
+    await refreshHeldOrders();
+  };
+
+  const restoreHeldOrder = async (heldOrder: IHeldOrder) => {
+    if (!heldOrder.id) return;
+    const storedOrder = await heldOrderService.getHeldOrder(heldOrder.id);
+    if (!storedOrder) {
+      await refreshHeldOrders();
+      setDialogConfig({ isOpen: true, title: 'Pesanan Tidak Ditemukan', message: 'Pesanan tersimpan ini sudah tidak tersedia.' });
+      return;
+    }
+    setCartItems(storedOrder.cartItems);
+    setDiscountPercent(storedOrder.discountPercent);
+    setPaymentCustomerName(storedOrder.customerName || '');
+    await heldOrderService.deleteHeldOrder(storedOrder.id!);
+    setIsHeldOrdersOpen(false);
+    await refreshHeldOrders();
+  };
+
+  const handleSelectHeldOrder = (heldOrder: IHeldOrder) => {
+    if (cartItems.length === 0) {
+      void restoreHeldOrder(heldOrder);
+      return;
+    }
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Ganti Pesanan Aktif?',
+      message: 'Keranjang saat ini akan diganti dengan pesanan tersimpan yang dipilih.',
+      confirmText: 'Ya, Ganti Pesanan',
+      onConfirm: () => { void restoreHeldOrder(heldOrder); },
+    });
+  };
+
+  const handleDeleteHeldOrder = (heldOrder: IHeldOrder) => {
+    if (!heldOrder.id) return;
+    setDialogConfig({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Hapus Pesanan Tersimpan?',
+      message: `Pesanan ${heldOrder.customerName || 'Umum'} akan dihapus dan tidak dapat dikembalikan.`,
+      isDanger: true,
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        void heldOrderService.deleteHeldOrder(heldOrder.id!).then(refreshHeldOrders).catch((err) => console.error('Failed to delete held order:', err));
+      },
+    });
   };
 
   // Checkout & Payment
@@ -282,6 +356,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
 
       setCartItems([]);
       setDiscountPercent(0);
+      setPaymentCustomerName('');
       setIsPaymentModalOpen(false);
       setCompletedOrder(order);
       refreshNotifications();
@@ -399,10 +474,16 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         appName={shopConfig?.appName || 'Triwara POS'}
         appLogo={shopConfig?.appLogoBase64}
         unreadCount={unreadCount}
+        heldOrderCount={heldOrders.length}
         isNotificationOpen={isNotificationOpen}
         currentUserName={currentUser.name}
         onOpenMaster={() => setIsMasterOpen(true)}
         onToggleNotifications={() => setIsNotificationOpen((prev) => !prev)}
+        onOpenHeldOrders={() => {
+          setIsNotificationOpen(false);
+          void refreshHeldOrders();
+          setIsHeldOrdersOpen(true);
+        }}
         onLockApp={onLockApp}
       >
         <NotificationFlyout
@@ -542,6 +623,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                 }
                 setIsPaymentModalOpen(true);
               }}
+              onHoldOrder={() => setIsSaveHeldOrderOpen(true)}
             />
           </div>
         )}
@@ -586,8 +668,25 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
             cartItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0) *
             ((100 - discountPercent) / 100)
           }
+          initialCustomerName={paymentCustomerName}
           onClose={() => setIsPaymentModalOpen(false)}
           onConfirmPayment={handleConfirmPayment}
+        />
+      )}
+
+      {isSaveHeldOrderOpen && (
+        <SaveHeldOrderModal
+          onClose={() => setIsSaveHeldOrderOpen(false)}
+          onSave={handleSaveHeldOrder}
+        />
+      )}
+
+      {isHeldOrdersOpen && (
+        <HeldOrdersModal
+          heldOrders={heldOrders}
+          onClose={() => setIsHeldOrdersOpen(false)}
+          onSelect={handleSelectHeldOrder}
+          onDelete={handleDeleteHeldOrder}
         />
       )}
 

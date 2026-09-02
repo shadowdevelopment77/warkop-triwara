@@ -8,6 +8,42 @@ import type { IOrder, IOrderItem, IRecipeItem, IProductAdditional, PaymentMethod
 
 let isSeedingInProgress = false;
 
+/**
+ * Production-only first-run bootstrap. Unlike the demo seed, this creates no
+ * menu, stock, transaction, shift, or sample employee data. It is idempotent:
+ * an existing client database is never cleared or reseeded.
+ */
+export async function initializeProductionDatabaseIfNeeded(
+  database: TriwaraDatabase = db
+): Promise<void> {
+  const configCount = await database.shopConfig.count();
+  if (configCount > 0) return;
+
+  const now = new Date();
+  const pinHash = await hashPin('0000');
+
+  await database.transaction('rw', [database.shopConfig, database.staff], async () => {
+    if (await database.shopConfig.count() > 0) return;
+
+    await database.shopConfig.add({
+      appName: 'Triwara POS',
+      receiptHeaderLines: [],
+      receiptFooterLines: [],
+      pinHash,
+    });
+
+    if (await database.staff.count() === 0) {
+      await database.staff.add({
+        name: 'Owner Toko',
+        pin: '0000',
+        role: 'owner',
+        active: true,
+        createdAt: now,
+      });
+    }
+  });
+}
+
 export async function resetAndSeedDatabase(database: TriwaraDatabase = db, totalOrders = 0): Promise<void> {
   if (isSeedingInProgress) return;
   isSeedingInProgress = true;
