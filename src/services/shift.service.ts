@@ -149,6 +149,13 @@ export class ShiftService {
       throw new Error('Shift ini sudah ditutup sebelumnya');
     }
 
+    const heldOrderCount = await this.database.heldOrders.count();
+    if (heldOrderCount > 0) {
+      throw new Error(
+        `Masih ada ${heldOrderCount} pesanan tersimpan. Selesaikan pembayaran atau hapus pesanan tersebut sebelum menutup toko.`
+      );
+    }
+
     const now = new Date();
     const validExpenses = (expenses || []).filter((e) => e.amount > 0);
     const totalExpenses = validExpenses.reduce((sum, e) => sum + e.amount, 0);

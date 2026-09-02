@@ -194,6 +194,21 @@ export interface ICartItem {
   itemHpp: number;
 }
 
+/**
+ * A "parked" order — a snapshot of the cart saved for later, before payment.
+ * Kept completely separate from IOrder: this is NOT a transaction yet, it
+ * never touches dailySummaries/reports/stock. Stock and reporting only get
+ * affected once the order is actually resumed and paid (existing createOrder
+ * flow, unchanged).
+ */
+export interface IHeldOrder {
+  id?: number;
+  customerName?: string; // optional, shown in the held-orders list for reference
+  cartItems: ICartItem[];
+  discountPercent: number;
+  createdAt: Date;
+}
+
 export type NotificationType = 'inventory' | 'order' | 'product' | 'alert';
 
 export interface IAppNotification {
@@ -229,5 +244,3 @@ export interface IDailySummary {
   createdAt: Date;
   updatedAt: Date;
 }
-
-

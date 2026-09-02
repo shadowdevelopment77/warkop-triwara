@@ -78,10 +78,23 @@
   box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 500px;
-  max-height: 88dvh;
+  /* Always size off the actual available viewport height (not a fixed 88%
+     guess) so this works correctly across portrait, landscape, and tablets
+     of any resolution/DPR — including the Advan Tab A10 (1280×800). */
+  max-height: calc(100vh - 20px);
+  max-height: calc(100dvh - 20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Scoped to the printer-connection modal only (see SettingsPanel.tsx) —
+   .modal-backdrop's default 200px bottom padding is shared by 20+ other
+   modals (many with form inputs that rely on that space for on-screen
+   keyboard clearance), so we don't touch it globally. This modal has no
+   text inputs, so it's safe to reclaim that space in landscape. */
+.printer-modal-backdrop {
+  padding-bottom: 24px;
 }
 
 .settings-modal-header {

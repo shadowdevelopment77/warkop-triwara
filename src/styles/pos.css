@@ -520,6 +520,82 @@
   background-color: #27272a;
 }
 
+.cart-payment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cart-payment-actions .btn-pay-now {
+  flex: 1;
+}
+
+.btn-hold-order {
+  min-width: 116px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.btn-hold-order:hover {
+  background: var(--bg-surface-hover);
+}
+
+.held-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: min(420px, 58vh);
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.held-order-card {
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.held-order-card:hover {
+  border-color: #94a3b8;
+  background: var(--bg-surface);
+}
+
+.held-order-card-header,
+.held-order-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.held-order-customer { font-size: 14px; font-weight: 800; }
+.held-order-menu, .held-order-time { color: var(--text-muted); font-size: 12px; }
+.held-order-menu { margin: 7px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.held-order-total { font-size: 13px; font-weight: 800; }
+
+.held-order-delete {
+  flex: 0 0 auto;
+  padding: 2px 4px;
+  color: var(--danger-color);
+  font-size: 17px;
+  line-height: 1;
+}
+
+@media (max-width: 420px) {
+  .cart-payment-actions { flex-direction: column-reverse; }
+  .btn-hold-order { width: 100%; }
+}
+
 /* ═══════════════════════════════════════════════
    Variant & Additional Modal Controls (High Contrast)
    ═══════════════════════════════════════════════ */

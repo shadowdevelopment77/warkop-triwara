@@ -4,12 +4,47 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import type { IOrder, IIngredient, IShopConfig } from '../types';
 import type { ISalesSummary, ITopProduct, ISalesChartResult } from './report.service';
 import { formatRupiah } from '../utils/currency';
 import { formatShortDate, formatDateIndonesian, toInputDateString } from '../utils/date';
 
 export class PdfService {
+  /**
+   * Saves a jsPDF document, adapting to the runtime:
+   * - Web / PWA (browser): jsPDF's doc.save() works fine (blob URL + <a download> click)
+   * - Native app (Capacitor/Android WebView): the <a download> trick is silently
+   *   unsupported — nothing downloads and no error is thrown. Instead, write the
+   *   PDF bytes to device storage via the Filesystem plugin, then open the native
+   *   Share sheet so the user can save it, send it via WhatsApp, etc.
+   */
+  private async savePdf(doc: jsPDF, fileName: string): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      doc.save(fileName);
+      return;
+    }
+
+    const base64Data = doc.output('datauristring').split(',')[1];
+    const written = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Documents,
+      recursive: true,
+    });
+
+    try {
+      await Share.share({
+        title: fileName,
+        url: written.uri,
+      });
+    } catch {
+      // User may cancel the share sheet — that's fine, the file is already
+      // saved to Documents on the device either way.
+    }
+  }
   /**
    * Generates and downloads Sales Report PDF (Clean 1-Page Document):
    * - Page 1: Header, Compact Metric Cards, Vector Omset Chart, and Top Selling Products Table
@@ -222,7 +257,7 @@ export class PdfService {
       }
     }
 
-    doc.save(`Laporan_Penjualan_${periodStr.replace(/\//g, '-')}.pdf`);
+    await this.savePdf(doc, `Laporan_Penjualan_${periodStr.replace(/\//g, '-')}.pdf`);
     onProgress?.(100, 'Selesai!');
   }
 
@@ -316,7 +351,7 @@ export class PdfService {
     onProgress?.(90, 'Menyimpan berkas PDF...');
 
     const fileName = `riwayat_transaksi_${toInputDateString(startDate)}_${toInputDateString(endDate)}.pdf`;
-    doc.save(fileName);
+    await this.savePdf(doc, fileName);
 
     if (wakeLock) {
       try {
@@ -366,7 +401,7 @@ export class PdfService {
       headStyles: { fillColor: [40, 40, 40] },
     });
 
-    doc.save(`Laporan_Stok_Bahan_${todayStr.replace(/\//g, '-')}.pdf`);
+    await this.savePdf(doc, `Laporan_Stok_Bahan_${todayStr.replace(/\//g, '-')}.pdf`);
   }
 
   /**
@@ -462,7 +497,7 @@ export class PdfService {
       doc.text(`Catatan Kasir: ${shift.notes}`, 14, currentY);
     }
 
-    doc.save(`Rekap_Shift_${shift.shiftNumber}_${shift.cashierName}.pdf`);
+    await this.savePdf(doc, `Rekap_Shift_${shift.shiftNumber}_${shift.cashierName}.pdf`);
   }
 }
 

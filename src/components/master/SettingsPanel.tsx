@@ -570,7 +570,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (
-        <div className="modal-backdrop" onClick={() => setActiveModal(null)}>
+        <div className="modal-backdrop printer-modal-backdrop" onClick={() => setActiveModal(null)}>
           <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="settings-modal-header">
               <h3 className="settings-modal-title">Koneksi Printer Thermal</h3>
@@ -635,6 +635,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div style={{ padding: '8px 12px', backgroundColor: '#e2e8f0', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Pilih Printer ({pairedDevices.length} perangkat ter-pair)
                   </div>
+                  <div style={{ maxHeight: '38vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   {pairedDevices.map((device) => (
                     <button
                       key={device.address}
@@ -668,6 +669,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       </span>
                     </button>
                   ))}
+                  </div>
                 </div>
               )}
 
