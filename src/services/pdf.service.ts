@@ -367,7 +367,12 @@ export class PdfService {
   /**
    * Generates and downloads Inventory Stock Report PDF
    */
-  async exportInventoryReport(ingredients: IIngredient[], config: IShopConfig): Promise<void> {
+  async exportInventoryReport(
+    ingredients: IIngredient[],
+    config: IShopConfig,
+    onProgress?: (percent: number, message: string) => void
+  ): Promise<void> {
+    onProgress?.(10, 'Menyiapkan data stok...');
     const doc = new jsPDF();
     const todayStr = formatShortDate(new Date());
 
@@ -378,6 +383,7 @@ export class PdfService {
     doc.setFontSize(10);
     doc.text(`Tanggal Cetak: ${todayStr}`, 14, 34);
 
+    onProgress?.(40, 'Menyusun tabel stok...');
     const tableBody = ingredients.map((ing, idx) => {
       let status = 'Aman';
       if (ing.currentStock <= ing.minStock * 0.1) status = 'Kritis';
@@ -401,7 +407,9 @@ export class PdfService {
       headStyles: { fillColor: [40, 40, 40] },
     });
 
+    onProgress?.(85, 'Menyimpan file PDF...');
     await this.savePdf(doc, `Laporan_Stok_Bahan_${todayStr.replace(/\//g, '-')}.pdf`);
+    onProgress?.(100, 'Selesai!');
   }
 
   /**
@@ -409,8 +417,10 @@ export class PdfService {
    */
   async exportShiftReportPdf(
     shift: import('../types').IShift,
-    config: IShopConfig
+    config: IShopConfig,
+    onProgress?: (percent: number, message: string) => void
   ): Promise<void> {
+    onProgress?.(10, 'Menyiapkan data shift...');
     const doc = new jsPDF();
     const openTimeStr = formatDateIndonesian(shift.openedAt);
     const closeTimeStr = shift.closedAt ? formatDateIndonesian(shift.closedAt) : 'Masih Berjalan';
@@ -426,6 +436,7 @@ export class PdfService {
     doc.text(`Waktu Buka  : ${openTimeStr}`, 14, 47);
     doc.text(`Waktu Tutup : ${closeTimeStr}`, 14, 53);
 
+    onProgress?.(40, 'Menyusun rincian kasir...');
     // Shift Financial Summary
     const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales - (shift.totalExpenses || 0));
     const actual = shift.actualEndingCash ?? expected;
@@ -497,7 +508,9 @@ export class PdfService {
       doc.text(`Catatan Kasir: ${shift.notes}`, 14, currentY);
     }
 
+    onProgress?.(85, 'Menyimpan file PDF...');
     await this.savePdf(doc, `Rekap_Shift_${shift.shiftNumber}_${shift.cashierName}.pdf`);
+    onProgress?.(100, 'Selesai!');
   }
 }
 

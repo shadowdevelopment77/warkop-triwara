@@ -549,7 +549,19 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                       type="button"
                       className="shift-btn-danger"
                       style={{ height: '30px', fontSize: '12px', padding: '0 12px' }}
-                      onClick={() => setIsCloseShiftModalOpen(true)}
+                      onClick={() => {
+                        if (heldOrders.length > 0) {
+                          setDialogConfig({
+                            isOpen: true,
+                            type: 'alert',
+                            title: 'Masih Ada Pesanan Tertunda',
+                            message: `Ada ${heldOrders.length} pesanan tertunda yang belum diselesaikan. Selesaikan dulu (bayar atau batalkan) sebelum menutup toko.`,
+                            onConfirm: () => {},
+                          });
+                          return;
+                        }
+                        setIsCloseShiftModalOpen(true);
+                      }}
                     >
                       Tutup Toko
                     </button>

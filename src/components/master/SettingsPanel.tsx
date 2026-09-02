@@ -635,7 +635,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div style={{ padding: '8px 12px', backgroundColor: '#e2e8f0', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Pilih Printer ({pairedDevices.length} perangkat ter-pair)
                   </div>
-                  <div style={{ maxHeight: '38vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   {pairedDevices.map((device) => (
                     <button
                       key={device.address}
@@ -669,7 +668,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       </span>
                     </button>
                   ))}
-                  </div>
                 </div>
               )}
 

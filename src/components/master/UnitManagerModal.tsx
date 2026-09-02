@@ -156,8 +156,6 @@ export const UnitManagerModal: React.FC<UnitManagerModalProps> = ({ onClose, onC
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
-                  maxHeight: '220px',
-                  overflowY: 'auto',
                   paddingRight: '4px',
                 }}
               >

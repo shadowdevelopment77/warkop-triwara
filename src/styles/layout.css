@@ -372,7 +372,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 10px 14px 200px;
+  padding: 10px 14px 56px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -413,7 +413,7 @@
 }
 
 .modal-body {
-  padding: 16px 18px 140px;
+  padding: 16px 18px 56px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;

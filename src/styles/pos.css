@@ -825,7 +825,7 @@
 }
 
 .pos-modal-body {
-  padding: 16px 18px 140px;
+  padding: 16px 18px 56px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
