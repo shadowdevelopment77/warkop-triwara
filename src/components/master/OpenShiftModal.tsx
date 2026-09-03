@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import type { IStaff, IShift } from '../../types';
 import { shiftService } from '../../services/shift.service';
 import { formatRupiah } from '../../utils/currency';
+import { NumberInput } from '../common/NumberInput';
 
 interface OpenShiftModalProps {
   isOpen: boolean;
@@ -86,17 +87,13 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
 
           <div className="inv-form-group">
             <label className="inv-form-label">Uang Kas Awal / Modal Kembalian Toko (Rp)</label>
-            <input
-              type="number"
-              inputMode="numeric"
+            <NumberInput
               className="form-input"
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
               placeholder="Uang Modal"
-              value={startingCash || ''}
-              onChange={(e) => setStartingCash(parseFloat(e.target.value) || 0)}
+              value={startingCash}
+              onChange={(v) => setStartingCash(v === '' ? 0 : v)}
               required
-              min="0"
-
             />
             <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
               {[50000, 100000, 200000, 300000].map((nominal) => (

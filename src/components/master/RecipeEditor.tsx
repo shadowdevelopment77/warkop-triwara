@@ -9,6 +9,7 @@ import { ingredientService } from '../../services/ingredient.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 import { DialogModal } from '../common/DialogModal';
+import { NumberInput } from '../common/NumberInput';
 
 interface RecipeEditorProps {
   product: IProduct | null;
@@ -331,12 +332,11 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
               <div className="form-group">
                 <label className="form-label">Harga Jual (Rp)</label>
-                <input
-                  type="number"
+                <NumberInput
                   className="form-input"
                   placeholder="contoh: 22000"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  onChange={setPrice}
                   required
                 />
               </div>
@@ -389,11 +389,11 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                       </select>
 
                       <div className="menu-qty-box">
-                        <input
-                          type="number"
+                        <NumberInput
                           placeholder="Qty"
+                          allowDecimal
                           value={item.amount || ''}
-                          onChange={(e) => handleRecipeAmountChange(idx, parseFloat(e.target.value) || 0)}
+                          onChange={(v) => handleRecipeAmountChange(idx, v === '' ? 0 : v)}
                         />
                         <span>{item.unit}</span>
                       </div>
@@ -447,11 +447,11 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                       </select>
 
                       <div className="menu-qty-box">
-                        <input
-                          type="number"
+                        <NumberInput
                           placeholder="Qty"
+                          allowDecimal
                           value={item.amount || ''}
-                          onChange={(e) => handlePackagingAmountChange(idx, parseFloat(e.target.value) || 0)}
+                          onChange={(v) => handlePackagingAmountChange(idx, v === '' ? 0 : v)}
                         />
                         <span>{item.unit}</span>
                       </div>
@@ -503,11 +503,10 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
                         <div className="menu-price-box">
                           <span>+Rp</span>
-                          <input
-                            type="number"
+                          <NumberInput
                             placeholder="Harga"
                             value={add.price || ''}
-                            onChange={(e) => handleAdditionalChange(idx, 'price', parseFloat(e.target.value) || 0)}
+                            onChange={(v) => handleAdditionalChange(idx, 'price', v === '' ? 0 : v)}
                             required
                           />
                         </div>
@@ -545,11 +544,11 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                         </select>
 
                         <div className="menu-qty-box">
-                          <input
-                            type="number"
+                          <NumberInput
                             placeholder="Qty"
+                            allowDecimal
                             value={add.amount || ''}
-                            onChange={(e) => handleAdditionalChange(idx, 'amount', parseFloat(e.target.value) || 0)}
+                            onChange={(v) => handleAdditionalChange(idx, 'amount', v === '' ? 0 : v)}
                             required
                           />
                           <span>

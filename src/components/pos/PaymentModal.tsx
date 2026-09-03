@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import type { PaymentMethod } from '../../types';
 import { formatRupiah } from '../../utils/currency';
+import { NumberInput } from '../common/NumberInput';
 
 interface PaymentModalProps {
   totalAmount: number;
@@ -123,12 +124,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 ))}
               </div>
 
-              <input
-                type="number"
-                inputMode="numeric"
+              <NumberInput
                 className="form-input price-input-lg"
-                value={cashInput || ''}
-                onChange={(e) => setCashInput(parseFloat(e.target.value) || 0)}
+                value={cashInput}
+                onChange={(v) => setCashInput(v === '' ? 0 : v)}
                 required
               />
 

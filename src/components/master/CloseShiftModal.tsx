@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import type { IShift, IShiftExpense } from '../../types';
 import { shiftService } from '../../services/shift.service';
 import { formatRupiah } from '../../utils/currency';
+import { NumberInput } from '../common/NumberInput';
 
 interface CloseShiftModalProps {
   isOpen: boolean;
@@ -221,14 +222,12 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
                 value={descInput}
                 onChange={(e) => setDescInput(e.target.value)}
               />
-              <input
-                type="number"
-                inputMode="numeric"
+              <NumberInput
                 placeholder="Rp..."
                 className="form-input"
                 style={{ flex: 1, height: '36px', fontSize: '13px' }}
-                value={amountInput || ''}
-                onChange={(e) => setAmountInput(parseFloat(e.target.value) || '')}
+                value={amountInput}
+                onChange={setAmountInput}
               />
               <button
                 type="button"
@@ -294,19 +293,16 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
           {/* Input Actual Physical Cash */}
           <div className="inv-form-group">
             <label className="inv-form-label">Uang Tunai Fisik di Laci Kasir (Rp)</label>
-            <input
-              type="number"
-              inputMode="numeric"
+            <NumberInput
               className="form-input"
               placeholder='Uang Modal'
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
-              value={actualCash || ''}
-              onChange={(e) => {
+              value={actualCash}
+              onChange={(v) => {
                 setHasManuallyEditedActual(true);
-                setActualCash(parseFloat(e.target.value) || 0);
+                setActualCash(v === '' ? 0 : v);
               }}
               required
-              min="0"
             />
           </div>
 
