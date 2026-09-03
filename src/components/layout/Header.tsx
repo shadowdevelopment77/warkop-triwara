@@ -8,10 +8,12 @@ interface HeaderProps {
   appName: string;
   appLogo?: string;
   unreadCount?: number;
+  heldOrderCount?: number;
   isNotificationOpen?: boolean;
   currentUserName?: string;
   onOpenMaster: () => void;
   onToggleNotifications: () => void;
+  onOpenHeldOrders: () => void;
   onLockApp: () => void;
   children?: React.ReactNode;
 }
@@ -20,10 +22,12 @@ export const Header: React.FC<HeaderProps> = ({
   appName,
   appLogo,
   unreadCount = 0,
+  heldOrderCount = 0,
   isNotificationOpen = false,
   currentUserName,
   onOpenMaster,
   onToggleNotifications,
+  onOpenHeldOrders,
   onLockApp,
   children,
 }) => {
@@ -83,6 +87,17 @@ export const Header: React.FC<HeaderProps> = ({
           {unreadCount > 0 && <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
         </button>
 
+        <button
+          type="button"
+          className="btn-notification-trigger"
+          onClick={onOpenHeldOrders}
+          title="Pesanan tersimpan"
+          aria-label="Pesanan tersimpan"
+        >
+          <span>🧾</span>
+          {heldOrderCount > 0 && <span className="notification-badge">{heldOrderCount > 99 ? '99+' : heldOrderCount}</span>}
+        </button>
+
         <button type="button" className="btn-lock-trigger" onClick={onLockApp} title="Kunci Aplikasi">
           Kunci PIN
         </button>
@@ -92,4 +107,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-

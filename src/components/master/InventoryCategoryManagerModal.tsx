@@ -142,8 +142,6 @@ export const InventoryCategoryManagerModal: React.FC<InventoryCategoryManagerMod
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                maxHeight: '260px',
-                overflowY: 'auto',
               }}
             >
               {categories.map((cat) => {

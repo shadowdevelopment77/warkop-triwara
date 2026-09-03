@@ -161,7 +161,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
       <div className="modal-backdrop" onClick={onClose}>
         <div
           className="settings-modal-card"
-          style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}
+          style={{ maxWidth: '640px' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

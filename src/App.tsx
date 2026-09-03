@@ -8,6 +8,7 @@ import { LockdownScreen } from './components/auth/LockdownScreen';
 import { AppShell } from './components/layout/AppShell';
 import { configService } from './services/config.service';
 import { licenseService, type ILicenseInfo } from './services/license.service';
+import { reportService } from './services/report.service';
 import { seedDatabaseIfEmpty } from './database/seed';
 import type { IShopConfig, IStaff } from './types';
 import './styles/global.css';
@@ -34,6 +35,7 @@ export function App() {
   useEffect(() => {
     seedDatabaseIfEmpty().finally(() => {
       configService.getConfig().then(setShopConfig).catch(console.error);
+      reportService.healRecentDailySummary();
     });
   }, [currentUser]);
 

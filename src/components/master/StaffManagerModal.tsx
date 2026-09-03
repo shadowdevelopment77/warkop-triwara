@@ -233,8 +233,6 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                maxHeight: '220px',
-                overflowY: 'auto',
               }}
             >
               {staffList.map((s) => (

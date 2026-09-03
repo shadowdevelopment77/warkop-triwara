@@ -11,6 +11,7 @@ import { formatDateIndonesian } from '../../utils/date';
 import { formatRupiah } from '../../utils/currency';
 import { PaginationBar } from '../common/PaginationBar';
 import { VoidModal } from './VoidModal';
+import { DialogModal } from '../common/DialogModal';
 
 interface TransactionHistoryPanelProps {
   onReprintOrder: (order: IOrder) => void;
@@ -182,6 +183,12 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     }
   };
 
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({ isOpen: false, title: '', message: '' });
+
   const handleConfirmVoid = async (reason: string) => {
     if (!voidingOrder?.id) return;
     try {
@@ -189,7 +196,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
       setVoidingOrder(null);
       await loadOrders();
     } catch (err) {
-      alert('Gagal membatalkan transaksi: ' + (err as Error).message);
+      setDialogConfig({ isOpen: true, title: 'Gagal Membatalkan Transaksi', message: (err as Error).message });
     }
   };
 
@@ -210,7 +217,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
     } catch (err) {
       console.error(err);
       setPdfProgress(null);
-      alert('Gagal mengekspor PDF: ' + (err as Error).message);
+      setDialogConfig({ isOpen: true, title: 'Gagal Mengekspor PDF', message: (err as Error).message });
     }
   };
 
@@ -406,6 +413,15 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
           </div>
         </div>
       )}
+
+      <DialogModal
+        isOpen={dialogConfig.isOpen}
+        type="alert"
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -256,24 +256,72 @@ export class ReceiptService {
   }
 
   /**
+     * Strips/replaces characters that are valid UTF-8 (from Intl.NumberFormat,
+     * typographic dashes, smart quotes, etc.) but are NOT understood by
+     * budget ESC/POS thermal printers, which read single-byte codepages
+     * (CP437/PC850) — not UTF-8. Left unhandled, these bytes print as garbage
+     * glyphs/boxes on real hardware (Xprinter/Xantri 58mm included).
+     */
+    private sanitizeForPrinter(text: string): string {
+      return text
+        .replace(/\u00A0/g, ' ')      // non-breaking space (from Intl.NumberFormat id-ID)
+        .replace(/[\u2013\u2014]/g, '-') // en-dash / em-dash → plain hyphen
+        .replace(/[\u2018\u2019]/g, "'") // smart single quotes
+        .replace(/[\u201C\u201D]/g, '"') // smart double quotes
+        .replace(/\u2026/g, '...')    // ellipsis
+        .replace(/[^\x00-\x7E\n]/g, '?'); // any other non-ASCII → '?' (safe fallback, never garbled bytes)
+    }
+
+  /**
    * Converts a receipt string into standard ESC/POS binary command buffer
-   * including ESC @ (Init), text encoding, and GS V (paper cut command)
+   * Configured for 58mm thermal paper (print area = 384 dots @ 203 DPI)
    */
   convertToEscPosBuffer(receiptText: string): Uint8Array {
     const encoder = new TextEncoder();
-    const textBytes = encoder.encode(receiptText);
+    const textBytes = encoder.encode(this.sanitizeForPrinter(receiptText));
 
-    // ESC @ (Initialize printer: 0x1B, 0x40)
+    // ESC @ — Initialize printer (clears previous settings)
     const initCmd = new Uint8Array([0x1b, 0x40]);
-    // GS V 66 0 (Partial paper cut: 0x1D, 0x56, 0x42, 0x00)
+
+    // GS L 0 0 — Set left margin = 0
+    const setLeftMargin = new Uint8Array([0x1d, 0x4c, 0x00, 0x00]);
+
+     const setCodepage = new Uint8Array([0x1b, 0x74, 0x00]);
+
+    // GS W 384 — Set print area width = 384 dots (58mm @ 203 DPI standard)
+    // 384 decimal = 0x0180 → nL = 0x80, nH = 0x01
+    const setPaperWidth = new Uint8Array([0x1d, 0x57, 0x80, 0x01]);
+
+    // ESC M 0 — Select Font A (standard readable size for 32 chars/line on 58mm)
+    const setFontA = new Uint8Array([0x1b, 0x4d, 0x00]);
+
+    // ESC d 4 — Feed 4 lines (enough to push past cutter blade before cut)
+    const feedCmd = new Uint8Array([0x1b, 0x64, 0x04]);
+
+    // GS V 66 0 — Partial paper cut
     const cutCmd = new Uint8Array([0x1d, 0x56, 0x42, 0x00]);
 
-    const totalLength = initCmd.length + textBytes.length + cutCmd.length;
-    const buffer = new Uint8Array(totalLength);
+    const totalLength =
+      initCmd.length +
+            setCodepage.length +
+            setLeftMargin.length +
+            setPaperWidth.length +
+            setFontA.length +
+            textBytes.length +
+            feedCmd.length +
+            cutCmd.length;
 
-    buffer.set(initCmd, 0);
-    buffer.set(textBytes, initCmd.length);
-    buffer.set(cutCmd, initCmd.length + textBytes.length);
+    const buffer = new Uint8Array(totalLength);
+       let offset = 0;
+       buffer.set(initCmd, offset);       offset += initCmd.length;
+       buffer.set(setCodepage, offset);   offset += setCodepage.length;
+       buffer.set(setLeftMargin, offset); offset += setLeftMargin.length;
+       buffer.set(setPaperWidth, offset); offset += setPaperWidth.length;
+       buffer.set(setFontA, offset);      offset += setFontA.length;
+       buffer.set(textBytes, offset);     offset += textBytes.length;
+       buffer.set(feedCmd, offset);       offset += feedCmd.length;
+       buffer.set(cutCmd, offset);
+
 
     return buffer;
   }

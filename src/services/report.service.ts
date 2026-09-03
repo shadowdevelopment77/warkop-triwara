@@ -1062,6 +1062,41 @@ export class ReportService {
       .limit(limit)
       .toArray();
   }
+
+  /**
+   * Lightweight startup self-heal: verifies yesterday's dailySummaries rollup
+   * actually matches the real completed-order count for that day, and
+   * rebuilds it if it's missing or drifted (e.g. an interrupted transaction
+   * on an older app version, or any other write that skipped the rollup).
+   * Bounded to a single day's query — cheap even with a large order history,
+   * safe to run on every app start. "Today" is intentionally skipped since
+   * getSalesSummary() already falls back to a live query for today.
+   */
+  async healRecentDailySummary(): Promise<void> {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateKey = toInputDateString(yesterday);
+
+      const [existing, actualCompletedCount] = await Promise.all([
+        this.database.dailySummaries.where('date').equals(dateKey).first(),
+        this.database.orders
+          .where('createdAt')
+          .between(startOfDay(yesterday), endOfDay(yesterday), true, true)
+          .filter((o) => o.status === 'completed')
+          .count(),
+      ]);
+
+      const drifted = !existing || existing.completedCount !== actualCompletedCount;
+      if (drifted) {
+        await this.syncDailySummary(yesterday);
+      }
+    } catch (e) {
+      // Never block app startup on this — worst case, yesterday's card stays
+      // stale until it's manually resynced or this check succeeds next launch.
+      console.warn('healRecentDailySummary failed:', e);
+    }
+  }
 }
 
 export const reportService = new ReportService();

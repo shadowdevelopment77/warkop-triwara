@@ -3,6 +3,9 @@
 // ═══════════════════════════════════════════════
 
 import { db, TriwaraDatabase } from '../database/db';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import type {
   ICategory,
   IProduct,
@@ -18,7 +21,8 @@ import type {
 } from '../types';
 import { orderService } from './order.service';
 import { shiftService } from './shift.service';
-import { reportService } from './report.service';
+import { ReportService, reportService } from './report.service';
+import { toInputDateString } from '../utils/date';
 
 export interface ITriwaraBackupPayload {
   version: number;
@@ -90,7 +94,7 @@ export class BackupService {
     ]);
 
     return {
-      version: 3,
+      version: 4,
       appName: 'Triwara POS',
       exportedAt: new Date().toISOString(),
       stats: {
@@ -122,9 +126,7 @@ export class BackupService {
     };
   }
 
-  /**
-   * Exports and triggers browser download of the backup file.
-   */
+  /** Exports to browser download or Android Documents + native share sheet. */
   async downloadBackupFile(): Promise<string> {
     const payload = await this.exportDatabase();
     const jsonString = JSON.stringify(payload, null, 2);
@@ -134,7 +136,24 @@ export class BackupService {
     const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     const fileName = `TriwaraPOS_Backup_${dateStr}.json`;
 
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    if (Capacitor.isNativePlatform()) {
+      const bytes = new TextEncoder().encode(jsonString);
+      let binary = '';
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+
+      const written = await Filesystem.writeFile({
+        path: fileName,
+        data: btoa(binary),
+        directory: Directory.Documents,
+        recursive: true,
+      });
+
+      try {
+        await Share.share({ title: fileName, url: written.uri });
+      } catch {
+        // Closing the Android share sheet is not a failed backup: the file is saved already.
+      }
+    } else if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -228,7 +247,9 @@ export class BackupService {
     const revivedShopConfig = data.shopConfig || [];
     const revivedStaff = data.staff || [];
 
-    // Atomic transaction replacing all tables
+    // Held orders are temporary and never restored. Clearing them avoids stale
+    // carts blocking the restored shift from being closed.
+    // Atomic transaction replacing all persisted backup tables
     await this.database.transaction(
       'rw',
       [
@@ -243,6 +264,7 @@ export class BackupService {
         this.database.staff,
         this.database.shifts,
         this.database.dailySummaries,
+        this.database.heldOrders,
       ],
       async () => {
         await Promise.all([
@@ -257,6 +279,7 @@ export class BackupService {
           this.database.staff.clear(),
           this.database.shifts.clear(),
           this.database.dailySummaries.clear(),
+          this.database.heldOrders.clear(),
         ]);
 
         if (revivedCategories.length > 0) await this.database.categories.bulkAdd(revivedCategories);
@@ -272,6 +295,16 @@ export class BackupService {
         if (revivedDailySummaries.length > 0) await this.database.dailySummaries.bulkAdd(revivedDailySummaries);
       }
     );
+
+    // Legacy/incomplete backups may not have daily summaries. Rebuild every
+    // date that has raw orders so report cards match restored history. Summary-
+    // only dates are retained for historical orders that were archived earlier.
+    const orderDates = new Set(revivedOrders.map((order) => toInputDateString(order.createdAt)));
+    const importedReportService = new ReportService(this.database);
+    for (const dateKey of orderDates) {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      await importedReportService.syncDailySummary(new Date(year, month - 1, day));
+    }
 
     // Invalidate all in-memory caches
     orderService.clearPaginationCache();

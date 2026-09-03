@@ -152,9 +152,28 @@ export class OrderService {
       createdAt: new Date(),
     };
 
-    // Save order & deduct stock in Dexie transaction
-    const orderId = await this.database.orders.add(orderData);
-    const savedOrder = { ...orderData, id: orderId };
+    // ─── Atomic transaction: order save + daily summary rollup succeed
+    // together, or both roll back together. This is the specific pairing
+    // that was silently drifting before (order saved, but the report
+    // rollup skipped on failure with only a console.warn). Deliberately
+    // narrow in scope — deductInventoryForOrder() below opens its own
+    // internal transaction, and nesting it inside a broader one here
+    // caused Dexie to throw ("Transaction has already completed or
+    // failed"), so stock deduction and shift totals stay outside, exactly
+    // as they worked before.
+    let savedOrder: IOrder = { ...orderData, id: undefined };
+
+    await this.database.transaction(
+      'rw',
+      [this.database.orders, this.database.dailySummaries],
+      async () => {
+        const orderId = await this.database.orders.add(orderData);
+        savedOrder = { ...orderData, id: orderId };
+
+        const reportSvc = new ReportService(this.database);
+        await reportSvc.recordOrderToDailySummary(savedOrder);
+      }
+    );
 
     // Record to active shift in DB
     if (activeShift && activeShift.id) {
@@ -178,14 +197,6 @@ export class OrderService {
 
     // Deduct stock and get stock alert notifications
     const lowStockAlerts = await this.hppService.deductInventoryForOrder(savedOrder);
-
-    // Background real-time increment to daily summary rollup (zero scan reporting)
-    try {
-      const reportSvc = new ReportService(this.database);
-      await reportSvc.recordOrderToDailySummary(savedOrder);
-    } catch (e) {
-      console.warn('Could not record order to daily summary:', e);
-    }
 
     // Invalidate pagination cache
     this.clearPaginationCache();

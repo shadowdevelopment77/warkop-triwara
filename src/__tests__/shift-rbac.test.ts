@@ -30,6 +30,7 @@ describe('Shift & Multi-PIN RBAC Lifecycle Tests', () => {
     await testDb.logs.clear();
     await testDb.products.clear();
     await testDb.ingredients.clear();
+    await testDb.heldOrders.clear();
 
     // Seed Owner & Cashier
     await testDb.staff.bulkAdd([
@@ -191,5 +192,20 @@ describe('Shift & Multi-PIN RBAC Lifecycle Tests', () => {
     // Active shift is now null
     const noActive = await shiftService.getActiveShift();
     expect(noActive).toBeNull();
+  });
+
+  it('refuses to close a shift while a held order remains', async () => {
+    const cashier = (await staffService.authenticate('1234'))!;
+    const shift = await shiftService.openShift(cashier, 50000);
+
+    await testDb.heldOrders.add({
+      customerName: 'Pelanggan Tunggu',
+      cartItems: [],
+      discountPercent: 0,
+      createdAt: new Date(),
+    });
+
+    await expect(shiftService.closeShift(shift.id!, 50000)).rejects.toThrow('pesanan tersimpan');
+    expect((await testDb.shifts.get(shift.id!))?.status).toBe('open');
   });
 });

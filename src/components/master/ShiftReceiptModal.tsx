@@ -85,8 +85,25 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
     }
   };
 
+  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
+
   const handleDownloadPdf = async () => {
-    await pdfService.exportShiftReportPdf(shift, config);
+    setPdfProgress({ isOpen: true, percent: 5, message: 'Memulai proses export...' });
+    try {
+      await pdfService.exportShiftReportPdf(shift, config, (percent, message) => {
+        setPdfProgress({ isOpen: true, percent, message });
+      });
+      setTimeout(() => setPdfProgress(null), 800);
+    } catch (err) {
+      setPdfProgress(null);
+      setDialogConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Export PDF Gagal',
+        message: (err as Error).message,
+        isDanger: true,
+      });
+    }
   };
 
   return (
@@ -311,8 +328,9 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
               className="shift-btn-action"
               style={{ flex: 1, height: '40px', justifyContent: 'center' }}
               onClick={handleDownloadPdf}
+              disabled={!!pdfProgress?.isOpen}
             >
-              📄 Unduh PDF
+              {pdfProgress?.isOpen ? '⏳ Memproses...' : '📄 Unduh PDF'}
             </button>
           </div>
 
@@ -335,6 +353,51 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* PDF Export Progress Modal */}
+      {pdfProgress && pdfProgress.isOpen && (
+        <div className="modal-backdrop" style={{ zIndex: 9999 }}>
+          <div
+            className="settings-modal-card"
+            style={{
+              maxWidth: '380px',
+              width: '90%',
+              textAlign: 'center',
+              padding: '24px',
+              backgroundColor: '#18181b',
+              border: '1px solid #3b82f6',
+            }}
+          >
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#f4f4f5' }}>
+              📄 Mengekspor Laporan PDF
+            </h4>
+            <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#93c5fd' }}>
+              {pdfProgress.message}
+            </p>
+            <div
+              style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: '#27272a',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${pdfProgress.percent}%`,
+                  height: '100%',
+                  backgroundColor: '#3b82f6',
+                  transition: 'width 0.2s linear',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block', marginTop: '8px' }}>
+              {pdfProgress.percent}%
+            </span>
+          </div>
+        </div>
+      )}
 
       <DialogModal
         isOpen={dialogConfig.isOpen}

@@ -14,6 +14,7 @@ interface CartPanelProps {
   onClearCart: () => void;
   onChangeDiscount: (percent: number) => void;
   onProceedToPayment: () => void;
+  onHoldOrder: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
 }
@@ -26,6 +27,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   onClearCart,
   onChangeDiscount,
   onProceedToPayment,
+  onHoldOrder,
   isMobileOpen,
 
 }) => {
@@ -180,13 +182,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            className="btn-pay-now"
-            onClick={onProceedToPayment}
-          >
-            Bayar Sekarang • {formatRupiah(grandTotal)}
-          </button>
+          <div className="cart-payment-actions">
+            <button type="button" className="btn-hold-order" onClick={onHoldOrder}>
+              Simpan Pesanan
+            </button>
+            <button type="button" className="btn-pay-now" onClick={onProceedToPayment}>
+              Bayar Sekarang • {formatRupiah(grandTotal)}
+            </button>
+          </div>
         </div>
       )}
     </aside>

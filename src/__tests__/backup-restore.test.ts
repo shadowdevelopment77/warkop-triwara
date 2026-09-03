@@ -104,11 +104,17 @@ describe('Backup & Restore Database Full Tests', () => {
       status: 'open',
     };
     await testDb.shifts.add(shift);
+    await testDb.heldOrders.add({
+      customerName: 'Pesanan Sementara',
+      cartItems: [],
+      discountPercent: 0,
+      createdAt: new Date(),
+    });
 
     // 2. Perform export
     const payload = await backupService.exportDatabase();
 
-    expect(payload.version).toBe(3);
+    expect(payload.version).toBe(4);
     expect(payload.appName).toBe('Triwara POS');
     expect(payload.stats.categories).toBe(1);
     expect(payload.stats.products).toBe(1);
@@ -231,6 +237,14 @@ describe('Backup & Restore Database Full Tests', () => {
       },
     });
 
+    // Restore must discard any temporary held order already present on target device.
+    await testDb.heldOrders.add({
+      customerName: 'Cart Lama Target',
+      cartItems: [],
+      discountPercent: 0,
+      createdAt: new Date(),
+    });
+
     // 2. Perform import
     const result = await backupService.importDatabase(jsonPayload);
     expect(result.success).toBe(true);
@@ -256,6 +270,14 @@ describe('Backup & Restore Database Full Tests', () => {
 
     const restoredConfig = await testDb.shopConfig.toArray();
     expect(restoredConfig[0].customUnits).toContain('sachet');
+
+    // Held orders are temporary and intentionally excluded from a restore.
+    expect(await testDb.heldOrders.count()).toBe(0);
+
+    // Missing summaries in legacy backups are rebuilt from raw orders.
+    const restoredSummary = await testDb.dailySummaries.where('date').equals('2026-08-25').first();
+    expect(restoredSummary?.totalOmset).toBe(15000);
+    expect(restoredSummary?.totalQris).toBe(15000);
   });
 
   it('rejects invalid or corrupted backup files with clear error messages', async () => {

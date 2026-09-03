@@ -119,7 +119,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
           </form>
 
           {/* Category List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {categories.map((cat) => {
               const usageCount = products.filter((p) => p.categoryId === cat.id).length;
               return (

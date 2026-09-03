@@ -8,6 +8,7 @@ import { formatRupiah } from '../../utils/currency';
 
 interface PaymentModalProps {
   totalAmount: number;
+  initialCustomerName?: string;
   onClose: () => void;
   onConfirmPayment: (
     customerName: string,
@@ -18,10 +19,11 @@ interface PaymentModalProps {
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   totalAmount,
+  initialCustomerName = '',
   onClose,
   onConfirmPayment,
 }) => {
-  const [customerName, setCustomerName] = useState<string>('');
+  const [customerName, setCustomerName] = useState<string>(initialCustomerName);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashInput, setCashInput] = useState<number>(totalAmount);
   const [errorMsg, setErrorMsg] = useState<string>('');
