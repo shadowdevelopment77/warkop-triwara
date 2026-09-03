@@ -7,6 +7,7 @@ import type { IIngredient } from '../../types';
 import { ingredientService } from '../../services/ingredient.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
+import { NumberInput } from '../common/NumberInput';
 
 interface RestockModalProps {
   ingredient: IIngredient;
@@ -79,30 +80,24 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
 
           <div className="inv-form-group">
             <label className="inv-form-label">Jumlah Barang Masuk (+ {ingredient.unit})</label>
-            <input
-              type="number"
-              className="form-input"
+            <NumberInput
               style={{ fontSize: '16px', fontWeight: 600 }}
-              placeholder={`contoh: 1000 ${ingredient.unit}`}
+              placeholder={`contoh: 1.000 ${ingredient.unit}`}
               value={addedQty || ''}
-              onChange={(e) => setAddedQty(parseFloat(e.target.value) || 0)}
+              onChange={(v) => setAddedQty(v === '' ? 0 : v)}
+              allowDecimal
               required
-              min="0.01"
-              step="any"
             />
           </div>
 
           <div className="inv-form-group">
             <label className="inv-form-label">Total Uang Belanja yang Dibayar (Rp)</label>
-            <input
-              type="number"
-              className="form-input"
+            <NumberInput
               style={{ fontSize: '16px', fontWeight: 600 }}
-              placeholder="contoh: 150000"
+              placeholder="contoh: 150.000"
               value={purchasePrice || ''}
-              onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || 0)}
+              onChange={(v) => setPurchasePrice(v === '' ? 0 : v)}
               required
-              min="0"
             />
             <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
               Masukkan total nominal uang yang dikeluarkan dari kas kecil untuk belanja ini.

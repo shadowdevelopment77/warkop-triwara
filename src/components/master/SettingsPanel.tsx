@@ -34,22 +34,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [feedbackMsg, setFeedbackMsg] = useState<string>('');
   const [licenseInfo, setLicenseInfo] = useState<ILicenseInfo>(() => licenseService.getLicenseInfo());
   const [activationInput, setActivationInput] = useState<string>('');
-  const [devTapCount, setDevTapCount] = useState<number>(0);
   const [pairedDevices, setPairedDevices] = useState<BluetoothDevice[]>([]);
   const [btScanning, setBtScanning] = useState<boolean>(false);
   const [btConnecting, setBtConnecting] = useState<string | null>(null); // MAC being connected
-
-  const handleSecretDevTap = () => {
-    const next = devTapCount + 1;
-    if (next >= 5) {
-      setDevTapCount(0);
-      setActiveModal(null);
-      licenseService.toggleSimulatedLock(true);
-    } else {
-      setDevTapCount(next);
-      setTimeout(() => setDevTapCount(0), 3000);
-    }
-  };
 
   useEffect(() => {
     return licenseService.subscribe((info) => setLicenseInfo(info));
@@ -601,7 +588,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       color: config?.printerMacAddress ? '#15803d' : '#b45309',
                     }}
                   >
-                    {config?.printerMacAddress ? '● Terhubung' : '○ Belum Dihubungkan'}
+                    {config?.printerMacAddress ? 'Terhubung' : 'Belum Dihubungkan'}
                   </span>
                 </div>
                 <strong style={{ fontSize: '15px', color: '#0f172a', display: 'block' }}>
@@ -626,7 +613,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 onClick={handleScanBluetoothDevices}
                 disabled={btScanning}
               >
-                {btScanning ? '🔍 Mencari Printer...' : '🔵 Cari Printer Bluetooth'}
+                {btScanning ? '🔍 Mencari Printer...' : 'Cari Printer Bluetooth'}
               </button>
 
               {/* Paired devices list */}
@@ -680,7 +667,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   onClick={handleTestPrint}
                   disabled={!config?.printerMacAddress}
                 >
-                  🖨️ Uji Cetak Thermal (58mm)
+                  Uji Cetak Thermal (58mm)
                 </button>
                 {config?.printerMacAddress && (
                   <button
@@ -1049,8 +1036,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {/* Row 1: Aktivasi Pertama */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span
-                    style={{ fontSize: '13px', color: '#475569', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
-                    onClick={handleSecretDevTap}
+                    style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}
                   >
                     Aktivasi Pertama
                   </span>

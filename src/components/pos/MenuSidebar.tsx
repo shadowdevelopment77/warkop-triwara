@@ -53,7 +53,7 @@ export const MenuSidebar: React.FC<MenuSidebarProps> = ({
       {products.length === 0 ? (
         <div className="empty-menu-state" style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
           <p style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>Belum ada menu produk.</p>
-          <small>Tambah menu di Hamburger -&gt; Produk &amp; Stok -&gt; Katalog Menu &amp; Resep</small>
+          <small>Silahkan Tambah Menu terlebih dahulu</small>
         </div>
       ) : (
         products.map((product) => {

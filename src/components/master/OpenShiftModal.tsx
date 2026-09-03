@@ -20,7 +20,7 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
   onClose,
   onOpened,
 }) => {
-  const [startingCash, setStartingCash] = useState<number>(100000);
+  const [startingCash, setStartingCash] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -91,11 +91,12 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
               inputMode="numeric"
               className="form-input"
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
+              placeholder="Uang Modal"
               value={startingCash || ''}
               onChange={(e) => setStartingCash(parseFloat(e.target.value) || 0)}
               required
               min="0"
-              placeholder="100000"
+
             />
             <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
               {[50000, 100000, 200000, 300000].map((nominal) => (

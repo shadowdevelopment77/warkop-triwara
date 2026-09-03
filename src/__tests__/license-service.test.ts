@@ -66,13 +66,21 @@ describe('Offline Multi-Stage Tempo License Service (SHA-256 Hashed)', () => {
     expect(info.isLocked).toBe(false);
   });
 
-  it('toggles simulation lock and unlocks instantly when valid code is entered', async () => {
-    // Simulate lock for localhost testing
-    const lockedInfo = licenseService.toggleSimulatedLock(true);
-    expect(lockedInfo.isLocked).toBe(true);
-    expect(lockedInfo.lockReason).toBe('simulated');
+  it('locks the app when the license genuinely expires, and unlocks with a valid code', async () => {
+    // Simulasikan lisensi yang beneran sudah lewat masa aktifnya (bukan pakai fitur test manapun,
+    // murni lewat data storage — merepresentasikan kondisi client yang telat bayar).
+    const rawInfo = {
+      stage: 'tempo_1',
+      expiresAt: '2020-01-01T00:00:00.000Z',
+      isLocked: false,
+    };
+    (licenseService as any).saveLicenseInfo(rawInfo);
 
-    // Entering stage 1 code unlocks it
+    const lockedInfo = licenseService.getLicenseInfo();
+    expect(lockedInfo.isLocked).toBe(true);
+    expect(lockedInfo.lockReason).toBe('expired');
+
+    // Masukin kode aktivasi asli -> harus langsung kebuka
     const res = await licenseService.activateCode(TEST_KEYS.STAGE_1_EXTEND);
     expect(res.success).toBe(true);
 

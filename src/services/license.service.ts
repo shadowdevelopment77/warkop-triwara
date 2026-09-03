@@ -9,7 +9,6 @@ export interface ILicenseInfo {
   expiresAt: string | null; // ISO string or null for lifetime
   isLocked: boolean;
   lockReason?: string;
-  isSimulatedLock?: boolean;
 }
 
 const STORAGE_KEY = 'triwara_license_data';
@@ -68,39 +67,32 @@ export class LicenseService {
   private listeners: Array<(info: ILicenseInfo) => void> = [];
 
   /**
-   * Reads current license state from persistent storage, or initializes default (Tempo 1)
+   * Reads the raw stored license record (merged with defaults), WITHOUT applying
+   * any lock-status computation.
    */
-  getLicenseInfo(): ILicenseInfo {
+  private readRawInfo(): ILicenseInfo {
     const defaultInfo: ILicenseInfo = {
       stage: 'tempo_1',
       expiresAt: '2026-10-05T00:00:00.000Z',
       isLocked: false,
-      isSimulatedLock: false,
     };
 
-    let info: ILicenseInfo;
     try {
       const raw = licenseStorage.getItem(STORAGE_KEY);
-      info = raw ? { ...defaultInfo, ...JSON.parse(raw) } : defaultInfo;
+      return raw ? { ...defaultInfo, ...JSON.parse(raw) } : defaultInfo;
     } catch {
-      info = defaultInfo;
+      return defaultInfo;
     }
+  }
 
-    // 1. Lifetime license is NEVER locked
+  /**
+   * Computes the lock status: clock rollback + expiration check.
+   */
+  private computeRealLockState(info: ILicenseInfo): { isLocked: boolean; lockReason?: string } {
     if (info.stage === 'lifetime') {
-      info.isLocked = false;
-      info.expiresAt = null;
-      return info;
+      return { isLocked: false };
     }
 
-    // 2. Simulated lock for dev/test purposes
-    if (info.isSimulatedLock) {
-      info.isLocked = true;
-      info.lockReason = 'simulated';
-      return info;
-    }
-
-    // 3. System clock anti-rollback check
     const now = new Date();
     const currentTs = now.getTime();
     try {
@@ -109,9 +101,7 @@ export class LicenseService {
         const lastKnownTs = parseInt(lastKnownTsStr, 10);
         // Allow up to 24h backward jitter (for timezone switching), but detect large month rollbacks
         if (currentTs < lastKnownTs - 24 * 3600 * 1000) {
-          info.isLocked = true;
-          info.lockReason = 'clock_rollback';
-          return info;
+          return { isLocked: true, lockReason: 'clock_rollback' };
         }
       }
       // Record current timestamp monotonically
@@ -120,17 +110,33 @@ export class LicenseService {
       // Storage unavailable fallback
     }
 
-    // 4. Expiration date check
     if (info.expiresAt) {
       const expiryDate = new Date(info.expiresAt);
       if (now >= expiryDate) {
-        info.isLocked = true;
-        info.lockReason = 'expired';
-        return info;
+        return { isLocked: true, lockReason: 'expired' };
       }
     }
 
-    info.isLocked = false;
+    return { isLocked: false };
+  }
+
+  /**
+   * Reads current license state from persistent storage, or initializes default (Tempo 1)
+   */
+  getLicenseInfo(): ILicenseInfo {
+    const info = this.readRawInfo();
+
+    // 1. Lifetime license is NEVER locked
+    if (info.stage === 'lifetime') {
+      info.isLocked = false;
+      info.expiresAt = null;
+      return info;
+    }
+
+    // 2. Real clock-rollback + expiration check
+    const real = this.computeRealLockState(info);
+    info.isLocked = real.isLocked;
+    info.lockReason = real.lockReason;
     return info;
   }
 
@@ -151,7 +157,6 @@ export class LicenseService {
         stage: 'lifetime',
         expiresAt: null,
         isLocked: false,
-        isSimulatedLock: false,
       };
       this.saveLicenseInfo(updated);
       this.notifyListeners(updated);
@@ -175,7 +180,6 @@ export class LicenseService {
         stage: 'tempo_2',
         expiresAt: '2026-11-05T00:00:00.000Z',
         isLocked: false,
-        isSimulatedLock: false,
       };
       this.saveLicenseInfo(updated);
       this.notifyListeners(updated);
@@ -190,23 +194,6 @@ export class LicenseService {
       success: false,
       message: 'Kode aktivasi tidak valid. Periksa kembali kode yang diberikan oleh developer.',
     };
-  }
-
-  /**
-   * Developer simulator: Toggles lock screen in localhost environment
-   */
-  toggleSimulatedLock(force?: boolean): ILicenseInfo {
-    const current = this.getLicenseInfo();
-    const isSimulated = force !== undefined ? force : !current.isSimulatedLock;
-    const updated: ILicenseInfo = {
-      ...current,
-      isSimulatedLock: isSimulated,
-      isLocked: isSimulated || (current.stage !== 'lifetime' && current.isLocked),
-      lockReason: isSimulated ? 'simulated' : undefined,
-    };
-    this.saveLicenseInfo(updated);
-    this.notifyListeners(updated);
-    return updated;
   }
 
   /**

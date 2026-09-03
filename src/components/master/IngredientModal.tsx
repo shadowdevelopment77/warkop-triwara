@@ -8,6 +8,7 @@ import { ingredientService } from '../../services/ingredient.service';
 import { notificationService } from '../../services/notification.service';
 import { formatRupiah } from '../../utils/currency';
 import { DialogModal } from '../common/DialogModal';
+import { NumberInput } from '../common/NumberInput';
 
 interface IngredientModalProps {
   ingredient: IIngredient | null;
@@ -250,12 +251,10 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             <div className="form-row two-cols">
               <div className="form-group">
                 <label className="form-label">Stock Saat Ini ({unit})</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="contoh: 1000"
+                <NumberInput
+                  placeholder="contoh: 1.000"
                   value={currentStock}
-                  onChange={(e) => setCurrentStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  onChange={setCurrentStock}
                   disabled={isEditing}
                   required
                 />
@@ -265,13 +264,11 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 <label className="form-label" style={{ color: isEditing ? 'var(--primary-color)' : undefined, fontWeight: 700 }}>
                   Batas Minimal Alert ({unit}) {isEditing && '✏️'}
                 </label>
-                <input
-                  type="number"
-                  className="form-input"
+                <NumberInput
                   style={isEditing ? { borderColor: 'var(--primary-color)', backgroundColor: 'var(--bg-input)' } : undefined}
                   placeholder="contoh: 100"
                   value={minStock}
-                  onChange={(e) => setMinStock(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  onChange={setMinStock}
                   required
                 />
               </div>
@@ -296,12 +293,10 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
               <div className="form-row two-cols">
                 <div className="form-group">
                   <label className="form-label">Harga Pembelian (Rp)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="contoh: 150000"
+                  <NumberInput
+                    placeholder="contoh: 150.000"
                     value={purchasePrice}
-                    onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    onChange={setPurchasePrice}
                     disabled={isEditing}
                     required
                   />
@@ -309,12 +304,10 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
                 <div className="form-group">
                   <label className="form-label">Jumlah Isi per Beli ({unit})</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="contoh: 1000"
+                  <NumberInput
+                    placeholder="contoh: 1.000"
                     value={purchaseQuantity}
-                    onChange={(e) => setPurchaseQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    onChange={setPurchaseQuantity}
                     disabled={isEditing}
                     required
                   />

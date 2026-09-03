@@ -121,4 +121,30 @@ describe('Phase 4: Bahan Baku & Resep Deletion Guard', () => {
     expect(updated!.costPerUnit).toBe(24);
     expect(updated!.name).toBe('Fresh Milk Greenfields');
   });
+
+  it('does not reset weighted-average costPerUnit when only minStock is edited after a restock', async () => {
+    const ingId = await ingredientService.addIngredient({
+      name: 'Gula Aren',
+      category: 'raw',
+      unit: 'ml',
+      currentStock: 1000,
+      minStock: 200,
+      purchasePackageName: 'Botol 1L',
+      purchasePrice: 20000, // costPerUnit awal = 20
+      purchaseQuantity: 1000,
+    });
+
+    // Restock dengan harga baru -> costPerUnit berubah jadi weighted average (bukan 20 lagi)
+    await ingredientService.restockIngredient(ingId, 1000, 40000, 1000); // batch ini 40/ml
+    const afterRestock = await ingredientService.getById(ingId);
+    expect(afterRestock!.costPerUnit).toBe(30); // (1000*20 + 1000*40) / 2000 = 30
+
+    // Sekarang cuma edit batas minimal alert, seperti yang user lakukan lewat modal "Detail Bahan"
+    await ingredientService.updateIngredient(ingId, { minStock: 300 });
+
+    const afterMinStockEdit = await ingredientService.getById(ingId);
+    expect(afterMinStockEdit!.minStock).toBe(300);
+    // costPerUnit HARUS tetap 30 (weighted average), bukan balik ke 20 (harga beli pertama)
+    expect(afterMinStockEdit!.costPerUnit).toBe(30);
+  });
 });

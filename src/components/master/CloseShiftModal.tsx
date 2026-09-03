@@ -202,7 +202,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                🛒 Pembelian / Pengeluaran Operasional (Opsional)
+                Pembelian / Pengeluaran Operasional (Opsional)
               </span>
               {totalExpenses > 0 && (
                 <span style={{ fontSize: '12px', color: '#b91c1c', fontWeight: 700 }}>
@@ -298,6 +298,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
               type="number"
               inputMode="numeric"
               className="form-input"
+              placeholder='Uang Modal'
               style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
               value={actualCash || ''}
               onChange={(e) => {

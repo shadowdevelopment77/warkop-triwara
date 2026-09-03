@@ -76,7 +76,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
         </div>
       ) : (
         <div className="shift-pos-banner closed">
-          <span>Toko Sedang Tutup. Buka toko untuk memulai shift kasir dan mencatat transaksi.</span>
+          <span>Toko Sedang Tutup.</span>
         </div>
       )}
 
@@ -154,7 +154,7 @@ export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
               {shifts.length === 0 ? (
                 <tr>
                   <td colSpan={11} style={{ textAlign: 'center', padding: '32px', color: '#a1a1aa' }}>
-                    {isPageLoading ? 'Memuat data shift...' : 'Tidak ada data shift yang cocok dengan filter.'}
+                    {isPageLoading ? 'Memuat data shift...' : 'Belum ada data shift.'}
                   </td>
                 </tr>
               ) : (

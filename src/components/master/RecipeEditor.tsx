@@ -68,7 +68,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       });
       return;
     }
-    setRecipe([...recipe, { ingredientId: defaultIng.id!, amount: 10, unit: defaultIng.unit }]);
+    setRecipe([...recipe, { ingredientId: defaultIng.id!, amount: 0, unit: defaultIng.unit }]);
   };
 
   const handleRemoveRecipeRow = (idx: number) => {
@@ -102,7 +102,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       });
       return;
     }
-    setTakeawayPackaging([...takeawayPackaging, { ingredientId: defaultPkg.id!, amount: 1, unit: defaultPkg.unit }]);
+    setTakeawayPackaging([...takeawayPackaging, { ingredientId: defaultPkg.id!, amount: 0, unit: defaultPkg.unit }]);
   };
 
   const handleRemovePackagingRow = (idx: number) => {
@@ -130,9 +130,9 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       ...availableAdditionals,
       {
         name: '',
-        price: 5000,
+        price: 0,
         ingredientId: defaultIng?.id,
-        amount: 15,
+        amount: 0,
       },
     ]);
   };
@@ -391,7 +391,8 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                       <div className="menu-qty-box">
                         <input
                           type="number"
-                          value={item.amount}
+                          placeholder="Qty"
+                          value={item.amount || ''}
                           onChange={(e) => handleRecipeAmountChange(idx, parseFloat(e.target.value) || 0)}
                         />
                         <span>{item.unit}</span>
@@ -448,7 +449,8 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
                       <div className="menu-qty-box">
                         <input
                           type="number"
-                          value={item.amount}
+                          placeholder="Qty"
+                          value={item.amount || ''}
                           onChange={(e) => handlePackagingAmountChange(idx, parseFloat(e.target.value) || 0)}
                         />
                         <span>{item.unit}</span>

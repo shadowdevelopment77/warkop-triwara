@@ -129,10 +129,15 @@ export class IngredientService {
     }
 
     let costPerUnit = ing.costPerUnit;
-    const price = data.purchasePrice !== undefined ? data.purchasePrice : ing.purchasePrice;
-    const qty = data.purchaseQuantity !== undefined ? data.purchaseQuantity : ing.purchaseQuantity;
-    if (qty > 0) {
-      costPerUnit = price / qty;
+    // Hanya hitung ulang costPerUnit kalau harga/jumlah beli MEMANG dikirim di update ini.
+    // Kalau tidak, biarkan costPerUnit apa adanya (bisa jadi hasil weighted-average dari restock),
+    // supaya update field lain (mis. minStock) tidak diam-diam mereset HPP ke harga beli pertama.
+    if (data.purchasePrice !== undefined || data.purchaseQuantity !== undefined) {
+      const price = data.purchasePrice !== undefined ? data.purchasePrice : ing.purchasePrice;
+      const qty = data.purchaseQuantity !== undefined ? data.purchaseQuantity : ing.purchaseQuantity;
+      if (qty > 0) {
+        costPerUnit = price / qty;
+      }
     }
 
     await this.database.ingredients.update(id, {
