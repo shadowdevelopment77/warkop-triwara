@@ -5,7 +5,7 @@
 import { db, TriwaraDatabase } from '../database/db';
 import type { IShopConfig } from '../types';
 import { hashPin } from '../utils/hash';
-import { seedDatabaseIfEmpty } from '../database/seed';
+import { initializeProductionDatabaseIfNeeded } from '../database/seed';
 
 export class ConfigService {
   private database: TriwaraDatabase;
@@ -16,7 +16,7 @@ export class ConfigService {
 
   /** Gets current shop configuration */
   async getConfig(): Promise<IShopConfig> {
-    await seedDatabaseIfEmpty();
+    await initializeProductionDatabaseIfNeeded();
     const configs = await this.database.shopConfig.toArray();
     if (configs.length > 0) {
       return configs[0];

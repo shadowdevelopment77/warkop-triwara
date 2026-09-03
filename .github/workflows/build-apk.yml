@@ -1,13 +1,10 @@
-name: Build Android APK (Debug Testing)
-
+name: Build Android APK
 on:
   push:
     branches: [ staging, main ]
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -36,11 +33,26 @@ jobs:
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Run tests
-        run: pnpm test
+      # Persist the debug keystore across runs so every build (staging debug,
+      # AND release — release currently reuses the debug keystore too, see
+      # android/app/build.gradle) is signed with the SAME key every time.
+      # Without this, GitHub's runner is a fresh VM each run and Android
+      # auto-generates a NEW random debug keystore, meaning every release
+      # gets a different signature — the client's device then refuses to
+      # install the update over the old one ("App not installed"), forcing
+      # a full uninstall (and losing all their transaction data) on every
+      # single update.
+      - name: Restore/persist debug keystore
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-keystore-v1
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
 
       - name: Build Web App
         run: pnpm run build
@@ -48,38 +60,67 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build Debug APK with Gradle
+      # main = clean production build for the CLIENT: assembleRelease
+      # (debuggable=false, so WebView remote-debugging is disabled — this
+      # matters for the license-lock enforcement staying tamper-resistant).
+      - name: Build Release APK (main → client)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace
+          cd ..
+          mkdir -p dist-apks
+          cp android/app/build/outputs/apk/release/app-release.apk dist-apks/triwara-pos-client.apk
+          ls -lh dist-apks/
+
+      # staging = internal/testing build only, never sent to the client.
+      - name: Build Debug APK (staging → internal testing)
+        if: github.ref == 'refs/heads/staging'
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
           cd ..
           mkdir -p dist-apks
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apks/triwara-pos-test-debug.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apks/triwara-pos-staging-debug.apk
           ls -lh dist-apks/
 
-      - name: Upload Test Debug APK Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: triwara-pos-test-debug
-          path: dist-apks/triwara-pos-test-debug.apk
+          name: ${{ github.ref == 'refs/heads/main' && 'triwara-pos-client' || 'triwara-pos-staging-debug' }}
+          path: dist-apks/*.apk
 
-      - name: Publish GitHub Release with Direct APK Link
+      # Separate release tags per branch — a push to staging can never
+      # overwrite the client-facing release, and vice versa.
+      - name: Publish GitHub Release (main → client build)
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
         with:
-          tag_name: latest-build
-          name: "Triwara POS - APK Testing (Debug)"
+          tag_name: client-latest
+          name: "Triwara POS — Rilis Client"
           prerelease: false
           make_latest: true
           body: |
-            ### 📱 Unduhan APK Triwara POS (Testing & Demo)
+            ### 📱 Triwara POS — Versi Client (Production)
+            🏢 **[Download APK](https://github.com/${{ github.repository }}/releases/download/client-latest/triwara-pos-client.apk)**
+            Versi resmi & bersih untuk perangkat kasir client.
+          files: dist-apks/triwara-pos-client.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            Silakan unduh langsung dari HP:
-            🧪 **[Download APK Testing / Debug (triwara-pos-test-debug.apk)](https://github.com/${{ github.repository }}/releases/download/latest-build/triwara-pos-test-debug.apk)**
-
-            - Siap untuk pengujian fitur transaksi & koneksi printer thermal Bluetooth.
-          files: |
-            dist-apks/triwara-pos-test-debug.apk
+      - name: Publish GitHub Release (staging → internal testing build)
+        if: github.ref == 'refs/heads/staging'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: staging-latest
+          name: "Triwara POS — Build Staging (Internal Testing)"
+          prerelease: true
+          make_latest: false
+          body: |
+            ### 🧪 Triwara POS — Build Staging (JANGAN kirim ke client)
+            🧪 **[Download APK Testing](https://github.com/${{ github.repository }}/releases/download/staging-latest/triwara-pos-staging-debug.apk)**
+          files: dist-apks/triwara-pos-staging-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
