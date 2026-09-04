@@ -105,8 +105,9 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="inv-modal-body">
-          {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
+        <form onSubmit={handleSubmit} className="modal-form-wrapper">
+          <div className="inv-modal-body">
+            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
           {/* Shift Info */}
           <div className="info-summary-card">
@@ -327,8 +328,9 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
               placeholder="contoh: Ada uang kembalian rusak / pecahan tip..."
             />
           </div>
+        </div>
 
-          <div className="inv-modal-footer" style={{ margin: '12px -20px -20px -20px' }}>
+        <div className="inv-modal-footer">
             <button type="button" className="inv-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>

@@ -700,7 +700,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveReceiptConfig} className="settings-modal-body">
+            <form onSubmit={handleSaveReceiptConfig} className="modal-form-wrapper">
+              <div className="settings-modal-body">
               <div className="form-group">
                 <label className="form-label">Logo Struk Thermal (Header)</label>
                 <input
@@ -854,8 +855,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   onChange={(e) => setF4(e.target.value)}
                 />
               </div>
+            </div>
 
-              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+            <div className="settings-modal-footer">
                 <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>
@@ -879,111 +881,113 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveBranding} className="settings-modal-body">
-              <div className="form-group">
-                <label className="form-label">Logo Utama Aplikasi</label>
-                <input
-                  type="file"
-                  ref={appFileInputRef}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleUploadAppLogo}
-                />
+            <form onSubmit={handleSaveBranding} className="modal-form-wrapper">
+              <div className="settings-modal-body">
+                <div className="form-group">
+                  <label className="form-label">Logo Utama Aplikasi</label>
+                  <input
+                    type="file"
+                    ref={appFileInputRef}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleUploadAppLogo}
+                  />
 
-                {config?.appLogoBase64 ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 14px',
-                      backgroundColor: '#f1f5f9',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img
-                        src={config.appLogoBase64}
-                        alt="App Logo"
-                        style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '6px',
-                          objectFit: 'contain',
-                          backgroundColor: '#ffffff',
-                          padding: '2px',
-                          border: '1px solid #cbd5e1',
-                        }}
-                      />
-                      <div>
-                        <strong style={{ color: '#0f172a', fontSize: '13px', display: 'block' }}>
-                          Logo Header Aktif
-                        </strong>
+                  {config?.appLogoBase64 ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        backgroundColor: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <img
+                          src={config.appLogoBase64}
+                          alt="App Logo"
+                          style={{
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '6px',
+                            objectFit: 'contain',
+                            backgroundColor: '#ffffff',
+                            padding: '2px',
+                            border: '1px solid #cbd5e1',
+                          }}
+                        />
+                        <div>
+                          <strong style={{ color: '#0f172a', fontSize: '13px', display: 'block' }}>
+                            Logo Header Aktif
+                          </strong>
                         </div>
-                    </div>
+                      </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          className="settings-btn-secondary"
+                          onClick={() => appFileInputRef.current?.click()}
+                        >
+                          Ganti
+                        </button>
+                        <button
+                          type="button"
+                          className="settings-btn-danger"
+                          onClick={handleDeleteAppLogo}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 16px',
+                        border: '1px dashed #3f3f46',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(24, 24, 27, 0.5)',
+                      }}
+                    >
+                      <div>
+                        <span style={{ color: '#a1a1aa', fontSize: '13px', display: 'block' }}>
+                          Belum ada logo aplikasi
+                        </span>
+                        <small style={{ color: '#71717a', fontSize: '11px' }}>
+                          Format PNG/JPG persegi (disarankan 120x120 px)
+                        </small>
+                      </div>
                       <button
                         type="button"
-                        className="settings-btn-secondary"
+                        className="settings-btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px' }}
                         onClick={() => appFileInputRef.current?.click()}
                       >
-                        Ganti
-                      </button>
-                      <button
-                        type="button"
-                        className="settings-btn-danger"
-                        onClick={handleDeleteAppLogo}
-                      >
-                        Hapus
+                        Pilih Foto
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      border: '1px dashed #3f3f46',
-                      borderRadius: '8px',
-                      backgroundColor: 'rgba(24, 24, 27, 0.5)',
-                    }}
-                  >
-                    <div>
-                      <span style={{ color: '#a1a1aa', fontSize: '13px', display: 'block' }}>
-                        Belum ada logo aplikasi
-                      </span>
-                      <small style={{ color: '#71717a', fontSize: '11px' }}>
-                        Format PNG/JPG persegi (disarankan 120x120 px)
-                      </small>
-                    </div>
-                    <button
-                      type="button"
-                      className="settings-btn-primary"
-                      style={{ fontSize: '12px', padding: '6px 14px' }}
-                      onClick={() => appFileInputRef.current?.click()}
-                    >
-                      Pilih Foto
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Nama Aplikasi Toko</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Nama Aplikasi Toko</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={appName}
-                  onChange={(e) => setAppName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="settings-modal-footer" style={{ margin: '0 -20px -20px -20px' }}>
+              <div className="settings-modal-footer">
                 <button type="button" className="settings-btn-secondary" onClick={() => setActiveModal(null)}>
                   Batal
                 </button>

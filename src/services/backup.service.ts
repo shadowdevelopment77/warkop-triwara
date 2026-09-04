@@ -4,7 +4,8 @@
 
 import { db, TriwaraDatabase } from '../database/db';
 import { Capacitor } from '@capacitor/core';
-import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Directory, Filesystem, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import type {
   ICategory,
   IProduct,
@@ -136,16 +137,23 @@ export class BackupService {
     const fileName = `TriwaraPOS_Backup_${dateStr}.json`;
 
     if (Capacitor.isNativePlatform()) {
-      const bytes = new TextEncoder().encode(jsonString);
-      let binary = '';
-      for (const byte of bytes) binary += String.fromCharCode(byte);
-
-      await Filesystem.writeFile({
+      const written = await Filesystem.writeFile({
         path: fileName,
-        data: btoa(binary),
+        data: jsonString,
         directory: Directory.Documents,
+        encoding: Encoding.UTF8,
         recursive: true,
       });
+
+      try {
+        await Share.share({
+          title: fileName,
+          url: written.uri,
+          dialogTitle: 'Simpan ke Folder atau Bagikan File Backup',
+        });
+      } catch {
+        // Closing the share sheet is not an error; file is already written
+      }
     } else if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);

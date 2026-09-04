@@ -193,136 +193,138 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="inv-modal-body">
-            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
-
-            <div className="form-group">
-              <label className="form-label">Nama Bahan Baku / Kemasan</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="contoh: Biji Kopi Arabica, Fresh Milk UHT, Paper Cup 8oz..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isEditing}
-                required
-              />
-            </div>
-
-            <div className="form-row two-cols">
-              <div className="form-group">
-                <label className="form-label">Kategori</label>
-                <select
-                  className="form-select"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as IngredientCategory)}
-                  disabled={isEditing}
-                >
-                  <option value="raw">Bahan Baku (raw)</option>
-                  <option value="packaging">Kemasan Sekali Pakai (packaging)</option>
-                  {availableCategories
-                    .filter((c) => c !== 'raw' && c !== 'packaging')
-                    .map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                </select>
-              </div>
+          <form onSubmit={handleSubmit} className="modal-form-wrapper">
+            <div className="inv-modal-body">
+              {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
               <div className="form-group">
-                <label className="form-label">Satuan Ukur (Unit)</label>
-                <select
-                  className="form-select"
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value as UnitType)}
-                  disabled={isEditing}
-                  required
-                >
-                  {availableUnits.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-row two-cols">
-              <div className="form-group">
-                <label className="form-label">Stock Saat Ini ({unit})</label>
-                <NumberInput
-                  placeholder="contoh: 1.000"
-                  value={currentStock}
-                  onChange={setCurrentStock}
-                  disabled={isEditing}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" style={{ color: isEditing ? 'var(--primary-color)' : undefined, fontWeight: 700 }}>
-                  Batas Minimal Alert ({unit}) {isEditing && '✏️'}
-                </label>
-                <NumberInput
-                  style={isEditing ? { borderColor: 'var(--primary-color)', backgroundColor: 'var(--bg-input)' } : undefined}
-                  placeholder="contoh: 100"
-                  value={minStock}
-                  onChange={setMinStock}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Cost Calculator Section */}
-            <div className="calc-section-box">
-              <h4 className="calc-section-title">Kalkulator Biaya Modal Beli (Cost Per Unit)</h4>
-
-              <div className="form-group">
-                <label className="form-label">Nama Kemasan Pembelian Supplier</label>
+                <label className="form-label">Nama Bahan Baku / Kemasan</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="contoh: Bag 1kg, Karton 1 Liter, Sleeve 50 pcs..."
-                  value={purchasePackageName}
-                  onChange={(e) => setPurchasePackageName(e.target.value)}
+                  placeholder="contoh: Biji Kopi Arabica, Fresh Milk UHT, Paper Cup 8oz..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   disabled={isEditing}
+                  required
                 />
               </div>
 
               <div className="form-row two-cols">
                 <div className="form-group">
-                  <label className="form-label">Harga Pembelian (Rp)</label>
+                  <label className="form-label">Kategori</label>
+                  <select
+                    className="form-select"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as IngredientCategory)}
+                    disabled={isEditing}
+                  >
+                    <option value="raw">Bahan Baku (raw)</option>
+                    <option value="packaging">Kemasan Sekali Pakai (packaging)</option>
+                    {availableCategories
+                      .filter((c) => c !== 'raw' && c !== 'packaging')
+                      .map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Satuan Ukur (Unit)</label>
+                  <select
+                    className="form-select"
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value as UnitType)}
+                    disabled={isEditing}
+                    required
+                  >
+                    {availableUnits.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row two-cols">
+                <div className="form-group">
+                  <label className="form-label">Stock Saat Ini ({unit})</label>
                   <NumberInput
-                    placeholder="contoh: 150.000"
-                    value={purchasePrice}
-                    onChange={setPurchasePrice}
+                    placeholder="contoh: 1.000"
+                    value={currentStock}
+                    onChange={setCurrentStock}
                     disabled={isEditing}
                     required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Jumlah Isi per Beli ({unit})</label>
+                  <label className="form-label" style={{ color: isEditing ? 'var(--primary-color)' : undefined, fontWeight: 700 }}>
+                    Batas Minimal Alert ({unit}) {isEditing && '✏️'}
+                  </label>
                   <NumberInput
-                    placeholder="contoh: 1.000"
-                    value={purchaseQuantity}
-                    onChange={setPurchaseQuantity}
-                    disabled={isEditing}
+                    style={isEditing ? { borderColor: 'var(--primary-color)', backgroundColor: 'var(--bg-input)' } : undefined}
+                    placeholder="contoh: 100"
+                    value={minStock}
+                    onChange={setMinStock}
                     required
                   />
                 </div>
               </div>
 
-              <div className="calc-result-badge">
-                <span>Hasil Cost per {unit}: </span>
-                <strong>
-                  {formatRupiah(calculatedCostPerUnit)} / {unit}
-                </strong>
+              {/* Cost Calculator Section */}
+              <div className="calc-section-box">
+                <h4 className="calc-section-title">Kalkulator Biaya Modal Beli (Cost Per Unit)</h4>
+
+                <div className="form-group">
+                  <label className="form-label">Nama Kemasan Pembelian Supplier</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="contoh: Bag 1kg, Karton 1 Liter, Sleeve 50 pcs..."
+                    value={purchasePackageName}
+                    onChange={(e) => setPurchasePackageName(e.target.value)}
+                    disabled={isEditing}
+                  />
+                </div>
+
+                <div className="form-row two-cols">
+                  <div className="form-group">
+                    <label className="form-label">Harga Pembelian (Rp)</label>
+                    <NumberInput
+                      placeholder="contoh: 150.000"
+                      value={purchasePrice}
+                      onChange={setPurchasePrice}
+                      disabled={isEditing}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Jumlah Isi per Beli ({unit})</label>
+                    <NumberInput
+                      placeholder="contoh: 1.000"
+                      value={purchaseQuantity}
+                      onChange={setPurchaseQuantity}
+                      disabled={isEditing}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="calc-result-badge">
+                  <span>Hasil Cost per {unit}: </span>
+                  <strong>
+                    {formatRupiah(calculatedCostPerUnit)} / {unit}
+                  </strong>
+                </div>
               </div>
             </div>
 
-            <div className="inv-modal-footer" style={{ margin: '20px -20px -20px -20px' }}>
+            <div className="inv-modal-footer">
               {isEditing && (
                 <button type="button" className="inv-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
                   Hapus Bahan

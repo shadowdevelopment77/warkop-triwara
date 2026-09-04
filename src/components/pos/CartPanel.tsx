@@ -35,6 +35,37 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const grandTotal = subtotal - discountAmount;
   const [isDiscountOpen, setIsDiscountOpen] = React.useState<boolean>(discountPercent > 0);
+  const [discountStr, setDiscountStr] = React.useState<string>(discountPercent > 0 ? String(discountPercent) : '');
+
+  React.useEffect(() => {
+    setDiscountStr(discountPercent > 0 ? String(discountPercent) : '');
+    if (discountPercent > 0) {
+      setIsDiscountOpen(true);
+    }
+  }, [discountPercent]);
+
+  const handleDiscountChange = (val: string) => {
+    setDiscountStr(val);
+    if (val === '') {
+      onChangeDiscount(0);
+      return;
+    }
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      const clamped = Math.min(100, Math.max(0, num));
+      onChangeDiscount(clamped);
+    }
+  };
+
+  const handleApplyPreset = (pct: number) => {
+    if (discountPercent === pct) {
+      onChangeDiscount(0);
+      setDiscountStr('');
+    } else {
+      onChangeDiscount(pct);
+      setDiscountStr(String(pct));
+    }
+  };
 
   return (
     <aside className={`pos-right-column cart-panel-right ${isMobileOpen ? 'mobile-show' : ''}`}>
@@ -116,19 +147,20 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             </button>
           ) : (
             <div className="discount-compact-box">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
-                  Discount: {discountPercent} %
+                  Diskon: {discountPercent}%
                 </span>
                 <button
                   type="button"
-                  style={{ fontSize: '12px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ fontSize: '11px', color: 'var(--danger-color)', fontWeight: 700, cursor: 'pointer' }}
                   onClick={() => {
                     onChangeDiscount(0);
+                    setDiscountStr('');
                     setIsDiscountOpen(false);
                   }}
                 >
-                  ✕ Batal Diskon
+                  ✕ Batal
                 </button>
               </div>
 
@@ -140,12 +172,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                     min="0"
                     max="100"
                     className="discount-input"
-                    placeholder="0"
-                    value={discountPercent || ''}
-                    onChange={(e) => {
-                      const val = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
-                      onChangeDiscount(val);
-                    }}
+                    placeholder="0%"
+                    value={discountStr}
+                    onChange={(e) => handleDiscountChange(e.target.value)}
                   />
                 </div>
                 <div className="discount-helpers">
@@ -154,7 +183,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                       key={pct}
                       type="button"
                       className={`discount-helper-btn ${discountPercent === pct ? 'active' : ''}`}
-                      onClick={() => onChangeDiscount(discountPercent === pct ? 0 : pct)}
+                      onClick={() => handleApplyPreset(pct)}
                     >
                       {pct}%
                     </button>

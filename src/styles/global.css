@@ -50,12 +50,20 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Soft-Keyboard Focus Handling Fix for Android Tablets */
+/* Soft-Keyboard Focus Handling for Tablets */
 input:focus, textarea:focus, select:focus {
   outline: 2px solid #2563eb;
   outline-offset: 1px;
-  scroll-margin-top: 40px;
-  scroll-margin-bottom: 280px;
+  scroll-margin: 6px 0;
+}
+
+/* Reusable Modal Form Wrapper for pinned header/footer with scrollable body */
+.modal-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 button {

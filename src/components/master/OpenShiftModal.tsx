@@ -62,75 +62,76 @@ export const OpenShiftModal: React.FC<OpenShiftModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="inv-modal-body">
-          {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
+        <form onSubmit={handleSubmit} className="modal-form-wrapper">
+          <div className="inv-modal-body">
+            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
-          <div className="info-summary-card">
-            <div>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>Petugas Kasir:</span>
-              <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{staff.name}</h4>
-            </div>
-            <span
-              style={{
-                fontSize: '11px',
-                backgroundColor: staff.role === 'owner' ? '#3b82f6' : '#e2e8f0',
-                color: staff.role === 'owner' ? '#ffffff' : '#0f172a',
-                padding: '3px 8px',
-                borderRadius: '4px',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-              }}
-            >
-              {staff.role}
-            </span>
-          </div>
-
-          <div className="inv-form-group">
-            <label className="inv-form-label">Uang Kas Awal / Modal Kembalian Toko (Rp)</label>
-            <NumberInput
-              className="form-input"
-              style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
-              placeholder="Uang Modal"
-              value={startingCash}
-              onChange={(v) => setStartingCash(v === '' ? 0 : v)}
-              required
-            />
-            <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-              {[50000, 100000, 200000, 300000].map((nominal) => (
-                <button
-                  key={nominal}
-                  type="button"
-                  onClick={() => setStartingCash(nominal)}
-                  style={{
-                    flex: 1,
-                    padding: '6px 0',
-                    fontSize: '11px',
-                    borderRadius: '4px',
-                    backgroundColor: '#f1f5f9',
-                    border: '1px solid #cbd5e1',
-                    color: '#0f172a',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {formatRupiah(nominal)}
-                </button>
-              ))}
+            <div className="info-summary-card">
+              <div>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>Petugas Kasir:</span>
+                <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{staff.name}</h4>
+              </div>
+              <span
+                style={{
+                  fontSize: '11px',
+                  backgroundColor: staff.role === 'owner' ? '#3b82f6' : '#e2e8f0',
+                  color: staff.role === 'owner' ? '#ffffff' : '#0f172a',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                }}
+              >
+                {staff.role}
+              </span>
             </div>
 
+            <div className="inv-form-group">
+              <label className="inv-form-label">Uang Kas Awal / Modal Kembalian Toko (Rp)</label>
+              <NumberInput
+                className="form-input"
+                style={{ fontSize: '18px', fontWeight: 700, height: '46px' }}
+                placeholder="Uang Modal"
+                value={startingCash}
+                onChange={(v) => setStartingCash(v === '' ? 0 : v)}
+                required
+              />
+              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                {[50000, 100000, 200000, 300000].map((nominal) => (
+                  <button
+                    key={nominal}
+                    type="button"
+                    onClick={() => setStartingCash(nominal)}
+                    style={{
+                      flex: 1,
+                      padding: '6px 0',
+                      fontSize: '11px',
+                      borderRadius: '4px',
+                      backgroundColor: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#0f172a',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {formatRupiah(nominal)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="inv-form-group">
+              <label className="inv-form-label">Catatan Buka Toko (Opsional)</label>
+              <input
+                type="text"
+                className="form-input"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="contoh: Kas awal pecahan 5rb & 10rb..."
+              />
+            </div>
           </div>
 
-          <div className="inv-form-group">
-            <label className="inv-form-label">Catatan Buka Toko (Opsional)</label>
-            <input
-              type="text"
-              className="form-input"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="contoh: Kas awal pecahan 5rb & 10rb..."
-            />
-          </div>
-
-          <div className="inv-modal-footer" style={{ margin: '12px -20px -20px -20px' }}>
+          <div className="inv-modal-footer">
             <button type="button" className="inv-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>

@@ -169,18 +169,18 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.25);
   width: 100%;
   max-width: 500px;
-  max-height: 94vh;
-  margin: 0 auto;
+  max-height: 92dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .inv-modal-header {
-  padding: 12px 16px;
+  flex-shrink: 0;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -195,10 +195,11 @@
 }
 
 .inv-modal-body {
-  padding: 16px 18px 56px;
+  padding: 16px 18px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -206,7 +207,8 @@
 }
 
 .inv-modal-footer {
-  padding: 16px 20px;
+  flex-shrink: 0;
+  padding: 14px 18px;
   border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -236,6 +238,55 @@
   background-color: var(--bg-surface);
   color: var(--text-main);
   font-size: 14px;
+}
+
+.ingredient-modal-card {
+  max-width: 620px;
+  width: 95%;
+}
+
+.restock-modal-card {
+  max-width: 540px;
+  width: 95%;
+}
+
+.form-row.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.calc-section-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calc-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.calc-result-badge {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.calc-result-badge strong {
+  color: #16a34a;
+  font-size: 15px;
 }
 
 .inv-calc-badge {

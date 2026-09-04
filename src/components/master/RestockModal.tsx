@@ -64,66 +64,68 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="inv-modal-body">
-          {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
+        <form onSubmit={handleSubmit} className="modal-form-wrapper">
+          <div className="inv-modal-body">
+            {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
-          <div className="info-summary-card">
-            <div>
-              <span>Stok Saat Ini: </span>
-              <strong>{ingredient.currentStock} {ingredient.unit}</strong>
+            <div className="info-summary-card">
+              <div>
+                <span>Stok Saat Ini: </span>
+                <strong>{ingredient.currentStock} {ingredient.unit}</strong>
+              </div>
+              <div>
+                <span>HPP Lama: </span>
+                <strong>{formatRupiah(ingredient.costPerUnit)} / {ingredient.unit}</strong>
+              </div>
             </div>
-            <div>
-              <span>HPP Lama: </span>
-              <strong>{formatRupiah(ingredient.costPerUnit)} / {ingredient.unit}</strong>
+
+            <div className="inv-form-group">
+              <label className="inv-form-label">Jumlah Barang Masuk (+ {ingredient.unit})</label>
+              <NumberInput
+                style={{ fontSize: '16px', fontWeight: 600 }}
+                placeholder={`contoh: 1.000 ${ingredient.unit}`}
+                value={addedQty || ''}
+                onChange={(v) => setAddedQty(v === '' ? 0 : v)}
+                allowDecimal
+                required
+              />
+            </div>
+
+            <div className="inv-form-group">
+              <label className="inv-form-label">Total Uang Belanja yang Dibayar (Rp)</label>
+              <NumberInput
+                style={{ fontSize: '16px', fontWeight: 600 }}
+                placeholder="contoh: 150.000"
+                value={purchasePrice || ''}
+                onChange={(v) => setPurchasePrice(v === '' ? 0 : v)}
+                required
+              />
+              <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
+                Masukkan total nominal uang yang dikeluarkan dari kas kecil untuk belanja ini.
+              </span>
+            </div>
+
+            <div className="calc-section-box">
+              <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
+                <span>Harga Beli Batch Ini:</span>
+                <strong>{formatRupiah(batchCostPerUnit)} / {ingredient.unit}</strong>
+              </div>
+
+              <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
+                <span>Total Stok Menjadi:</span>
+                <strong style={{ color: '#22c55e' }}>{newTotalStock} {ingredient.unit}</strong>
+              </div>
+
+              <div className="inv-calc-badge" style={{ border: '1px solid #3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                <span>Estimasi HPP Baru (Weighted Avg):</span>
+                <strong style={{ color: '#60a5fa', fontSize: '15px' }}>
+                  {formatRupiah(projectedWeightedCost)} / {ingredient.unit}
+                </strong>
+              </div>
             </div>
           </div>
 
-          <div className="inv-form-group">
-            <label className="inv-form-label">Jumlah Barang Masuk (+ {ingredient.unit})</label>
-            <NumberInput
-              style={{ fontSize: '16px', fontWeight: 600 }}
-              placeholder={`contoh: 1.000 ${ingredient.unit}`}
-              value={addedQty || ''}
-              onChange={(v) => setAddedQty(v === '' ? 0 : v)}
-              allowDecimal
-              required
-            />
-          </div>
-
-          <div className="inv-form-group">
-            <label className="inv-form-label">Total Uang Belanja yang Dibayar (Rp)</label>
-            <NumberInput
-              style={{ fontSize: '16px', fontWeight: 600 }}
-              placeholder="contoh: 150.000"
-              value={purchasePrice || ''}
-              onChange={(v) => setPurchasePrice(v === '' ? 0 : v)}
-              required
-            />
-            <span style={{ fontSize: '12px', color: '#a1a1aa' }}>
-              Masukkan total nominal uang yang dikeluarkan dari kas kecil untuk belanja ini.
-            </span>
-          </div>
-
-          <div className="calc-section-box">
-            <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
-              <span>Harga Beli Batch Ini:</span>
-              <strong>{formatRupiah(batchCostPerUnit)} / {ingredient.unit}</strong>
-            </div>
-
-            <div className="inv-calc-badge" style={{ marginBottom: '8px' }}>
-              <span>Total Stok Menjadi:</span>
-              <strong style={{ color: '#22c55e' }}>{newTotalStock} {ingredient.unit}</strong>
-            </div>
-
-            <div className="inv-calc-badge" style={{ border: '1px solid #3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
-              <span>Estimasi HPP Baru (Weighted Avg):</span>
-              <strong style={{ color: '#60a5fa', fontSize: '15px' }}>
-                {formatRupiah(projectedWeightedCost)} / {ingredient.unit}
-              </strong>
-            </div>
-          </div>
-
-          <div className="inv-modal-footer" style={{ margin: '8px -20px -20px -20px' }}>
+          <div className="inv-modal-footer">
             <button type="button" className="inv-btn-secondary" onClick={onClose}>
               Batal
             </button>
