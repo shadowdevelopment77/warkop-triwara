@@ -5,7 +5,6 @@
 import { db, TriwaraDatabase } from '../database/db';
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 import type {
   ICategory,
   IProduct,
@@ -141,18 +140,12 @@ export class BackupService {
       let binary = '';
       for (const byte of bytes) binary += String.fromCharCode(byte);
 
-      const written = await Filesystem.writeFile({
+      await Filesystem.writeFile({
         path: fileName,
         data: btoa(binary),
         directory: Directory.Documents,
         recursive: true,
       });
-
-      try {
-        await Share.share({ title: fileName, url: written.uri });
-      } catch {
-        // Closing the Android share sheet is not a failed backup: the file is saved already.
-      }
     } else if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);

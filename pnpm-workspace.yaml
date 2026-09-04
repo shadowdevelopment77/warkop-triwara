@@ -1,6 +1,2 @@
 allowBuilds:
-  '@github/keytar': set this to true or false
-  '@google/genai': set this to true or false
   core-js: false
-  node-pty: set this to true or false
-  protobufjs: set this to true or false

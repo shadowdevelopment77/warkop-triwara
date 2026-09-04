@@ -63,7 +63,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
       setIsExporting(true);
       setErrorMsg('');
       const fileName = await backupService.downloadBackupFile();
-      setSuccessMsg(`File backup "${fileName}" berhasil diunduh.`);
+      setSuccessMsg(`File backup "${fileName}" berhasil disimpan di folder Dokumen perangkat.`);
     } catch (err) {
       setErrorMsg(`Gagal membuat backup: ${(err as Error).message}`);
     } finally {
