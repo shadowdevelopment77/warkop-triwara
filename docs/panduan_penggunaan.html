@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Buku Panduan Penggunaan Triwara POS</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 18mm 15mm 18mm 15mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+      }
+      @bottom-left {
+        content: "Triwara POS — Buku Panduan Penggunaan Resmi";
+        font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+        font-size: 8pt;
+        color: #94a3b8;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+      color: #1e293b;
+      background-color: #ffffff;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      page-break-after: always;
+      height: 100%;
+      min-height: 240mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      padding: 30mm 10mm 15mm 10mm;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      align-self: center;
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .cover-title {
+      font-size: 32pt;
+      font-weight: 900;
+      color: #09090b;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-subtitle {
+      font-size: 15pt;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 30px;
+      line-height: 1.4;
+    }
+
+    .cover-illustration {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .cover-feature-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .cover-feature-list li {
+      font-size: 10.5pt;
+      color: #334155;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cover-footer {
+      border-top: 1px solid #cbd5e1;
+      padding-top: 15px;
+      font-size: 9.5pt;
+      color: #64748b;
+    }
+
+    /* Table of Contents */
+    .toc-page {
+      page-break-after: always;
+      padding-top: 10mm;
+    }
+
+    .page-title {
+      font-size: 20pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 10px;
+      border-bottom: 1px dotted #cbd5e1;
+      font-size: 10.5pt;
+    }
+
+    .toc-item strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .toc-item span {
+      color: #64748b;
+      font-size: 9.5pt;
+    }
+
+    /* Chapter Content */
+    .chapter {
+      page-break-after: always;
+      padding-top: 5mm;
+    }
+
+    .chapter-header {
+      background-color: #f8fafc;
+      border-left: 6px solid #0f172a;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border-radius: 0 8px 8px 0;
+      border-top: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .chapter-number {
+      font-size: 9.5pt;
+      font-weight: 800;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chapter-title {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .lead-text {
+      font-size: 11pt;
+      color: #334155;
+      font-weight: 600;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    /* Step boxes */
+    .step-box {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .step-title {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      background-color: #0f172a;
+      color: #ffffff;
+      font-size: 9pt;
+      font-weight: 800;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-desc {
+      font-size: 10pt;
+      color: #334155;
+      line-height: 1.5;
+      padding-left: 30px;
+    }
+
+    /* Screenshots */
+    .screenshot-container {
+      text-align: center;
+      margin: 14px 0 16px 0;
+      page-break-inside: avoid;
+    }
+
+    .screenshot-img {
+      max-width: 96%;
+      height: auto;
+      max-height: 92mm;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      object-fit: contain;
+    }
+
+    .screenshot-caption {
+      font-size: 8.5pt;
+      color: #64748b;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* Alerts and Tips */
+    .info-box {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      color: #1e40af;
+      page-break-inside: avoid;
+    }
+
+    .tip-box {
+      background-color: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      color: #166534;
+      page-break-inside: avoid;
+    }
+
+    .warning-box {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      color: #92400e;
+      page-break-inside: avoid;
+    }
+
+    /* Simple Tables */
+    .manual-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9.5pt;
+    }
+
+    .manual-table th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .manual-table td {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+
+    .badge-button {
+      background-color: #e2e8f0;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 8.5pt;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      display: inline-block;
+      font-family: monospace;
+    }
+
+    .badge-primary {
+      background-color: #09090b;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 8.5pt;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HALAMAN SAMPUL (COVER) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="cover-page">
+    <div>
+      <div class="cover-badge">Buku Panduan Operasional Resmi</div>
+      <h1 class="cover-title">TRIWARA POS</h1>
+      <h2 class="cover-subtitle">Sistem Kasir, Stok Bahan & Perhitungan HPP Resep Otomatis<br>Panduan Lengkap untuk Pemula</h2>
+    </div>
+
+    <div class="cover-illustration">
+      <h3 style="font-size: 12pt; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-align: center;">
+        Fitur Unggulan Triwara POS yang Memudahkan Usaha Anda:
+      </h3>
+      <ul class="cover-feature-list">
+        <li>✅ 100% Bebas Kuota (Offline-First)</li>
+        <li>✅ Hitung Kembalian & Cetak Struk 58mm</li>
+        <li>✅ Hitung Modal HPP Resep Otomatis</li>
+        <li>✅ Rekap Kas Shift & Deteksi Selisih Laci</li>
+        <li>✅ Pengurangan Stok Bahan Otomatis</li>
+        <li>✅ Laporan Penjualan & Ekspor Excel</li>
+      </ul>
+    </div>
+
+    <div class="cover-footer">
+      <p style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">Diterbitkan Khusus untuk Pemilik Toko, Manajer Kedai, dan Staf Kasir</p>
+      <p>Edisi 2026 • Versi Aplikasi 1.0 (Produksi) • Sangat Mudah Dipahami Siapa Saja</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DAFTAR ISI -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="toc-page">
+    <h2 class="page-title">DAFTAR ISI PANDUAN</h2>
+    <p class="lead-text">Buku ini disusun secara berurutan mulai dari saat Anda pertama kali menyalakan aplikasi di pagi hari hingga tutup toko di malam hari.</p>
+
+    <ul class="toc-list">
+      <li class="toc-item"><strong>Bab 1: Menghidupkan Aplikasi & Masuk Menggunakan PIN Kasir</strong> <span>Halaman 3</span></li>
+      <li class="toc-item"><strong>Bab 2: Membuka Shift Kasir (Memasukkan Uang Modal Awal)</strong> <span>Halaman 4</span></li>
+      <li class="toc-item"><strong>Bab 3: Melayani Pesanan Pelanggan di Layar Kasir (POS)</strong> <span>Halaman 5</span></li>
+      <li class="toc-item"><strong>Bab 4: Memilih Varian Minuman (Es/Panas, Gula, & Topping)</strong> <span>Halaman 6</span></li>
+      <li class="toc-item"><strong>Bab 5: Pembayaran (Tunai / QRIS) & Mencetak Struk Kasir</strong> <span>Halaman 7</span></li>
+      <li class="toc-item"><strong>Bab 6: Fitur Menahan Pesanan Sementara (Pesanan Gantung)</strong> <span>Halaman 8</span></li>
+      <li class="toc-item"><strong>Bab 7: Riwayat Penjualan, Cetak Ulang Struk & Pembatalan (Void)</strong> <span>Halaman 9</span></li>
+      <li class="toc-item"><strong>Bab 8: Tutup Shift di Akhir Jam Kerja & Hitung Uang Kas Laci</strong> <span>Halaman 10</span></li>
+      <li class="toc-item"><strong>Bab 9: Mengatur Bahan Baku & Stok Gudang (Inventori)</strong> <span>Halaman 11</span></li>
+      <li class="toc-item"><strong>Bab 10: Menambah Menu Baru, Resep & Perhitungan HPP Otomatis</strong> <span>Halaman 12</span></li>
+      <li class="toc-item"><strong>Bab 11: Melihat Laporan Keuntungan & Pembukuan Toko</strong> <span>Halaman 13</span></li>
+      <li class="toc-item"><strong>Bab 12: Menghubungkan Printer Bluetooth (Thermal 58mm)</strong> <span>Halaman 14</span></li>
+      <li class="toc-item"><strong>Bab 13: Kelola Karyawan, Backup Data & Lisensi Toko</strong> <span>Halaman 15</span></li>
+      <li class="toc-item"><strong>Bab 14: Panduan Mengatasi Kendala Sehari-hari (FAQ & Solusi)</strong> <span>Halaman 16</span></li>
+    </ul>
+
+    <div class="tip-box" style="margin-top: 25px;">
+      <strong>💡 Tips Membaca:</strong> Anda tidak perlu menghafal seluruh isi buku ini sekaligus. Cukup pelajari <strong>Bab 1 sampai Bab 5</strong> terlebih dahulu untuk mulai melayani pembeli pertama Anda hari ini.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 1: LOGIN PIN -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 1</div>
+      <h2 class="chapter-title">Menghidupkan Aplikasi & Masuk dengan PIN</h2>
+    </div>
+
+    <p class="lead-text">Aplikasi Triwara POS dilindungi oleh 4 angka PIN rahasia agar catatan penjualan kasir tidak tertukar dan pengaturan penting toko tetap aman.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/01_login_pin.png" alt="Layar Kunci PIN" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 1: Layar Tombol Angka PIN Keamanan</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Sentuh 4 Angka PIN Anda</div>
+      <div class="step-desc">
+        Tekan tombol angka di layar satu per satu hingga 4 bulatan di atas terisi penuh. Aplikasi akan terbuka secara otomatis begitu angka ke-4 ditekan.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Jika Salah Tekan Angka</div>
+      <div class="step-desc">
+        Tekan tombol panah hapus <span class="badge-button">⌫</span> di pojok kanan bawah untuk menghapus angka terakhir, atau tekan tombol <span class="badge-button">C</span> untuk mengulang dari awal.
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>🔑 Informasi PIN Bawaan Toko:</strong><br>
+      • <strong>PIN Pemilik Toko (Owner Pertama)</strong>: <span class="badge-button">0000</span> (Nol empat kali).<br>
+      • Pemilik toko dapat membuatkan PIN terpisah untuk setiap karyawan kasir di menu <em>Kelola Karyawan</em>.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 2: BUKA SHIFT -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 2</div>
+      <h2 class="chapter-title">Membuka Shift Kasir (Uang Modal Awal)</h2>
+    </div>
+
+    <p class="lead-text">Setiap kali memulai hari kerja atau pergantian petugas kasir, kasir wajib memasukkan jumlah uang modal kembalian yang ada di dalam laci.</p>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Mengetik Jumlah Uang Modal di Laci</div>
+      <div class="step-desc">
+        Ketika jendela <strong>"Buka Toko / Shift"</strong> muncul, ketikkan jumlah uang modal yang ada di laci kasir (misalnya Rp 100.000). Anda juga bisa langsung menyentuh tombol cepat <span class="badge-button">50.000</span>, <span class="badge-button">100.000</span>, atau <span class="badge-button">200.000</span>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Menekan Tombol Buka Shift</div>
+      <div class="step-desc">
+        Tekan tombol <span class="badge-primary">Buka Toko</span>. Sekarang layar kasir akan terbuka dan Anda siap melayani pelanggan yang datang.
+      </div>
+    </div>
+
+    <div class="warning-box">
+      <strong>⚠️ Mengapa Uang Modal Awal Harus Diisi?</strong><br>
+      Uang modal awal diperlukan agar saat tutup toko nanti, sistem dapat memisahkan antara <strong>uang modal kembalian</strong> dan <strong>uang murni hasil jualan</strong>, sehingga uang kas di laci tidak akan pernah selisih!
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 3: LAYAR KASIR POS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 3</div>
+      <h2 class="chapter-title">Melayani Pesanan di Layar Kasir (POS)</h2>
+    </div>
+
+    <p class="lead-text">Layar kasir dibagi menjadi 2 bagian utama yang sangat jelas: Sisi Kiri untuk memilih menu, dan Sisi Kanan untuk melihat daftar belanjaan pelanggan.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/02_kasir_pos.png" alt="Layar Kasir POS" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 2: Layar Utama Kasir (Kiri: Menu Produk, Kanan: Keranjang Pesanan)</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Memilih Menu yang Dipesan Pembeli</div>
+      <div class="step-desc">
+        Cukup <strong>sentuh kotak menu</strong> yang diinginkan pelanggan (misalnya: *Kopi Susu Aren*). Menu tersebut akan langsung masuk ke keranjang di sebelah kanan.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Menggunakan Tombol Kategori & Pencarian</div>
+      <div class="step-desc">
+        Jika menu sangat banyak, geser tombol kategori di atas (<span class="badge-button">Kopi</span>, <span class="badge-button">Non-Kopi</span>, <span class="badge-button">Makanan</span>) untuk menyaring menu dengan cepat, atau ketik nama minuman di kolom pencarian.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 4: VARIAN & TOPPING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 4</div>
+      <h2 class="chapter-title">Memilih Varian (Es/Panas, Gula, & Topping)</h2>
+    </div>
+
+    <p class="lead-text">Saat pembeli memesan minuman dengan permintaan khusus (misal: dingin, sedikit gula, atau minta tambah topping), Anda dapat mengaturnya di jendela varian.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/03_varian_menu.png" alt="Pilihan Varian" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 3: Jendela Pilihan Varian Minuman & Tambahan Topping</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Pilih Jenis Minum / Bungkus (Type)</div>
+      <div class="step-desc">
+        Sentuh <span class="badge-button">Dine-In</span> jika pelanggan minum di warung, atau sentuh <span class="badge-button">Takeaway</span> jika dibungkus bawa pulang. <em>(Kemasan takeaway otomatis memotong stok cup di gudang).</em>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Pilih Suhu (Ice / Hot) & Gula (Sugar Level)</div>
+      <div class="step-desc">
+        Sentuh tombol <span class="badge-button">Ice</span> untuk dingin atau <span class="badge-button">Hot</span> untuk panas. Kemudian pilih tingkat gula: <span class="badge-button">Normal</span>, <span class="badge-button">Less Sugar</span> (sedikit), atau <span class="badge-button">No Sugar</span> (tanpa gula).
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Tambahan Topping (Additional)</div>
+      <div class="step-desc">
+        Jika pelanggan meminta topping tambahan (seperti <em>Extra Shot, Cincau, Jelly</em>), centang kotak topping tersebut. Harga akan otomatis bertambah.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">4</span> Masukkan ke Keranjang</div>
+      <div class="step-desc">
+        Sentuh tombol hitam <span class="badge-primary">Tambah ke Keranjang</span> di bagian paling bawah.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 5: PEMBAYARAN & CETAK STRUK -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 5</div>
+      <h2 class="chapter-title">Pembayaran (Tunai / QRIS) & Cetak Struk</h2>
+    </div>
+
+    <p class="lead-text">Setelah semua pesanan selesai dicatat di keranjang, kasir menekan tombol Bayar untuk menerima pembayaran pelanggan.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/04_pembayaran.png" alt="Layar Pembayaran" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 4: Jendela Pembayaran (Hitung Kembalian Otomatis & QRIS)</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Menekan Tombol Bayar Sekarang</div>
+      <div class="step-desc">
+        Sentuh tombol hitam besar <span class="badge-primary">Bayar Sekarang</span> di pojok kanan bawah keranjang belanja.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Jika Pelanggan Membayar TUNAI (Uang Kertas / Koin)</div>
+      <div class="step-desc">
+        Sentuh tombol <span class="badge-button">Tunai</span>, lalu ketik jumlah uang yang diserahkan pembeli atau sentuh tombol cepat (<span class="badge-button">Uang Pas</span>, <span class="badge-button">50.000</span>, <span class="badge-button">100.000</span>).<br>
+        👉 <strong>Lihat tulisan KEMBALIAN berwarna hijau</strong> di layar. Berikan uang kembalian tersebut kepada pembeli.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Jika Pelanggan Membayar QRIS (Scan Barcode)</div>
+      <div class="step-desc">
+        Sentuh tombol <span class="badge-button">QRIS</span>. Tunjukkan barcode QRIS toko kepada pembeli. Setelah pembeli menunjukkan bukti transfer sukses di HP-nya, lanjutkan transaksi.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">4</span> Cetak Struk Bukti Pembayaran</div>
+      <div class="step-desc">
+        Sentuh tombol <span class="badge-primary">Selesaikan Pembayaran</span>. Struk belanja akan langsung keluar terpotong rapi dari mesin printer Bluetooth kasir!
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 6: PESANAN GANTUNG (HELD ORDERS) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 6</div>
+      <h2 class="chapter-title">Fitur Menahan Pesanan (Pesanan Gantung)</h2>
+    </div>
+
+    <p class="lead-text">Gunakan fitur ini jika pembeli sedang memesan tetapi masih ingin melihat menu lain atau temannya belum datang, sementara antrean di belakangnya sudah menunggu.</p>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Cara Menahan Pesanan Sementara</div>
+      <div class="step-desc">
+        Di panel keranjang sebelah kanan, tekan tombol <span class="badge-button">Tahan Pesanan</span>. Masukkan nama pelanggan atau nomor meja (misal: <em>"Mas Dimas"</em> atau <em>"Meja 03"</em>). Keranjang akan kosong kembali sehingga Anda bisa langsung melayani pembeli berikutnya.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Cara Memanggil Kembali Pesanan Gantung</div>
+      <div class="step-desc">
+        Ketika pelanggan tadi sudah siap bayar: Tekan tombol <span class="badge-button">Pesanan Gantung</span> di pojok kanan atas keranjang → Sentuh nama pelanggan tersebut → Pesanan lama akan kembali muncul utuh di keranjang untuk dibayar.
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>💡 Keuntungan Fitur Ini:</strong> Anda tidak perlu mengetik ulang pesanan dari awal jika pelanggan menambah pesanan di tengah jalan!
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 7: RIWAYAT & VOID -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 7</div>
+      <h2 class="chapter-title">Riwayat Penjualan & Pembatalan (Void)</h2>
+    </div>
+
+    <p class="lead-text">Menu ini digunakan untuk mengecek daftar nota penjualan hari ini, mencetak ulang struk yang hilang, atau membatalkan nota yang salah input.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/05_riwayat_transaksi.png" alt="Riwayat Transaksi" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 5: Layar Riwayat Transaksi & Detail Nota Penjualan</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Membuka Riwayat Transaksi</div>
+      <div class="step-desc">
+        Sentuh tombol menu garis tiga <span class="badge-button">☰</span> di pojok kiri atas layar → Sentuh <strong>"Riwayat Transaksi"</strong>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Cetak Ulang Struk (Reprint)</div>
+      <div class="step-desc">
+        Sentuh salah satu nota penjualan di daftar → Tekan tombol <span class="badge-button">Cetak Struk</span> untuk mencetak kembali nota tersebut jika pelanggan memintanya.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Membatalkan Nota yang Salah (Void)</div>
+      <div class="step-desc">
+        Jika ada pesanan salah ketik: Sentuh nota tersebut → Tekan tombol merah <span class="badge-button" style="color:red;">Batalkan Transaksi (Void)</span> → Masukkan alasan pembatalan → Masukkan PIN Supervisor/Owner. Sistem akan otomatis membatalkan nota dan <strong>mengembalikan stok bahan baku ke gudang</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 8: TUTUP SHIFT -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 8</div>
+      <h2 class="chapter-title">Tutup Shift & Hitung Uang Kas Laci</h2>
+    </div>
+
+    <p class="lead-text">Di akhir jam kerja sebelum kasir pulang, kasir wajib melakukan Tutup Shift untuk mencocokkan uang fisik di laci dengan data penjualan komputer.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/06_shift_panel.png" alt="Manajemen Shift" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 6: Layar Rekapitulasi Shift & Ringkasan Penjualan</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Membuka Menu Tutup Shift</div>
+      <div class="step-desc">
+        Sentuh tombol menu <span class="badge-button">☰</span> → Sentuh <strong>"Shift"</strong> → Tekan tombol merah <span class="badge-button" style="color:red;">Tutup Shift</span>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Menghitung Uang Fisik di Laci</div>
+      <div class="step-desc">
+        Keluarkan semua uang kertas dan koin di laci kasir, lalu hitung manual totalnya. Ketikkan jumlah uang nyata tersebut di kolom <strong>"Uang Kas Fisik Nyata di Laci"</strong>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Melihat Status Selisih Kas</div>
+      <div class="step-desc">
+        Sistem akan otomatis membandingkan dan menampilkan status:
+        <br>• <strong style="color: green;">PAS (Rp 0)</strong>: Uang di laci tepat sesuai data transaksi.
+        <br>• <strong style="color: blue;">SURPLUS</strong>: Ada kelebihan uang di laci.
+        <br>• <strong style="color: red;">MINUS</strong>: Ada kekurangan uang di laci.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">4</span> Konfirmasi & Cetak Rekap Shift</div>
+      <div class="step-desc">
+        Tekan <span class="badge-primary">Konfirmasi Tutup Shift</span>. Printer akan mencetak struk rekapitulasi shift yang berisi total omset tunai, QRIS, dan nama kasir yang bertugas.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 9: INVENTORI & STOK BAHAN -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 9</div>
+      <h2 class="chapter-title">Mengatur Bahan Baku & Stok Gudang</h2>
+    </div>
+
+    <p class="lead-text">Menu Inventori mencatat seluruh bahan baku minuman (biji kopi, susu, sirup, bubuk) dan kemasan (cup, sedotan) agar Anda tahu kapan harus belanja ulang.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/07_inventori_bahan.png" alt="Inventori Bahan Baku" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 7: Tabel Stok Bahan Baku, Satuan Gram/Ml, dan Batas Alert</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Membuka Menu Bahan & Stok</div>
+      <div class="step-desc">
+        Sentuh tombol menu <span class="badge-button">☰</span> → Sentuh folder <strong>"Produk & Stok"</strong> → Pilih <strong>"Bahan & Stok"</strong>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Memahami Warna Status Stok</div>
+      <div class="step-desc">
+        • <span style="background-color: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Hijau (Aman)</span>: Stok masih banyak.<br>
+        • <span style="background-color: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Kuning (Menipis)</span>: Stok sudah mendekati batas minimum, bersiaplah belanja.<br>
+        • <span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">Merah (Habis)</span>: Bahan sudah habis di gudang!
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Menambah Stok Belanjaan Baru (Restock)</div>
+      <div class="step-desc">
+        Jika ada pasokan bahan baru datang dari supplier: Tekan tombol <span class="badge-primary">+ Tambah Bahan</span> atau sentuh nama bahan lalu tekan tombol Restock → Masukkan jumlah barang yang dibeli (misal: 1000 gram biji kopi) beserta total harga belinya.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 10: KATALOG RESEP & HPP OTOMATIS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 10</div>
+      <h2 class="chapter-title">Katalog Menu & Hitung Modal HPP Otomatis</h2>
+    </div>
+
+    <p class="lead-text">Fitur paling canggih di Triwara POS! Anda cukup memasukkan takaran resep kopi, sistem akan menghitung modal per cangkir dan keuntungan bersih secara otomatis!</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/08_katalog_menu_resep.png" alt="Katalog Menu" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 8: Katalog Menu dengan Rincian HPP Dine-In, HPP Takeaway, & Margin</div>
+    </div>
+
+    <div class="screenshot-container">
+      <img src="screenshots/09_editor_resep.png" alt="Editor Resep" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 9: Form Pembuatan Resep Menu (Takaran Bahan Baku & Kemasan)</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Membuat Menu Baru</div>
+      <div class="step-desc">
+        Sentuh tombol menu <span class="badge-button">☰</span> → <strong>Produk & Stok</strong> → <strong>Katalog Menu & Resep</strong> → Tekan tombol hitam <span class="badge-primary">+ Menu Baru</span>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Mengisi Data Menu & Takaran Bahan</div>
+      <div class="step-desc">
+        1. Masukkan <strong>Nama Menu</strong> (misal: <em>Kopi Susu Aren</em>) dan <strong>Harga Jual</strong> (misal: <em>Rp 22.000</em>).<br>
+        2. Pada bagian <strong>Bahan Baku Utama</strong>, tekan <span class="badge-button">+ Add</span> lalu pilih bahannya beserta takarannya (misal: <em>Espresso 30 ml, Fresh Milk 120 ml, Gula Aren 20 ml</em>).<br>
+        3. Pada bagian <strong>Kemasan Takeaway</strong>, tambahkan cup dan sedotan (misal: <em>Paper Cup 1 pcs, Sedotan 1 pcs</em>).
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>✨ Keajaiban Hitung Modal (HPP) Otomatis:</strong><br>
+      Sistem akan langsung menghitung total biaya bahan: <strong>"Modal Minuman Rp 7.500 → Dijual Rp 22.000 → Untung Bersih Rp 14.500 (Margin 65%)"</strong>. Anda tidak perlu repot menghitung manual di kalkulator lagi!
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 11: LAPORAN PENJUALAN -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 11</div>
+      <h2 class="chapter-title">Melihat Laporan Keuntungan & Pembukuan</h2>
+    </div>
+
+    <p class="lead-text">Pemilik toko dapat memantau grafik penjualan, mengetahui produk apa yang paling laris, dan mengunduh laporan keuangan ke file Excel.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/10_laporan_penjualan.png" alt="Laporan Penjualan" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 10: Grafik Omset Harian, Ringkasan Laba Bersih, & Produk Terlaris</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Membuka Laporan Penjualan</div>
+      <div class="step-desc">
+        Sentuh tombol menu <span class="badge-button">☰</span> → Sentuh <strong>"Laporan Penjualan"</strong>. <em>(Menu ini hanya bisa dibuka oleh Pemilik Toko dengan PIN Owner).</em>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Membaca Ringkasan Angka Keuangan</div>
+      <div class="step-desc">
+        • <strong>Total Omset</strong>: Total semua uang masuk dari penjualan.<br>
+        • <strong>Total HPP Modal</strong>: Total uang modal bahan baku yang terpakai.<br>
+        • <strong>Laba Kotor (Gross Profit)</strong>: Keuntungan bersih toko setelah dikurangi modal bahan.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Download Laporan ke Excel (.xlsx)</div>
+      <div class="step-desc">
+        Tekan tombol <span class="badge-button">Unduh Excel</span> di bagian atas laporan untuk menyimpan seluruh rincian penjualan ke dalam file spreadsheet yang bisa dibuka di HP, laptop, atau dikirim ke WhatsApp.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 12: KONEKSI PRINTER THERMAL -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 12</div>
+      <h2 class="chapter-title">Menghubungkan Printer Bluetooth 58mm</h2>
+    </div>
+
+    <p class="lead-text">Triwara POS langsung terhubung ke printer struk thermal Bluetooth standar 58mm secara mandiri tanpa memerlukan aplikasi perantara seperti RawBT.</p>
+
+    <div class="screenshot-container">
+      <img src="screenshots/11_pengaturan_toko.png" alt="Pengaturan Toko" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 11: Menu Pengaturan Toko & Konfigurasi Printer</div>
+    </div>
+
+    <div class="screenshot-container">
+      <img src="screenshots/12_koneksi_printer_58mm.png" alt="Modal Printer 58mm" class="screenshot-img">
+      <div class="screenshot-caption">Gambar 12: Jendela Pencarian & Pengujian Printer Bluetooth Thermal (58mm)</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Nyalakan Printer & Sambungkan di Pengaturan HP/Tablet</div>
+      <div class="step-desc">
+        1. Hidupkan printer thermal Bluetooth Anda dan pastikan kertas thermal terpasang.<br>
+        2. Di HP/Tablet Android, buka <strong>Pengaturan → Bluetooth</strong>, cari nama printer thermal Anda, lalu lakukan <strong>Pairing</strong> (PIN pairing biasanya <span class="badge-button">0000</span> atau <span class="badge-button">1234</span>).
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Sambungkan di Aplikasi Triwara POS</div>
+      <div class="step-desc">
+        1. Buka Triwara POS → Tekan menu <span class="badge-button">☰</span> → <strong>Pengaturan Toko</strong>.<br>
+        2. Sentuh kartu <strong>"Koneksi Printer Thermal"</strong>.<br>
+        3. Tekan tombol biru <span class="badge-button" style="background:#0891b2; color:white;">Cari Printer Bluetooth</span>.<br>
+        4. Sentuh nama printer Anda pada daftar perangkat (misal: <em>Xantri BT-58D</em> atau <em>RPP02N</em>) hingga muncul tulisan <span style="color:#1d4ed8; font-weight:bold;">✓ Aktif</span>.<br>
+        5. Tekan tombol <span class="badge-button" style="background:#0284c7; color:white;">Uji Cetak Thermal (58mm)</span> untuk mencoba cetak.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 13: KELOLA KARYAWAN & BACKUP DATA -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 13</div>
+      <h2 class="chapter-title">Kelola Karyawan, Backup Data & Lisensi</h2>
+    </div>
+
+    <p class="lead-text">Menu khusus Pemilik Toko untuk menjaga keamanan data usaha dan mengelola akun staf kasir.</p>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">1</span> Kelola Karyawan & Ganti PIN</div>
+      <div class="step-desc">
+        Buka <strong>Pengaturan Toko</strong> → <strong>Kelola Karyawan</strong>. Anda dapat menambahkan nama kasir baru dengan PIN 4 digit khusus mereka masing-masing, atau mengubah PIN jika ada kasir yang lupa.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">2</span> Cadangkan Data Toko (Backup Database)</div>
+      <div class="step-desc">
+        Buka <strong>Pengaturan Toko</strong> → <strong>Backup & Restore Database</strong> → Tekan <span class="badge-primary">Unduh Cadangan (.json)</span>. File cadangan ini berisi seluruh data produk, resep, transaksi, dan inventori. Sangat disarankan untuk mengunduh backup seminggu sekali untuk disimpan di memori HP atau Google Drive.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">3</span> Mengganti Perangkat HP / Tablet Baru (Restore)</div>
+      <div class="step-desc">
+        Jika Anda membeli tablet kasir baru, pasang aplikasi Triwara POS lalu buka menu Restore → Pilih file backup .json yang tadi disimpan → Seluruh data toko akan kembali persis seperti semula dalam hitungan detik!
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- BAB 14: FAQ & TROUBLESHOOTING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-number">Bab 14</div>
+      <h2 class="chapter-title">Panduan Mengatasi Kendala (FAQ untuk Pemula)</h2>
+    </div>
+
+    <p class="lead-text">Solusi cepat dan praktis jika Anda menemui kendala saat menggunakan aplikasi di kasir.</p>
+
+    <div class="step-box">
+      <div class="step-title">❓ Printer thermal tidak mau mencetak struk?</div>
+      <div class="step-desc">
+        1. Pastikan lampu printer menyala dan kertas struk tidak terpasang terbalik (sisi licin menghadap ke pemanas).<br>
+        2. Pastikan Bluetooth HP/Tablet menyala.<br>
+        3. Buka menu <em>Pengaturan Toko → Koneksi Printer Thermal</em>, tekan <em>"Cari Printer Bluetooth"</em> lalu pilih printer Anda sampai berstatus <strong>✓ Aktif</strong>.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">❓ Kasir salah memasukkan harga atau salah menu saat bayar?</div>
+      <div class="step-desc">
+        Jangan panik! Buka menu <strong>Riwayat Transaksi</strong> → Sentuh transaksi yang salah tersebut → Tekan tombol merah <strong>Batalkan Transaksi (Void)</strong> → Masukkan PIN Owner. Transaksi akan dibatalkan dan kasir dapat membuat pesanan baru yang benar.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">❓ Apakah aplikasi bisa dipakai saat mati lampu / tidak ada internet?</div>
+      <div class="step-desc">
+        <strong>BISA 100%!</strong> Aplikasi Triwara POS bekerja secara mandiri (*Offline-First*). Anda tidak memerlukan WiFi atau kuota data internet sama sekali untuk melayani pelanggan, mencatat stok, maupun mencetak struk.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">❓ Lupa PIN Kasir atau PIN Supervisor?</div>
+      <div class="step-desc">
+        Masuklah menggunakan akun <strong>Owner (PIN Pemilik)</strong>. Buka <em>Pengaturan Toko → Kelola Karyawan</em>, lalu ubah PIN kasir yang terlupa tersebut menjadi angka baru.
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top: 20px; text-align: center;">
+      <strong>🌟 Selamat Menggunakan Triwara POS! 🌟</strong><br>
+      Semoga usaha kedai warkop & F&B Anda semakin lancar, rapi, dan berkembang sukses!
+    </div>
+  </div>
+
+</body>
+</html>

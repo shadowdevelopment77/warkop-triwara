@@ -89,12 +89,99 @@
 }
 
 /* Scoped to the printer-connection modal only (see SettingsPanel.tsx) —
-   .modal-backdrop's default 200px bottom padding is shared by 20+ other
-   modals (many with form inputs that rely on that space for on-screen
-   keyboard clearance), so we don't touch it globally. This modal has no
-   text inputs, so it's safe to reclaim that space in landscape. */
+   .modal-backdrop's default bottom padding is preserved for other modals. */
 .printer-modal-backdrop {
   padding-bottom: 24px;
+}
+
+.printer-settings-modal-card {
+  max-width: 720px;
+  width: 100%;
+}
+
+.printer-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) and (min-height: 460px) {
+  .printer-modal-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+  }
+}
+
+.printer-modal-col-main,
+.printer-modal-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.printer-status-card {
+  background-color: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+.printer-device-list-container {
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+}
+
+.printer-device-list-header {
+  padding: 7px 12px;
+  background-color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.printer-device-list-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.printer-device-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  text-align: left;
+  color: #0f172a;
+  transition: background-color 0.15s ease;
+}
+.printer-device-item:hover {
+  background-color: #f8fafc;
+}
+.printer-device-item.active {
+  background-color: #dbeafe;
+}
+
+.printer-guide-box {
+  background-color: #f1f5f9;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
+  border: 1px solid #e2e8f0;
 }
 
 .settings-modal-header {

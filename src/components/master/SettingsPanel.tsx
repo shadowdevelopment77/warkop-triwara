@@ -558,7 +558,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       {/* Modal 2: Koneksi Printer Thermal */}
       {activeModal === 'printer' && (
         <div className="modal-backdrop printer-modal-backdrop" onClick={() => setActiveModal(null)}>
-          <div className="settings-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div className="settings-modal-card printer-settings-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="settings-modal-header">
               <h3 className="settings-modal-title">Koneksi Printer Thermal</h3>
               <button type="button" className="modal-close-btn-red" onClick={() => setActiveModal(null)} title="Tutup">
@@ -566,130 +566,116 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </button>
             </div>
 
-            <div className="settings-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Status card */}
-              <div
-                style={{
-                  backgroundColor: '#f8fafc',
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: `1px solid ${config?.printerMacAddress ? '#86efac' : '#cbd5e1'}`,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Status Koneksi:</span>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '999px',
-                      fontWeight: 700,
-                      backgroundColor: config?.printerMacAddress ? '#dcfce7' : '#fef3c7',
-                      color: config?.printerMacAddress ? '#15803d' : '#b45309',
-                    }}
-                  >
-                    {config?.printerMacAddress ? 'Terhubung' : 'Belum Dihubungkan'}
-                  </span>
-                </div>
-                <strong style={{ fontSize: '15px', color: '#0f172a', display: 'block' }}>
-                  {config?.printerName || 'Belum ada printer dipilih'}
-                </strong>
-                {config?.printerMacAddress ? (
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
-                    MAC: {config.printerMacAddress}
-                  </p>
-                ) : (
-                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-                    Tap "Cari Printer Bluetooth" untuk melihat daftar printer yang ter-pair.
-                  </p>
-                )}
-              </div>
-
-              {/* Scan button */}
-              <button
-                type="button"
-                className="settings-btn-primary"
-                style={{ backgroundColor: '#0891b2', borderColor: '#0891b2' }}
-                onClick={handleScanBluetoothDevices}
-                disabled={btScanning}
-              >
-                {btScanning ? '🔍 Mencari Printer...' : 'Cari Printer Bluetooth'}
-              </button>
-
-              {/* Paired devices list */}
-              {pairedDevices.length > 0 && (
-                <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                  <div style={{ padding: '8px 12px', backgroundColor: '#e2e8f0', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Pilih Printer ({pairedDevices.length} perangkat ter-pair)
+            <div className="settings-modal-body">
+              <div className="printer-modal-grid">
+                {/* Kolom Kiri: Status, Scan, & List Printer */}
+                <div className="printer-modal-col-main">
+                  <div className="printer-status-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Status Koneksi:</span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                          fontWeight: 700,
+                          backgroundColor: config?.printerMacAddress ? '#dcfce7' : '#fef3c7',
+                          color: config?.printerMacAddress ? '#15803d' : '#b45309',
+                        }}
+                      >
+                        {config?.printerMacAddress ? 'Terhubung' : 'Belum Dihubungkan'}
+                      </span>
+                    </div>
+                    <strong style={{ fontSize: '15px', color: '#0f172a', display: 'block' }}>
+                      {config?.printerName || 'Belum ada printer dipilih'}
+                    </strong>
+                    {config?.printerMacAddress ? (
+                      <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0 0', fontFamily: 'monospace' }}>
+                        MAC: {config.printerMacAddress}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+                        Tap "Cari Printer Bluetooth" untuk melihat daftar printer yang ter-pair.
+                      </p>
+                    )}
                   </div>
-                  {pairedDevices.map((device) => (
-                    <button
-                      key={device.address}
-                      type="button"
-                      onClick={() => handleSelectPrinter(device)}
-                      disabled={btConnecting === device.address}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        width: '100%',
-                        padding: '12px 14px',
-                        background: config?.printerMacAddress === device.address ? '#dbeafe' : 'white',
-                        border: 'none',
-                        borderBottom: '1px solid #e2e8f0',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        color: '#0f172a',
-                      }}
-                    >
-                      <span>
-                        <span style={{ fontSize: '14px', fontWeight: 600, display: 'block' }}>
-                          {device.name}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
-                          {device.address}
-                        </span>
-                      </span>
-                      <span style={{ fontSize: '12px', color: config?.printerMacAddress === device.address ? '#1d4ed8' : '#94a3b8', flexShrink: 0, marginLeft: '8px' }}>
-                        {btConnecting === device.address ? '⏳' : config?.printerMacAddress === device.address ? '✓ Aktif' : 'Pilih →'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
 
-              {/* Action buttons */}
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="settings-btn-primary"
-                  style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
-                  onClick={handleTestPrint}
-                  disabled={!config?.printerMacAddress}
-                >
-                  Uji Cetak Thermal (58mm)
-                </button>
-                {config?.printerMacAddress && (
                   <button
                     type="button"
-                    className="settings-btn-danger"
-                    style={{ padding: '0 12px' }}
-                    onClick={handleDisconnectPrinter}
+                    className="settings-btn-primary"
+                    style={{ backgroundColor: '#0891b2', borderColor: '#0891b2' }}
+                    onClick={handleScanBluetoothDevices}
+                    disabled={btScanning}
                   >
-                    Reset
+                    {btScanning ? 'Mencari Printer...' : 'Cari Printer Bluetooth'}
                   </button>
-                )}
-              </div>
 
-              {/* Info guide */}
-              <div style={{ backgroundColor: '#f1f5f9', padding: '12px', borderRadius: '6px', fontSize: '12px', color: '#475569', lineHeight: '1.5' }}>
-                <strong>Panduan Koneksi Printer (Bluetooth Langsung):</strong>
-                <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
-                  <li>Nyalakan printer thermal Bluetooth Anda.</li>
-                  <li>Di HP, buka <strong>Pengaturan → Bluetooth</strong> dan pair printer (sekali saja).</li>
-                  <li>Kembali ke sini, tap <strong>"Cari Printer Bluetooth"</strong>.</li>
-                  <li>Pilih nama printer dari daftar → tap <strong>"Uji Cetak Thermal (58mm)"</strong>.</li>
-                </ol>
+                  {pairedDevices.length > 0 && (
+                    <div className="printer-device-list-container">
+                      <div className="printer-device-list-header">
+                        Pilih Printer ({pairedDevices.length} perangkat ter-pair)
+                      </div>
+                      <div className="printer-device-list-scroll">
+                        {pairedDevices.map((device) => (
+                          <button
+                            key={device.address}
+                            type="button"
+                            onClick={() => handleSelectPrinter(device)}
+                            disabled={btConnecting === device.address}
+                            className={`printer-device-item ${config?.printerMacAddress === device.address ? 'active' : ''}`}
+                          >
+                            <span>
+                              <span style={{ fontSize: '14px', fontWeight: 600, display: 'block' }}>
+                                {device.name}
+                              </span>
+                              <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
+                                {device.address}
+                              </span>
+                            </span>
+                            <span style={{ fontSize: '12px', color: config?.printerMacAddress === device.address ? '#1d4ed8' : '#94a3b8', flexShrink: 0, marginLeft: '8px' }}>
+                              {btConnecting === device.address ? 'Menyambungkan...' : config?.printerMacAddress === device.address ? '✓ Aktif' : 'Pilih →'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Kolom Kanan: Tombol Uji Cetak & Panduan */}
+                <div className="printer-modal-col-side">
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="settings-btn-primary"
+                      style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                      onClick={handleTestPrint}
+                      disabled={!config?.printerMacAddress}
+                    >
+                      Uji Cetak Thermal (58mm)
+                    </button>
+                    {config?.printerMacAddress && (
+                      <button
+                        type="button"
+                        className="settings-btn-danger"
+                        style={{ padding: '0 12px' }}
+                        onClick={handleDisconnectPrinter}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="printer-guide-box">
+                    <strong>Panduan Koneksi Printer (Bluetooth Langsung):</strong>
+                    <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
+                      <li>Nyalakan printer thermal Bluetooth Anda.</li>
+                      <li>Di HP, buka <strong>Pengaturan → Bluetooth</strong> dan pair printer (sekali saja).</li>
+                      <li>Kembali ke sini, tap <strong>"Cari Printer Bluetooth"</strong>.</li>
+                      <li>Pilih nama printer dari daftar → tap <strong>"Uji Cetak Thermal (58mm)"</strong>.</li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             </div>
 

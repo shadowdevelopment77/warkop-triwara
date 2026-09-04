@@ -298,7 +298,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <div className="menu-modal-body">
               {errorMsg && <div className="form-error-alert">{errorMsg}</div>}
 
