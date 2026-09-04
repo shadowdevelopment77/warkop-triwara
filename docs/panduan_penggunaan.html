@@ -364,7 +364,7 @@
         <li>✅ Hitung Modal HPP Resep Otomatis</li>
         <li>✅ Rekap Kas Shift & Deteksi Selisih Laci</li>
         <li>✅ Pengurangan Stok Bahan Otomatis</li>
-        <li>✅ Laporan Penjualan & Ekspor Excel</li>
+        <li>✅ Laporan Penjualan & Ekspor Dokumen PDF</li>
       </ul>
     </div>
 
@@ -434,9 +434,9 @@
     </div>
 
     <div class="info-box">
-      <strong>🔑 Informasi PIN Bawaan Toko:</strong><br>
-      • <strong>PIN Pemilik Toko (Owner Pertama)</strong>: <span class="badge-button">0000</span> (Nol empat kali).<br>
-      • Pemilik toko dapat membuatkan PIN terpisah untuk setiap karyawan kasir di menu <em>Kelola Karyawan</em>.
+      <strong>🔑 Informasi Keamanan PIN:</strong><br>
+      • Setiap kasir dan pemilik toko memiliki <strong>4-Digit PIN Mandiri</strong> yang telah didaftarkan.<br>
+      • Pemilik toko dapat menambah atau mengubah PIN karyawan kasir kapan saja di menu <em>Kelola Karyawan</em>.
     </div>
   </div>
 
@@ -654,9 +654,16 @@
     </div>
 
     <div class="step-box">
-      <div class="step-title"><span class="step-badge">3</span> Membatalkan Nota yang Salah (Void)</div>
+      <div class="step-title"><span class="step-badge">3</span> Ekspor Riwayat ke PDF</div>
       <div class="step-desc">
-        Jika ada pesanan salah ketik: Sentuh nota tersebut → Tekan tombol merah <span class="badge-button" style="color:red;">Batalkan Transaksi (Void)</span> → Masukkan alasan pembatalan → Masukkan PIN Supervisor/Owner. Sistem akan otomatis membatalkan nota dan <strong>mengembalikan stok bahan baku ke gudang</strong>.
+        Tekan tombol <span class="badge-button">📄 Export PDF</span> di pojok kanan atas untuk mengunduh seluruh daftar transaksi pada periode yang dipilih ke dalam file dokumen PDF resmi.
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">4</span> Membatalkan Nota yang Salah (Void)</div>
+      <div class="step-desc">
+        Dapat dilakukan oleh <strong>Kasir maupun Owner</strong> jika ada pesanan yang salah ketik atau pelanggan membatalkan pesanan: Sentuh tombol merah <span class="badge-button" style="color:red;">🚫 Void</span> pada baris transaksi → Masukkan alasan pembatalan (misal <em>"Salah input pesanan"</em>) → Konfirmasi. Sistem akan otomatis membatalkan nota dan <strong>mengembalikan seluruh stok bahan baku ke gudang</strong>.
       </div>
     </div>
   </div>
@@ -801,7 +808,7 @@
       <h2 class="chapter-title">Melihat Laporan Keuntungan & Pembukuan</h2>
     </div>
 
-    <p class="lead-text">Pemilik toko dapat memantau grafik penjualan, mengetahui produk apa yang paling laris, dan mengunduh laporan keuangan ke file Excel.</p>
+    <p class="lead-text">Pemilik toko dapat memantau grafik penjualan, mengetahui produk apa yang paling laris, dan mengunduh laporan keuangan ke file PDF resmi.</p>
 
     <div class="screenshot-container">
       <img src="screenshots/10_laporan_penjualan.png" alt="Laporan Penjualan" class="screenshot-img">
@@ -825,9 +832,9 @@
     </div>
 
     <div class="step-box">
-      <div class="step-title"><span class="step-badge">3</span> Download Laporan ke Excel (.xlsx)</div>
+      <div class="step-title"><span class="step-badge">3</span> Download Laporan ke PDF (.pdf)</div>
       <div class="step-desc">
-        Tekan tombol <span class="badge-button">Unduh Excel</span> di bagian atas laporan untuk menyimpan seluruh rincian penjualan ke dalam file spreadsheet yang bisa dibuka di HP, laptop, atau dikirim ke WhatsApp.
+        Tekan tombol <span class="badge-button">Export PDF</span> di pojok kanan atas laporan untuk menyimpan ringkasan penjualan, grafik performa, dan rincian produk terlaris ke dalam file dokumen PDF resmi yang siap dicetak atau dibagikan ke WhatsApp.
       </div>
     </div>
   </div>
@@ -904,6 +911,13 @@
         Jika Anda membeli tablet kasir baru, pasang aplikasi Triwara POS lalu buka menu Restore → Pilih file backup .json yang tadi disimpan → Seluruh data toko akan kembali persis seperti semula dalam hitungan detik!
       </div>
     </div>
+
+    <div class="step-box">
+      <div class="step-title"><span class="step-badge">4</span> Lisensi Perangkat</div>
+      <div class="step-desc">
+        Perangkat diaktivasi menggunakan Kunci Lisensi resmi dari pengembang yang tersimpan permanen di perangkat tanpa perlu diatur ulang saat operasional harian.
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -927,9 +941,9 @@
     </div>
 
     <div class="step-box">
-      <div class="step-title">❓ Kasir salah memasukkan harga atau salah menu saat bayar?</div>
+      <div class="step-title">❓ Kasir salah memasukkan pesanan atau pelanggan membatalkan pesanan?</div>
       <div class="step-desc">
-        Jangan panik! Buka menu <strong>Riwayat Transaksi</strong> → Sentuh transaksi yang salah tersebut → Tekan tombol merah <strong>Batalkan Transaksi (Void)</strong> → Masukkan PIN Owner. Transaksi akan dibatalkan dan kasir dapat membuat pesanan baru yang benar.
+        Jangan panik! Buka menu <strong>Riwayat Transaksi</strong> → Tekan tombol merah <strong>🚫 Void</strong> pada transaksi yang bersangkutan → Masukkan alasan pembatalan → Konfirmasi. Transaksi akan dibatalkan, seluruh stok bahan baku otomatis dikembalikan ke gudang, dan kasir dapat melayani pesanan baru.
       </div>
     </div>
 

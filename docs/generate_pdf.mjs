@@ -32,13 +32,16 @@ async function generatePDF() {
   console.log('Doc server listening on http://localhost:8099');
 
   const chrome = spawn('/usr/bin/google-chrome', [
-    '--headless',
+    '--headless=new',
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
     '--disable-gpu',
     '--remote-debugging-port=9223',
+    '--user-data-dir=/tmp/chrome-pdf-profile',
     'http://localhost:8099/panduan_penggunaan.html'
   ]);
 
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 2500));
 
   const list = await new Promise((res, rej) => {
     http.get('http://localhost:9223/json', (r) => {

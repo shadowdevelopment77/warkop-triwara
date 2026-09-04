@@ -38,8 +38,8 @@ Aplikasi Triwara POS dilindungi oleh sistem keamanan PIN 4 digit untuk memastika
 
 ### 🔹 Cara Masuk:
 1. Tekan tombol angka **4 digit PIN** Anda pada layar numpad.
-2. Jika PIN benar, aplikasi akan otomatis terbuka dan menampilkan identitas kasir di pojok kanan atas.
-3. **PIN Default Pemilik (Owner Awal)**: `0000` *(Dapat diubah di menu Kelola Karyawan)*.
+2. Jika PIN benar, aplikasi akan otomatis terbuka dan menampilkan identitas staf/kasir di pojok kanan atas.
+3. Gunakan **4-Digit PIN Keamanan** yang telah didaftarkan oleh Pemilik Toko.
 
 ---
 
@@ -126,11 +126,12 @@ Menu Riwayat Transaksi memungkinkan kasir dan owner melihat semua nota penjualan
 ### 🔹 Kemampuan Riwayat Transaksi:
 * **Filter Tanggal & Status**: Cari nota berdasarkan tanggal atau nomor struk.
 * **Cetak Ulang Struk (Reprint)**: Jika kertas printer habis atau pelanggan meminta nota baru.
+* **Ekspor Riwayat PDF**: Unduh seluruh daftar transaksi pada periode yang dipilih ke format PDF resmi.
 * **Pembatalan Transaksi (Void)**:
-  - Digunakan jika terjadi kesalahan input atau pembatalan pesanan.
-  - Klik tombol **"Batalkan Transaksi (Void)"**.
-  - Masukkan alasan pembatalan dan verifikasi **PIN Supervisor/Owner**.
-  - Sistem akan mengembalikan stok bahan baku yang terpotong ke inventori secara otomatis!
+  - Dapat dilakukan oleh Kasir maupun Owner jika terjadi kesalahan input atau pembatalan pesanan.
+  - Klik tombol **"🚫 Void"** pada baris transaksi yang ingin dibatalkan.
+  - Masukkan alasan pembatalan (misalnya *"Salah input menu"*).
+  - Sistem akan otomatis membatalkan nota dan mengembalikan seluruh stok bahan baku yang terpakai ke inventori!
 
 ---
 
@@ -206,7 +207,7 @@ Owner dapat melihat performa penjualan kedai secara transparan kapan saja tanpa 
 * **Ringkasan Finansial**: Total Omset Kotor, Estimasi Total HPP Modal, dan Laba Kotor (*Gross Profit*).
 * **Produk Terlaris (*Best Seller*)**: Mengetahui menu favorit pelanggan dan menu yang kurang laku.
 * **Rincian Pembayaran**: Persentase transaksi Tunai vs QRIS.
-* **Ekspor Excel (.xlsx)**: Unduh seluruh data transaksi lengkap ke format spreadsheet untuk keperluan audit atau pembukuan bulanan.
+* **Ekspor Dokumen PDF**: Unduh laporan lengkap penjualan dan ringkasan keuangan ke format PDF resmi siap cetak atau dibagikan.
 
 ---
 
@@ -246,6 +247,9 @@ Menu ini dikhususkan bagi Pemilik Toko (Owner) untuk menjaga keamanan dan kesina
 ### 🔹 3. Identitas & Branding Toko:
 * Unggah logo warkop/kedai untuk tampil di bagian header struk cetak dan layar login aplikasi.
 * Atur alamat toko, nomor WhatsApp, dan pesan penutup pada struk pelanggan.
+
+### 🔹 4. Lisensi Perangkat:
+* Perangkat diaktivasi menggunakan Kunci Lisensi resmi dari pengembang yang tersimpan permanen di perangkat tanpa perlu diatur ulang.
 
 ---
 
