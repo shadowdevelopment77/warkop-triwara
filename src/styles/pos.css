@@ -605,17 +605,22 @@
   width: 95%;
 }
 
-.variant-selectors-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+.variant-selectors-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-@media (min-width: 520px) {
-  .variant-selectors-grid {
-    grid-template-columns: 1fr 1fr 1.15fr;
-    align-items: start;
-  }
+.variant-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.variant-sugar-row {
+  display: flex;
+  flex-direction: column;
 }
 
 .btn-toggle-group {
@@ -902,109 +907,3 @@
   border-color: #94a3b8;
 }
 
-/* ═══════════════════════════════════════════════
-   Mobile Responsive POS Layout & Floating Cart
-   ═══════════════════════════════════════════════ */
-.mobile-floating-cart-bar {
-  display: none;
-}
-
-.mobile-cart-top-bar {
-  display: none;
-}
-
-@media (max-width: 900px), (max-height: 520px) {
-  .pos-view-split {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .pos-left-column {
-    width: 100%;
-    padding: 8px;
-    gap: 8px;
-    height: 100%;
-    border-right: none;
-  }
-
-  .pos-right-column {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 60;
-    border-left: none;
-    background-color: var(--bg-page);
-  }
-
-  .pos-right-column.mobile-show {
-    display: flex;
-  }
-
-  .mobile-cart-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    background-color: #121214;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .btn-mobile-back-menu {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background-color: #27272a;
-    border: 1px solid #3f3f46;
-    color: #fafafa;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .mobile-floating-cart-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 8px 10px;
-    background-color: #ffffff;
-    border-top: 1px solid #cbd5e1;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-    z-index: 50;
-  }
-
-  .mobile-floating-cart-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    background-color: #2563eb;
-    color: #ffffff;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-  }
-
-  .mobile-floating-cart-badge {
-    background-color: #ffffff;
-    color: #1d4ed8;
-    padding: 2px 7px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 800;
-    margin-right: 6px;
-  }
-}

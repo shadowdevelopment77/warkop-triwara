@@ -15,8 +15,6 @@ interface CartPanelProps {
   onChangeDiscount: (percent: number) => void;
   onProceedToPayment: () => void;
   onHoldOrder: () => void;
-  isMobileOpen?: boolean;
-  onCloseMobile?: () => void;
 }
 
 export const CartPanel: React.FC<CartPanelProps> = ({
@@ -28,8 +26,6 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   onChangeDiscount,
   onProceedToPayment,
   onHoldOrder,
-  isMobileOpen,
-
 }) => {
   const subtotal = cartItems.reduce((sum, item) => sum + item.itemPrice * item.quantity, 0);
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
@@ -68,7 +64,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   };
 
   return (
-    <aside className={`pos-right-column cart-panel-right ${isMobileOpen ? 'mobile-show' : ''}`}>
+    <aside className="pos-right-column cart-panel-right">
       <div className="cart-panel-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 className="cart-panel-title">Pesanan</h2>

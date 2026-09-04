@@ -140,7 +140,6 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
   // Cart & Modals
   const [cartItems, setCartItems] = useState<ICartItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
-  const [isMobileCartOpen, setIsMobileCartOpen] = useState<boolean>(false);
 
   const [customizingProduct, setCustomizingProduct] = useState<IProduct | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
@@ -582,29 +581,6 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
                 onQuickAddToCart={handleQuickAddToCart}
                 onOpenVariant={(product) => setCustomizingProduct(product)}
               />
-
-              {/* Mobile Floating Cart Action Bar (Phones / Narrow Screens) */}
-              {cartItems.length > 0 && (
-                <div className="mobile-floating-cart-bar">
-                  <button
-                    type="button"
-                    className="mobile-floating-cart-btn"
-                    onClick={() => setIsMobileCartOpen(true)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span className="mobile-floating-cart-badge">
-                        {cartItems.reduce((acc, it) => acc + it.quantity, 0)}
-                      </span>
-                      <span>
-                        {formatRupiah(
-                          cartItems.reduce((acc, it) => acc + it.itemPrice * it.quantity, 0)
-                        )}
-                      </span>
-                    </div>
-                    <span>Lihat Pesanan ➔</span>
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Right Column: Persistent Cart Panel */}
@@ -615,8 +591,6 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
               onRemoveItem={handleRemoveCartItem}
               onClearCart={handleClearCart}
               onChangeDiscount={setDiscountPercent}
-              isMobileOpen={isMobileCartOpen}
-              onCloseMobile={() => setIsMobileCartOpen(false)}
               onProceedToPayment={() => {
                 if (!activeShift) {
                   setDialogConfig({

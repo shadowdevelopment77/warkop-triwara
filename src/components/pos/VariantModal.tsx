@@ -70,64 +70,68 @@ export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, on
         </div>
 
         <div className="pos-modal-body">
-          {/* Top Variant Selectors (Responsive Compact Grid) */}
-          <div className="variant-selectors-grid">
-            {/* Order Type: Dine In vs Takeaway */}
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Type</label>
-              <div className="btn-toggle-group">
-                <button
-                  type="button"
-                  className={`toggle-btn ${orderType === 'dine_in' ? 'active' : ''}`}
-                  onClick={() => setOrderType('dine_in')}
-                >
-                  Dine-In
-                </button>
-                <button
-                  type="button"
-                  className={`toggle-btn ${orderType === 'takeaway' ? 'active' : ''}`}
-                  onClick={() => setOrderType('takeaway')}
-                >
-                  Takeaway
-                </button>
+          {/* Top Variant Selectors (Row 1: Type & Suhu, Row 2: Sugar Level) */}
+          <div className="variant-selectors-container">
+            <div className="variant-top-row">
+              {/* Order Type: Dine In vs Takeaway */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Type</label>
+                <div className="btn-toggle-group">
+                  <button
+                    type="button"
+                    className={`toggle-btn ${orderType === 'dine_in' ? 'active' : ''}`}
+                    onClick={() => setOrderType('dine_in')}
+                  >
+                    Dine-In
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${orderType === 'takeaway' ? 'active' : ''}`}
+                    onClick={() => setOrderType('takeaway')}
+                  >
+                    Takeaway
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Temperature */}
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Ice/Hot</label>
-              <div className="btn-toggle-group">
-                <button
-                  type="button"
-                  className={`toggle-btn ${temperature === 'Iced' ? 'active' : ''}`}
-                  onClick={() => setTemperature('Iced')}
-                >
-                  Ice
-                </button>
-                <button
-                  type="button"
-                  className={`toggle-btn ${temperature === 'Hot' ? 'active' : ''}`}
-                  onClick={() => setTemperature('Hot')}
-                >
-                  Hot
-                </button>
+              {/* Temperature */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Ice/Hot</label>
+                <div className="btn-toggle-group">
+                  <button
+                    type="button"
+                    className={`toggle-btn ${temperature === 'Iced' ? 'active' : ''}`}
+                    onClick={() => setTemperature('Iced')}
+                  >
+                    Ice
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${temperature === 'Hot' ? 'active' : ''}`}
+                    onClick={() => setTemperature('Hot')}
+                  >
+                    Hot
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Sugar Level */}
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Sugar Level</label>
-              <div className="btn-toggle-group">
-                {['Normal', 'Less Sugar', 'No Sugar'].map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    className={`toggle-btn ${sugarLevel.trim() === level.trim() ? 'active' : ''}`}
-                    onClick={() => setSugarLevel(level)}
-                  >
-                    {level}
-                  </button>
-                ))}
+            <div className="variant-sugar-row">
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Sugar Level</label>
+                <div className="btn-toggle-group">
+                  {['Normal', 'Less Sugar', 'No Sugar'].map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      className={`toggle-btn ${sugarLevel.trim() === level.trim() ? 'active' : ''}`}
+                      onClick={() => setSugarLevel(level)}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
