@@ -28,20 +28,29 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
     setStaffList(list);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadData();
-    }
-  }, [isOpen, loadData]);
-
-  if (!isOpen) return null;
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setName('');
     setPin('');
     setRole('cashier');
     setEditingStaff(null);
     setErrorMsg('');
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+      setSuccessMsg('');
+      loadData();
+    }
+  }, [isOpen, loadData, resetForm]);
+
+  if (!isOpen) return null;
+
+  const handleClose = () => {
+    resetForm();
+    setSuccessMsg('');
+    setErrorMsg('');
+    onClose();
   };
 
   const handleStartEdit = (staff: IStaff) => {
@@ -98,9 +107,10 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
     setSuccessMsg('');
 
     if (staff.role === 'owner') {
-      const ownerCount = staffList.filter((s) => s.role === 'owner').length;
+      const allStaff = await staffService.getAllStaff();
+      const ownerCount = allStaff.filter((s) => s.role === 'owner').length;
       if (ownerCount <= 1) {
-        setErrorMsg('Akun Owner utama tidak dapat dihapus');
+        setErrorMsg('Tidak dapat menghapus satu-satunya akun Owner pada sistem.');
         return;
       }
     }
@@ -118,7 +128,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={handleClose}>
       <div
         className="inv-modal-card"
         style={{ maxWidth: '520px', width: '92%' }}
@@ -126,7 +136,7 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({ isOpen, on
       >
         <div className="inv-modal-header">
           <h3 className="inv-modal-title">Kelola Karyawan</h3>
-          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+          <button type="button" className="modal-close-btn-red" onClick={handleClose} title="Tutup">
             ✕
           </button>
         </div>

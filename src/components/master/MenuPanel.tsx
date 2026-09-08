@@ -22,7 +22,8 @@ export const MenuPanel: React.FC = () => {
   const [dineHpp, setDineHpp] = useState<IHppBreakdown | null>(null);
   const [takeHpp, setTakeHpp] = useState<IHppBreakdown | null>(null);
 
-  // Modal editor
+  // Modal editor: null = tambah menu baru, IProduct = edit menu
+  const [editingProduct, setEditingProduct] = useState<IProduct | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
@@ -36,16 +37,19 @@ export const MenuPanel: React.FC = () => {
       setIngredients(ings);
 
       if (prods.length > 0) {
-        if (!selectedProduct || !prods.some((p) => p.id === selectedProduct.id)) {
-          setSelectedProduct(prods[0]);
-        }
+        setSelectedProduct((prev) => {
+          if (!prev || !prods.some((p) => p.id === prev.id)) {
+            return prods[0];
+          }
+          return prods.find((p) => p.id === prev.id) || prods[0];
+        });
       } else {
         setSelectedProduct(null);
       }
     } catch (err) {
       console.error('Failed to load menu data:', err);
     }
-  }, [searchTerm, selectedProduct]);
+  }, [searchTerm]);
 
   useEffect(() => {
     loadData();
@@ -82,7 +86,7 @@ export const MenuPanel: React.FC = () => {
               className="menu-btn-primary"
               style={{ flex: 1 }}
               onClick={() => {
-                setSelectedProduct(null);
+                setEditingProduct(null);
                 setIsEditorOpen(true);
               }}
             >
@@ -129,7 +133,10 @@ export const MenuPanel: React.FC = () => {
               <button
                 type="button"
                 className="menu-btn-primary"
-                onClick={() => setIsEditorOpen(true)}
+                onClick={() => {
+                  setEditingProduct(selectedProduct);
+                  setIsEditorOpen(true);
+                }}
               >
                 Edit Resep &amp; Menu
               </button>
@@ -294,11 +301,15 @@ export const MenuPanel: React.FC = () => {
       {/* Recipe Editor Modal */}
       {isEditorOpen && (
         <RecipeEditor
-          product={selectedProduct}
+          product={editingProduct}
           categories={categories}
-          onClose={() => setIsEditorOpen(false)}
+          onClose={() => {
+            setIsEditorOpen(false);
+            setEditingProduct(null);
+          }}
           onSaved={() => {
             setIsEditorOpen(false);
+            setEditingProduct(null);
             loadData();
           }}
         />
