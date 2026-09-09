@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import type { IShift, IShiftExpense } from '../../types';
 import { shiftService } from '../../services/shift.service';
+import { backupService } from '../../services/backup.service';
 import { formatRupiah } from '../../utils/currency';
 import { NumberInput } from '../common/NumberInput';
 
@@ -83,6 +84,11 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
         notes.trim(),
         expenses
       );
+
+      // Silent background tasks: auto-backup single file to Download folder & purge logs > 90 days
+      backupService.saveLatestAutoBackup().catch((e) => console.warn('Silent auto-backup notice:', e));
+      shiftService.purgeOldLogs(90).catch((e) => console.warn('Silent log purge notice:', e));
+
       onClosed(closed);
     } catch (err) {
       setErrorMsg((err as Error).message);

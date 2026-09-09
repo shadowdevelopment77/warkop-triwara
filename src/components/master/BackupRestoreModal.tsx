@@ -63,7 +63,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
       setIsExporting(true);
       setErrorMsg('');
       const fileName = await backupService.downloadBackupFile();
-      setSuccessMsg(`File backup "${fileName}" berhasil disimpan di folder Dokumen perangkat.`);
+      setSuccessMsg(`File backup "${fileName}" berhasil disimpan di folder Download / Unduhan perangkat.`);
     } catch (err) {
       setErrorMsg(`Gagal membuat backup: ${(err as Error).message}`);
     } finally {
@@ -278,7 +278,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                 {isExporting ? 'Menyiapkan File Backup...' : 'Unduh File Backup (.json)'}
               </button>
               <p style={{ fontSize: '11px', color: '#64748b', margin: '8px 0 0 0', textAlign: 'center' }}>
-                💡 <em>Pilih <strong>"Salin ke..." / "Simpan ke File"</strong> untuk simpan di folder tablet, atau kirim ke WhatsApp toko.</em>
+                💡 <em>File backup otomatis tersimpan langsung di folder <strong>Download / Unduhan</strong> perangkat tablet Anda.</em>
               </p>
             </div>
 

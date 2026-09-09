@@ -197,6 +197,23 @@ export class ShiftService {
   }
 
   /**
+   * Purges activity logs older than retentionDays (default: 90 days)
+   * to keep database footprint minimal and prevent clutter in old age.
+   * Orders, summaries, products, and shifts are NEVER touched.
+   */
+  async purgeOldLogs(retentionDays: number = 90): Promise<number> {
+    const cutoff = new Date(Date.now() - retentionDays * 86400000);
+    try {
+      const deletedLogs = await this.database.logs.where('createdAt').below(cutoff).delete();
+      const deletedInvLogs = await this.database.inventoryLogs.where('createdAt').below(cutoff).delete();
+      return deletedLogs + deletedInvLogs;
+    } catch (err) {
+      console.warn('Log purge warning:', err);
+      return 0;
+    }
+  }
+
+  /**
    * Retrieves paginated shift history using database-level B-Tree indexing,
    * LRU page cache (< 30 KB RAM), and background prefetching.
    * Pulls ONLY the requested pageSize into memory, zero full-table scan.

@@ -3,9 +3,18 @@
 // ═══════════════════════════════════════════════
 
 import { db, TriwaraDatabase } from '../database/db';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Directory, Filesystem, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
+
+interface NativeStoragePluginInterface {
+  saveToDownloads(options: {
+    fileName: string;
+    content: string;
+    mimeType?: string;
+  }): Promise<{ success: boolean; fileName: string; folder: string }>;
+}
+
+export const NativeStorage = registerPlugin<NativeStoragePluginInterface>('NativeStorage');
 import type {
   ICategory,
   IProduct,
@@ -126,7 +135,49 @@ export class BackupService {
     };
   }
 
-  /** Exports to browser download or Android Documents + native share sheet. */
+  /**
+   * Saves the latest single-file backup to public Download folder.
+   * Silent, non-intrusive, and always overwrites.
+   */
+  async saveLatestAutoBackup(): Promise<string> {
+    const payload = await this.exportDatabase();
+    const jsonString = JSON.stringify(payload, null, 2);
+    const fileName = 'TriwaraPOS_Backup_Terbaru.json';
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await NativeStorage.saveToDownloads({
+          fileName,
+          content: jsonString,
+          mimeType: 'application/json',
+        });
+      } catch (nativeErr) {
+        console.warn('NativeStorage saveToDownloads fallback to Filesystem:', nativeErr);
+        await Filesystem.writeFile({
+          path: fileName,
+          data: jsonString,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+          recursive: true,
+        });
+      }
+    } else if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      // Browser dev fallback
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    return fileName;
+  }
+
+  /** Exports manual backup file directly to public Download folder on Android or browser download. */
   async downloadBackupFile(): Promise<string> {
     const payload = await this.exportDatabase();
     const jsonString = JSON.stringify(payload, null, 2);
@@ -137,22 +188,21 @@ export class BackupService {
     const fileName = `TriwaraPOS_Backup_${dateStr}.json`;
 
     if (Capacitor.isNativePlatform()) {
-      const written = await Filesystem.writeFile({
-        path: fileName,
-        data: jsonString,
-        directory: Directory.Documents,
-        encoding: Encoding.UTF8,
-        recursive: true,
-      });
-
       try {
-        await Share.share({
-          title: fileName,
-          url: written.uri,
-          dialogTitle: 'Simpan ke Folder atau Bagikan File Backup',
+        await NativeStorage.saveToDownloads({
+          fileName,
+          content: jsonString,
+          mimeType: 'application/json',
         });
-      } catch {
-        // Closing the share sheet is not an error; file is already written
+      } catch (nativeErr) {
+        console.warn('NativeStorage saveToDownloads fallback to Filesystem:', nativeErr);
+        await Filesystem.writeFile({
+          path: fileName,
+          data: jsonString,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+          recursive: true,
+        });
       }
     } else if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });

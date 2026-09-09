@@ -296,4 +296,34 @@ describe('Backup & Restore Database Full Tests', () => {
       'File ini bukan file backup resmi Triwara POS.'
     );
   });
+
+  it('exports latest single-file backup with fixed name TriwaraPOS_Backup_Terbaru.json', async () => {
+    const fileName = await backupService.saveLatestAutoBackup();
+    expect(fileName).toBe('TriwaraPOS_Backup_Terbaru.json');
+  });
+
+  it('purges logs older than 90 days while preserving recent logs', async () => {
+    const now = Date.now();
+    const oldDate = new Date(now - 95 * 86400000); // 95 days old
+    const freshDate = new Date(now - 10 * 86400000); // 10 days old
+
+    await testDb.logs.add({
+      type: 'shift',
+      description: 'Old log to purge',
+      createdAt: oldDate,
+    });
+    await testDb.logs.add({
+      type: 'shift',
+      description: 'Fresh log to keep',
+      createdAt: freshDate,
+    });
+
+    const shiftSvc = new (await import('../services/shift.service')).ShiftService(testDb);
+    const deletedCount = await shiftSvc.purgeOldLogs(90);
+
+    expect(deletedCount).toBe(1);
+    const remainingLogs = await testDb.logs.toArray();
+    expect(remainingLogs.length).toBe(1);
+    expect(remainingLogs[0].description).toBe('Fresh log to keep');
+  });
 });
