@@ -227,8 +227,10 @@ describe('Scope 6: Hybrid Rollup Sales Statistics & PDF Spacing Tests', () => {
 
     await testDb.orders.add({
       orderNumber: 'TRW-TEST-ALL-PRODUCTS',
+      sequenceNumber: 1,
+      customerName: 'Umum',
+      processedBy: 'Kasir',
       shiftId: 1,
-      cashierName: 'Kasir',
       items,
       subtotal: 360000,
       discountPercent: 0,
