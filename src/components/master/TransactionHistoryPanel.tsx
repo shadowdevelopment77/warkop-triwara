@@ -159,36 +159,55 @@ const TransactionRow = React.memo<TransactionRowProps>(({ order, isExpanded, onT
       {isExpanded && (
         <tr className="tx-items-expand-row">
           <td colSpan={8}>
-            <div className="tx-items-horizontal-container">
-              <div className="tx-items-header-label">
-                <span>🛒 Menu ({order.items.reduce((s, it) => s + it.qty, 0)}):</span>
-              </div>
-              <div className="tx-items-chips-scroll">
-                {order.items.map((item, idx) => (
-                  <div key={idx} className="tx-item-chip">
-                    <span className="tx-item-qty">{item.qty}x</span>
-                    <span className="tx-item-name">{item.productName}</span>
-                    <span className="tx-item-price">{formatRupiah(item.subtotal)}</span>
-                    {(item.temperature || item.sugarLevel || (item.toppings && item.toppings.length > 0)) && (
-                      <span className="tx-item-modifiers">
-                        {[
-                          item.temperature,
-                          item.sugarLevel,
-                          ...(item.toppings || []).map((t) => `+${t.name}`),
-                        ]
-                          .filter(Boolean)
-                          .join(', ')}
-                      </span>
-                    )}
-                    {item.notes && <span className="tx-item-notes">"{item.notes}"</span>}
+            <div className="tx-items-wrap-container">
+              <div className="tx-items-header-bar">
+                <span className="tx-items-header-title">
+                  🛒 Rincian Menu Terjual ({order.items.reduce((s, it) => s + it.qty, 0)} item):
+                </span>
+                {order.discountAmount > 0 && (
+                  <div className="tx-item-discount-badge">
+                    🏷️ Diskon {order.discountPercent}% (-{formatRupiah(order.discountAmount)})
                   </div>
-                ))}
+                )}
               </div>
-              {order.discountAmount > 0 && (
-                <div className="tx-item-discount-badge">
-                  🏷️ Diskon {order.discountPercent}% (-{formatRupiah(order.discountAmount)})
-                </div>
-              )}
+              <div className="tx-items-cards-grid">
+                {order.items.map((item, idx) => {
+                  const modifiers = [
+                    item.temperature,
+                    item.sugarLevel,
+                    ...(item.toppings || []).map((t) => `+${t.name}`),
+                  ].filter(Boolean);
+
+                  return (
+                    <div key={idx} className="tx-item-minicard">
+                      <div className="tx-item-minicard-top">
+                        <div className="tx-item-minicard-left">
+                          <span className="tx-item-qty">{item.qty}x</span>
+                          <span className="tx-item-name" title={item.productName}>
+                            {item.productName}
+                          </span>
+                        </div>
+                        <span className="tx-item-price">{formatRupiah(item.subtotal)}</span>
+                      </div>
+
+                      {(modifiers.length > 0 || item.notes) && (
+                        <div className="tx-item-minicard-bottom">
+                          {modifiers.length > 0 && (
+                            <span className="tx-item-modifiers" title={modifiers.join(', ')}>
+                              {modifiers.join(', ')}
+                            </span>
+                          )}
+                          {item.notes && (
+                            <span className="tx-item-notes" title={item.notes}>
+                              "{item.notes}"
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </td>
         </tr>
