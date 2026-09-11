@@ -515,3 +515,116 @@
 .report-void-btn-danger:hover {
   background-color: var(--danger-hover);
 }
+
+/* ═══════════════════════════════════════════════
+   Expandable Transaction Sub-Row (Horizontal Items)
+   ═══════════════════════════════════════════════ */
+.report-data-table tr.row-expanded-parent {
+  background-color: rgba(59, 130, 246, 0.07) !important;
+}
+
+.report-data-table tr.tx-items-expand-row td {
+  padding: 10px 16px 12px 16px !important;
+  background-color: #121214 !important;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.25) !important;
+}
+
+.tx-items-horizontal-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.tx-items-header-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #93c5fd;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tx-items-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tx-items-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.tx-items-chips-scroll::-webkit-scrollbar-track {
+  background: #18181b;
+  border-radius: 4px;
+}
+.tx-items-chips-scroll::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+.tx-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #1c1917;
+  border: 1px solid #292524;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tx-item-qty {
+  font-weight: 800;
+  color: #4ade80;
+  background-color: rgba(74, 222, 128, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.tx-item-name {
+  font-weight: 600;
+  color: #f4f4f5;
+}
+
+.tx-item-price {
+  font-weight: 700;
+  color: #93c5fd;
+  font-size: 11px;
+}
+
+.tx-item-modifiers {
+  font-size: 10px;
+  color: #a1a1aa;
+  background-color: #27272a;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.tx-item-notes {
+  font-size: 10px;
+  font-style: italic;
+  color: #fbbf24;
+}
+
+.tx-item-discount-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+

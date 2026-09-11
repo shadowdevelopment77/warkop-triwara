@@ -112,7 +112,7 @@ export class ReportService {
 
     const [summary, topProducts, chart] = await Promise.all([
       this.getSalesSummary(startDate, endDate, todayOrders),
-      this.getTopSellingProducts(startDate, endDate, 5, todayOrders),
+      this.getTopSellingProducts(startDate, endDate, 0, todayOrders),
       this.getSalesChartData(startDate, endDate, todayOrders),
     ]);
 
@@ -537,8 +537,8 @@ export class ReportService {
     };
   }
 
-  /** Gets top best-selling products using Pre-computed Rollup with Live Fallback */
-  async getTopSellingProducts(startDate: Date, endDate: Date, limit: number = 5, preloadedTodayOrders?: IOrder[]): Promise<ITopProduct[]> {
+  /** Gets top best-selling products using Pre-computed Rollup with Live Fallback (limit 0 = all products) */
+  async getTopSellingProducts(startDate: Date, endDate: Date, limit: number = 0, preloadedTodayOrders?: IOrder[]): Promise<ITopProduct[]> {
     const today = new Date();
     const todayStart = startOfDay(today);
     const start = startOfDay(startDate);

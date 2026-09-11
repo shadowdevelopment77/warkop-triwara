@@ -36,91 +36,164 @@ const getInitialDateRange = () => {
 
 interface TransactionRowProps {
   order: IOrder;
+  isExpanded: boolean;
+  onToggleExpand: (orderId: number) => void;
   onReprintOrder: (order: IOrder) => void;
   onVoidOrder: (order: IOrder) => void;
 }
 
-const TransactionRow = React.memo<TransactionRowProps>(({ order, onReprintOrder, onVoidOrder }) => {
+const TransactionRow = React.memo<TransactionRowProps>(({ order, isExpanded, onToggleExpand, onReprintOrder, onVoidOrder }) => {
   const isVoided = order.status === 'voided';
   return (
-    <tr className={isVoided ? 'row-voided' : ''}>
-      <td>
-        <strong>#{order.orderNumber}</strong>
-      </td>
-      <td style={{ color: '#60a5fa', fontWeight: 600 }}>
-        {order.processedBy || 'Kasir'}
-      </td>
-      <td>{order.customerName || 'Umum'}</td>
-      <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
-        {formatDateIndonesian(order.createdAt)}
-      </td>
-      <td style={{ fontWeight: 700, color: '#0f172a' }}>
-        {formatRupiah(order.total)}
-      </td>
-      <td>
-        <span
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '2px 6px',
-            borderRadius: '4px',
-            backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
-            color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
-            border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
-            textTransform: 'uppercase',
-          }}
-        >
-          {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
-        </span>
-      </td>
-      <td>
-        <span
-          className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
-        >
-          {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
-        </span>
-      </td>
-      <td style={{ textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-          {order.status === 'completed' ? (
-            <>
-              <button
-                type="button"
-                className="report-btn-print"
-                onClick={() => onReprintOrder(order)}
-                title="Cetak Ulang Struk Pelanggan"
-              >
-                🖨️ Cetak
-              </button>
-              <button
-                type="button"
-                className="report-btn-void"
-                onClick={() => onVoidOrder(order)}
-                title="Batalkan (Void) Transaksi"
-              >
-                🚫 Void
-              </button>
-            </>
-          ) : (
-            <span
-              className="report-voided-label"
-              title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
-              style={{
-                color: '#ef4444',
-                fontWeight: 700,
-                fontSize: '12px',
-                padding: '3px 8px',
-                borderRadius: '4px',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+    <React.Fragment>
+      <tr
+        className={`${isVoided ? 'row-voided' : ''} ${isExpanded ? 'row-expanded-parent' : ''}`}
+        onClick={() => {
+          if (order.id) onToggleExpand(order.id);
+        }}
+        style={{ cursor: 'pointer' }}
+      >
+        <td>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (order.id) onToggleExpand(order.id);
               }}
+              style={{
+                background: isExpanded ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid ' + (isExpanded ? '#3b82f6' : 'rgba(255, 255, 255, 0.1)'),
+                borderRadius: '4px',
+                width: '22px',
+                height: '22px',
+                cursor: 'pointer',
+                color: isExpanded ? '#60a5fa' : '#a1a1aa',
+                fontSize: '10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
+              }}
+              title={isExpanded ? 'Tutup Rincian Menu' : 'Lihat Rincian Menu'}
             >
-              🚫 Dibatalkan
-            </span>
-          )}
-        </div>
-      </td>
-    </tr>
+              {isExpanded ? '▲' : '▼'}
+            </button>
+            <strong>#{order.orderNumber}</strong>
+          </div>
+        </td>
+        <td style={{ color: '#60a5fa', fontWeight: 600 }}>
+          {order.processedBy || 'Kasir'}
+        </td>
+        <td>{order.customerName || 'Umum'}</td>
+        <td style={{ fontSize: '12px', color: '#a1a1aa' }}>
+          {formatDateIndonesian(order.createdAt)}
+        </td>
+        <td style={{ fontWeight: 700, color: '#0f172a' }}>
+          {formatRupiah(order.total)}
+        </td>
+        <td>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: order.paymentMethod === 'cash' ? '#f1f5f9' : '#dbeafe',
+              color: order.paymentMethod === 'cash' ? '#0f172a' : '#1d4ed8',
+              border: order.paymentMethod === 'cash' ? '1px solid #cbd5e1' : '1px solid #93c5fd',
+              textTransform: 'uppercase',
+            }}
+          >
+            {order.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'}
+          </span>
+        </td>
+        <td>
+          <span
+            className={`status-badge ${order.status === 'completed' ? 'safe' : 'critical'}`}
+          >
+            {order.status === 'completed' ? 'Sukses' : 'Batal / Void'}
+          </span>
+        </td>
+        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+            {order.status === 'completed' ? (
+              <>
+                <button
+                  type="button"
+                  className="report-btn-print"
+                  onClick={() => onReprintOrder(order)}
+                  title="Cetak Ulang Struk Pelanggan"
+                >
+                  🖨️ Cetak
+                </button>
+                <button
+                  type="button"
+                  className="report-btn-void"
+                  onClick={() => onVoidOrder(order)}
+                  title="Batalkan (Void) Transaksi"
+                >
+                  🚫 Void
+                </button>
+              </>
+            ) : (
+              <span
+                className="report-voided-label"
+                title={`Alasan: ${order.voidReason || 'Dibatalkan'}`}
+                style={{
+                  color: '#ef4444',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                }}
+              >
+                🚫 Dibatalkan
+              </span>
+            )}
+          </div>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr className="tx-items-expand-row">
+          <td colSpan={8}>
+            <div className="tx-items-horizontal-container">
+              <div className="tx-items-header-label">
+                <span>🛒 Menu ({order.items.reduce((s, it) => s + it.qty, 0)}):</span>
+              </div>
+              <div className="tx-items-chips-scroll">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="tx-item-chip">
+                    <span className="tx-item-qty">{item.qty}x</span>
+                    <span className="tx-item-name">{item.productName}</span>
+                    <span className="tx-item-price">{formatRupiah(item.subtotal)}</span>
+                    {(item.temperature || item.sugarLevel || (item.toppings && item.toppings.length > 0)) && (
+                      <span className="tx-item-modifiers">
+                        {[
+                          item.temperature,
+                          item.sugarLevel,
+                          ...(item.toppings || []).map((t) => `+${t.name}`),
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </span>
+                    )}
+                    {item.notes && <span className="tx-item-notes">"{item.notes}"</span>}
+                  </div>
+                ))}
+              </div>
+              {order.discountAmount > 0 && (
+                <div className="tx-item-discount-badge">
+                  🏷️ Diskon {order.discountPercent}% (-{formatRupiah(order.discountAmount)})
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
   );
 });
 TransactionRow.displayName = 'TransactionRow';
@@ -131,6 +204,7 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [voidingOrder, setVoidingOrder] = useState<IOrder | null>(null);
   const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
   const [pdfProgress, setPdfProgress] = useState<{
@@ -342,6 +416,8 @@ export const TransactionHistoryPanel: React.FC<TransactionHistoryPanelProps> = (
                   <TransactionRow
                     key={order.id}
                     order={order}
+                    isExpanded={Boolean(order.id && expandedOrderId === order.id)}
+                    onToggleExpand={(id) => setExpandedOrderId((prev) => (prev === id ? null : id))}
                     onReprintOrder={onReprintOrder}
                     onVoidOrder={setVoidingOrder}
                   />

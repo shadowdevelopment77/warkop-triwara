@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import 'fake-indexeddb/auto';
 import { printerService } from '../services/printer.service';
 import { receiptService } from '../services/receipt.service';
 import type { IOrder, IShift, IShopConfig } from '../types';

@@ -1,6 +1,7 @@
 package com.triwara.pos;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -43,39 +44,72 @@ public class NativeStoragePlugin extends Plugin {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // Android 10+ (API 29+): Use official MediaStore.Downloads API
                 ContentResolver resolver = context.getContentResolver();
+                Uri contentUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
 
-                // If file with same name already exists in Downloads, delete it first to prevent (1), (2) duplicate copies
-                Uri queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-                String selection = MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " +
-                        MediaStore.MediaColumns.RELATIVE_PATH + "=?";
-                String[] selectionArgs = new String[]{fileName, Environment.DIRECTORY_DOWNLOADS + "/"};
+                // 1. Search if a file with this exact DISPLAY_NAME already exists in MediaStore.Downloads
+                String selection = MediaStore.MediaColumns.DISPLAY_NAME + "=?";
+                String[] selectionArgs = new String[]{fileName};
 
-                try (Cursor cursor = resolver.query(queryUri, new String[]{MediaStore.MediaColumns._ID}, selection, selectionArgs, null)) {
+                Uri targetUri = null;
+                try (Cursor cursor = resolver.query(contentUri, new String[]{MediaStore.MediaColumns._ID}, selection, selectionArgs, null)) {
                     if (cursor != null && cursor.moveToFirst()) {
                         long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
-                        Uri existingUri = Uri.withAppendedPath(queryUri, String.valueOf(id));
-                        resolver.delete(existingUri, null, null);
+                        targetUri = ContentUris.withAppendedId(contentUri, id);
+
+                        // Clean up any extra duplicates with the exact same name if any exist
+                        while (cursor.moveToNext()) {
+                            try {
+                                long dupId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+                                resolver.delete(ContentUris.withAppendedId(contentUri, dupId), null, null);
+                            } catch (Exception ignored) {}
+                        }
                     }
                 } catch (Exception e) {
-                    Log.w(TAG, "Notice checking existing file: " + e.getMessage());
+                    Log.w(TAG, "Notice querying existing backup file: " + e.getMessage());
                 }
 
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-                values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
-                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/");
-
-                Uri itemUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (itemUri == null) {
-                    throw new Exception("Gagal membuat entri file di folder Download");
-                }
-
-                try (OutputStream os = resolver.openOutputStream(itemUri, "wt")) {
-                    if (os == null) {
-                        throw new Exception("Gagal membuka stream penulisan file");
+                // 2. If existing file was found, overwrite it directly in-place with "wt" (truncate)
+                boolean writeSuccess = false;
+                if (targetUri != null) {
+                    try (OutputStream os = resolver.openOutputStream(targetUri, "wt")) {
+                        if (os != null) {
+                            os.write(content.getBytes(StandardCharsets.UTF_8));
+                            os.flush();
+                            writeSuccess = true;
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "Notice overwriting existing file URI, will recreate: " + e.getMessage());
+                        try {
+                            resolver.delete(targetUri, null, null);
+                        } catch (Exception ignored) {}
+                        targetUri = null;
                     }
-                    os.write(content.getBytes(StandardCharsets.UTF_8));
-                    os.flush();
+                }
+
+                // 3. If file did not exist yet (or overwrite failed), insert brand new record
+                if (!writeSuccess) {
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                    values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+                    values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+
+                    targetUri = resolver.insert(contentUri, values);
+                    if (targetUri == null) {
+                        throw new Exception("Gagal membuat entri file di folder Download");
+                    }
+
+                    try (OutputStream os = resolver.openOutputStream(targetUri, "wt")) {
+                        if (os == null) {
+                            throw new Exception("Gagal membuka stream penulisan file");
+                        }
+                        os.write(content.getBytes(StandardCharsets.UTF_8));
+                        os.flush();
+                    }
+                }
+
+                // 4. If saving the auto-backup file, automatically clean up legacy duplicate "(1).json", "(2).json"
+                if ("TriwaraPOS_Backup_Terbaru.json".equalsIgnoreCase(fileName)) {
+                    cleanupDuplicateBackups(resolver, contentUri);
                 }
 
                 JSObject ret = new JSObject();
@@ -95,6 +129,18 @@ public class NativeStoragePlugin extends Plugin {
                     fos.flush();
                 }
 
+                // Clean up physical duplicates if any
+                if ("TriwaraPOS_Backup_Terbaru.json".equalsIgnoreCase(fileName)) {
+                    File[] dupFiles = downloadDir.listFiles((dir, name) ->
+                        name.startsWith("TriwaraPOS_Backup_Terbaru (") && name.endsWith(".json")
+                    );
+                    if (dupFiles != null) {
+                        for (File dup : dupFiles) {
+                            try { dup.delete(); } catch (Exception ignored) {}
+                        }
+                    }
+                }
+
                 MediaScannerConnection.scanFile(
                     context,
                     new String[]{targetFile.getAbsolutePath()},
@@ -111,6 +157,27 @@ public class NativeStoragePlugin extends Plugin {
         } catch (Exception err) {
             Log.e(TAG, "Failed to save file to downloads", err);
             call.reject("Gagal menyimpan ke folder Download: " + err.getMessage(), err);
+        }
+    }
+
+    /**
+     * Cleans up orphaned duplicate files matching "TriwaraPOS_Backup_Terbaru (*).json" from MediaStore.
+     */
+    private void cleanupDuplicateBackups(ContentResolver resolver, Uri contentUri) {
+        try {
+            String selection = MediaStore.MediaColumns.DISPLAY_NAME + " LIKE 'TriwaraPOS_Backup_Terbaru (%.json'";
+            try (Cursor cursor = resolver.query(contentUri, new String[]{MediaStore.MediaColumns._ID}, selection, null, null)) {
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+                        try {
+                            resolver.delete(ContentUris.withAppendedId(contentUri, id), null, null);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Notice cleaning up duplicate backups: " + e.getMessage());
         }
     }
 }

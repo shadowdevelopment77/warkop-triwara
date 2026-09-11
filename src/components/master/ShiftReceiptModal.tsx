@@ -2,12 +2,13 @@
 // Triwara POS — 58mm Shift Thermal Receipt Modal
 // ═══════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { formatRupiah } from '../../utils/currency';
 import { formatDateIndonesian } from '../../utils/date';
 import { pdfService } from '../../services/pdf.service';
 import { printerService } from '../../services/printer.service';
+import { shiftService, type IShiftCategorySales } from '../../services/shift.service';
 import { DialogModal } from '../common/DialogModal';
 
 interface ShiftReceiptModalProps {
@@ -22,6 +23,7 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
   onClose,
 }) => {
   const [isPrinted, setIsPrinted] = useState<boolean>(false);
+  const [categorySales, setCategorySales] = useState<IShiftCategorySales[]>([]);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -59,6 +61,18 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
         ? 1
         : 0;
 
+  useEffect(() => {
+    let isMounted = true;
+    if (shift.id) {
+      shiftService.getShiftProductSalesByCategory(shift.id).then((sales) => {
+        if (isMounted) setCategorySales(sales);
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [shift.id]);
+
   const handlePrintReceipt = async () => {
     if (!config.printerMacAddress || config.printerMacAddress.trim() === '') {
       setDialogConfig({
@@ -71,7 +85,7 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
       return;
     }
 
-    const result = await printerService.printShiftReceipt(shift, config);
+    const result = await printerService.printShiftReceipt(shift, config, categorySales);
     if (result.success) {
       setIsPrinted(true);
     } else {
@@ -90,7 +104,7 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
   const handleDownloadPdf = async () => {
     setPdfProgress({ isOpen: true, percent: 5, message: 'Memulai proses export...' });
     try {
-      await pdfService.exportShiftReportPdf(shift, config, (percent, message) => {
+      await pdfService.exportShiftReportPdf(shift, config, categorySales, (percent, message) => {
         setPdfProgress({ isOpen: true, percent, message });
       });
       setTimeout(() => setPdfProgress(null), 800);
@@ -282,6 +296,58 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Category-Grouped Product Sales in Receipt Preview */}
+              {categorySales && categorySales.length > 0 && (
+                <>
+                  <div style={{ borderBottom: '1px dashed #000000', margin: '6px 0' }} />
+                  <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        textAlign: 'center',
+                        margin: '2px 0 4px 0',
+                        borderTop: '1px solid #000',
+                        borderBottom: '1px solid #000',
+                        padding: '2px 0',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      PRODUK TERJUAL PER KATEGORI
+                    </div>
+                    {categorySales.map((cat, cIdx) => (
+                      <div key={cIdx} style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
+                        <span style={{ fontWeight: 800, textTransform: 'uppercase', color: '#0f172a' }}>
+                          [{cat.categoryName}]
+                        </span>
+                        {cat.items.map((item, iIdx) => (
+                          <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '6px' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+                              {item.productName}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>
+                              x{item.quantitySold} {formatRupiah(item.totalRevenue)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    <div
+                      style={{
+                        borderTop: '1px dashed #000000',
+                        marginTop: '4px',
+                        paddingTop: '3px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontWeight: 700,
+                      }}
+                    >
+                      <span>Total Produk Terjual:</span>
+                      <span>{categorySales.reduce((sum, c) => sum + c.totalQty, 0)} Item</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div style={{ borderBottom: '1px dashed #000000', margin: '8px 0' }} />
 

@@ -209,4 +209,47 @@ describe('Scope 6: Hybrid Rollup Sales Statistics & PDF Spacing Tests', () => {
     expect(topProducts[1].productName).toBe('Caramel Macchiato');
     expect(topProducts[1].quantitySold).toBe(3);
   });
+
+  it('returns all sold products without being capped at 5 in getReportBundle and getTopSellingProducts', async () => {
+    const today = new Date();
+    const items = Array.from({ length: 8 }, (_, i) => ({
+      productId: i + 1,
+      productName: `Menu Item ${i + 1}`,
+      price: 10000,
+      hpp: 5000,
+      qty: i + 1,
+      orderType: 'dine_in' as const,
+      subtotal: (i + 1) * 10000,
+      hppSubtotal: (i + 1) * 5000,
+      toppings: [],
+      notes: '',
+    }));
+
+    await testDb.orders.add({
+      orderNumber: 'TRW-TEST-ALL-PRODUCTS',
+      shiftId: 1,
+      cashierName: 'Kasir',
+      items,
+      subtotal: 360000,
+      discountPercent: 0,
+      discountAmount: 0,
+      total: 360000,
+      hppTotal: 180000,
+      profit: 180000,
+      paymentMethod: 'cash',
+      paymentAmount: 360000,
+      changeAmount: 0,
+      status: 'completed',
+      createdAt: today,
+    });
+
+    const allProducts = await reportService.getTopSellingProducts(today, today, 0);
+    expect(allProducts).toHaveLength(8);
+    expect(allProducts[0].productName).toBe('Menu Item 8');
+    expect(allProducts[7].productName).toBe('Menu Item 1');
+
+    const bundle = await reportService.getReportBundle(today, today);
+    expect(bundle.topProducts).toHaveLength(8);
+  });
 });
+

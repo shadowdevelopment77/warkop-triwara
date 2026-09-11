@@ -418,8 +418,12 @@ export class PdfService {
   async exportShiftReportPdf(
     shift: import('../types').IShift,
     config: IShopConfig,
-    onProgress?: (percent: number, message: string) => void
+    categorySalesOrProgress?: import('./shift.service').IShiftCategorySales[] | ((percent: number, message: string) => void),
+    maybeOnProgress?: (percent: number, message: string) => void
   ): Promise<void> {
+    const categorySales = Array.isArray(categorySalesOrProgress) ? categorySalesOrProgress : undefined;
+    const onProgress = typeof categorySalesOrProgress === 'function' ? categorySalesOrProgress : maybeOnProgress;
+
     onProgress?.(10, 'Menyiapkan data shift...');
     const doc = new jsPDF();
     const openTimeStr = formatDateIndonesian(shift.openedAt);
@@ -496,6 +500,50 @@ export class PdfService {
           0: { cellWidth: 15, halign: 'center' },
           1: { cellWidth: 120 },
           2: { halign: 'right', fontStyle: 'bold' },
+        },
+      });
+
+      currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
+    }
+
+    // Category-Grouped Product Sales Table
+    if (categorySales && categorySales.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Rincian Produk Terjual per Kategori:', 14, currentY);
+      currentY += 4;
+
+      const productRows: any[] = [];
+      let totalQty = 0;
+      let totalRev = 0;
+
+      categorySales.forEach((cat) => {
+        cat.items.forEach((item) => {
+          totalQty += item.quantitySold;
+          totalRev += item.totalRevenue;
+          productRows.push([
+            cat.categoryName,
+            item.productName,
+            `${item.quantitySold} terjual`,
+            formatRupiah(item.totalRevenue),
+          ]);
+        });
+      });
+
+      productRows.push(['TOTAL', '', `${totalQty} Item Terjual`, formatRupiah(totalRev)]);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Kategori', 'Nama Produk', 'Jumlah Terjual', 'Total Omset']],
+        body: productRows,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 75 },
+          2: { halign: 'center', cellWidth: 35 },
+          3: { halign: 'right', fontStyle: 'bold' },
         },
       });
 

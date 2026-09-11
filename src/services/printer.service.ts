@@ -6,6 +6,7 @@
 
 import type { IOrder, IShift, IShopConfig } from '../types';
 import { receiptService, type ReceiptType } from './receipt.service';
+import { shiftService, type IShiftCategorySales } from './shift.service';
 import { BluetoothPrinter } from '../plugins/bluetooth-printer';
 
 export type PrinterErrorCode =
@@ -158,9 +159,21 @@ export class PrinterService {
   /**
    * Prints cashier shift closing summary
    */
-  async printShiftReceipt(shift: IShift, config: IShopConfig): Promise<PrinterResult> {
+  async printShiftReceipt(
+    shift: IShift,
+    config: IShopConfig,
+    categorySales?: IShiftCategorySales[]
+  ): Promise<PrinterResult> {
     try {
-      const receiptText = receiptService.generateShiftReceiptText(shift, config);
+      let sales = categorySales;
+      if (!sales && shift.id) {
+        try {
+          sales = await shiftService.getShiftProductSalesByCategory(shift.id);
+        } catch {
+          sales = undefined;
+        }
+      }
+      const receiptText = receiptService.generateShiftReceiptText(shift, config, sales);
       const buffer = receiptService.convertToEscPosBuffer(receiptText);
       return await this.transmitEscPos(buffer, config);
     } catch (err) {

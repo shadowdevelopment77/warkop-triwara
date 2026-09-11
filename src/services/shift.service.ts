@@ -3,8 +3,23 @@
 // ═══════════════════════════════════════════════
 
 import { db, TriwaraDatabase } from '../database/db';
-import type { IShift, IStaff, IOrder, IShiftExpense } from '../types';
+import type { IShift, IStaff, IOrder, IShiftExpense, IProduct, ICategory } from '../types';
 import { ReportService } from './report.service';
+
+export interface IShiftCategorySaleItem {
+  productId?: number;
+  productName: string;
+  quantitySold: number;
+  totalRevenue: number;
+}
+
+export interface IShiftCategorySales {
+  categoryId?: number;
+  categoryName: string;
+  items: IShiftCategorySaleItem[];
+  totalQty: number;
+  totalRevenue: number;
+}
 
 export interface IPaginatedShiftsResult {
   shifts: IShift[];
@@ -370,6 +385,93 @@ export class ShiftService {
     return Array.from(productMap.entries())
       .map(([productName, quantitySold]) => ({ productName, quantitySold }))
       .sort((a, b) => b.quantitySold - a.quantitySold);
+  }
+
+  /** Aggregates product sales grouped by menu category for a specific shift */
+  async getShiftProductSalesByCategory(shiftId: number): Promise<IShiftCategorySales[]> {
+    const orders = await this.database.orders
+      .where('shiftId')
+      .equals(shiftId)
+      .and((o) => o.status === 'completed')
+      .toArray();
+
+    if (orders.length === 0) return [];
+
+    const [products, categories] = await Promise.all([
+      this.database.products.toArray(),
+      this.database.categories.toArray(),
+    ]);
+
+    const productMap = new Map<number, IProduct>();
+    products.forEach((p) => {
+      if (p.id) productMap.set(p.id, p);
+    });
+
+    const categoryMap = new Map<number, ICategory>();
+    categories.forEach((c) => {
+      if (c.id) categoryMap.set(c.id, c);
+    });
+
+    interface CatBucket {
+      categoryId?: number;
+      categoryName: string;
+      sortOrder: number;
+      itemsMap: Map<string, IShiftCategorySaleItem>;
+    }
+
+    const catBuckets = new Map<string, CatBucket>();
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        const prod = item.productId ? productMap.get(item.productId) : undefined;
+        const catId = prod?.categoryId;
+        const cat = catId ? categoryMap.get(catId) : undefined;
+
+        const bucketKey = cat ? `cat_${cat.id}` : 'cat_other';
+        const bucketName = cat ? cat.name : 'Lainnya';
+        const bucketSort = cat ? cat.sortOrder : 9999;
+
+        if (!catBuckets.has(bucketKey)) {
+          catBuckets.set(bucketKey, {
+            categoryId: cat?.id,
+            categoryName: bucketName,
+            sortOrder: bucketSort,
+            itemsMap: new Map(),
+          });
+        }
+
+        const bucket = catBuckets.get(bucketKey)!;
+        const itemKey = item.productName;
+        const existingItem = bucket.itemsMap.get(itemKey);
+
+        if (existingItem) {
+          existingItem.quantitySold += item.qty;
+          existingItem.totalRevenue += item.subtotal;
+        } else {
+          bucket.itemsMap.set(itemKey, {
+            productId: item.productId,
+            productName: item.productName,
+            quantitySold: item.qty,
+            totalRevenue: item.subtotal,
+          });
+        }
+      }
+    }
+
+    return Array.from(catBuckets.values())
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((bucket) => {
+        const items = Array.from(bucket.itemsMap.values()).sort((a, b) => b.quantitySold - a.quantitySold);
+        const totalQty = items.reduce((sum, it) => sum + it.quantitySold, 0);
+        const totalRevenue = items.reduce((sum, it) => sum + it.totalRevenue, 0);
+        return {
+          categoryId: bucket.categoryId,
+          categoryName: bucket.categoryName,
+          items,
+          totalQty,
+          totalRevenue,
+        };
+      });
   }
 }
 

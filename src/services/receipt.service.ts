@@ -178,7 +178,11 @@ export class ReceiptService {
   /**
    * Generates formatted text receipt for Cashier Shift Summary (58mm thermal)
    */
-  generateShiftReceiptText(shift: import('../types').IShift, config: IShopConfig): string {
+  generateShiftReceiptText(
+    shift: import('../types').IShift,
+    config: IShopConfig,
+    categorySales?: import('./shift.service').IShiftCategorySales[]
+  ): string {
     const lines: string[] = [];
     const expected = shift.expectedEndingCash ?? (shift.startingCash + shift.totalCashSales - (shift.totalExpenses || 0));
     const actual = shift.actualEndingCash ?? expected;
@@ -194,9 +198,16 @@ export class ReceiptService {
     if (shift.closedAt) {
       lines.push(`Tutup    : ${formatDateIndonesian(shift.closedAt)}`);
     }
+
+    // ─── 1. Rekap Sales & Keuangan ───
     lines.push(this.lineDivider('-'));
     lines.push(this.formatKeyValue('Kas Awal Modal', formatRupiah(shift.startingCash)));
     lines.push(this.formatKeyValue('+ Total Tunai', formatRupiah(shift.totalCashSales)));
+    lines.push(this.formatKeyValue('Penjualan QRIS', formatRupiah(shift.totalQrisSales)));
+    lines.push(this.formatKeyValue('Total Omset', formatRupiah(shift.totalCashSales + shift.totalQrisSales)));
+    lines.push(this.formatKeyValue('Pesanan Sukses', `${shift.totalTransactions} Order`));
+    lines.push(this.formatKeyValue('Pesanan Void', `${shift.totalVoided} Order`));
+
     if (shift.totalExpenses && shift.totalExpenses > 0) {
       lines.push(this.formatKeyValue('- Pengeluaran Kas', `-${formatRupiah(shift.totalExpenses)}`));
       if (shift.borrowedFromSales && shift.borrowedFromSales > 0) {
@@ -208,6 +219,7 @@ export class ReceiptService {
     lines.push(this.formatKeyValue('Fisik Dihitung', formatRupiah(actual)));
     lines.push(this.formatKeyValue('Selisih Kas', `${formatRupiah(diff)} ${diff === 0 ? '(PAS)' : diff > 0 ? '(+)' : '(-)'}`));
 
+    // ─── 2. Item Belanja Kasir / Pengeluaran Toko Hari Ini ───
     if (shift.expenses && shift.expenses.length > 0) {
       lines.push(this.lineDivider('-'));
       lines.push(this.centerLine('RINCIAN BELANJA KASIR:'));
@@ -217,11 +229,26 @@ export class ReceiptService {
       lines.push(this.formatKeyValue('Total Belanja:', formatRupiah(shift.totalExpenses || 0)));
     }
 
-    lines.push(this.lineDivider('-'));
-    lines.push(this.formatKeyValue('Penjualan QRIS', formatRupiah(shift.totalQrisSales)));
-    lines.push(this.formatKeyValue('Total Omset', formatRupiah(shift.totalCashSales + shift.totalQrisSales)));
-    lines.push(this.formatKeyValue('Pesanan Sukses', `${shift.totalTransactions} Order`));
-    lines.push(this.formatKeyValue('Pesanan Void', `${shift.totalVoided} Order`));
+    // ─── 3. Menu yang Terjual per Kategori ───
+    if (categorySales && categorySales.length > 0) {
+      lines.push(this.lineDivider('-'));
+      lines.push(this.centerLine('PRODUK TERJUAL PER KATEGORI:'));
+      let totalItemsCount = 0;
+      categorySales.forEach((cat) => {
+        if (cat.items.length === 0) return;
+        lines.push(`[${cat.categoryName.toUpperCase()}]`);
+        cat.items.forEach((item) => {
+          totalItemsCount += item.quantitySold;
+          const left = item.productName.substring(0, 16);
+          const right = `x${item.quantitySold} ${formatRupiah(item.totalRevenue)}`;
+          lines.push(this.formatKeyValue(left, right));
+        });
+      });
+      lines.push(this.lineDivider('-'));
+      lines.push(this.formatKeyValue('Total Produk Terjual:', `${totalItemsCount} Item`));
+    }
+
+    // ─── 4. Tanda Tangan Kasir ───
     lines.push(this.lineDivider('='));
     lines.push(this.centerLine('Tanda Tangan Kasir,'));
     lines.push('\n\n');
