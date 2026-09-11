@@ -216,6 +216,7 @@ export class HppService {
   /** Deducts inventory ingredients when an order is completed (Atomic ACID Transaction) */
   async deductInventoryForOrder(order: IOrder): Promise<string[]> {
     const alerts: string[] = [];
+    const deductedIngredientIds = new Set<number>();
 
     await this.database.transaction(
       'rw',
@@ -230,6 +231,7 @@ export class HppService {
             for (const rec of product.recipe) {
               const ing = await this.database.ingredients.get(rec.ingredientId);
               if (ing && ing.id) {
+                deductedIngredientIds.add(ing.id);
                 const deductedQty = rec.amount * item.qty;
                 const newStock = ing.currentStock - deductedQty;
 
@@ -256,6 +258,7 @@ export class HppService {
             for (const pkg of product.takeawayPackaging) {
               const ing = await this.database.ingredients.get(pkg.ingredientId);
               if (ing && ing.id) {
+                deductedIngredientIds.add(ing.id);
                 const deductedQty = pkg.amount * item.qty;
                 const newStock = ing.currentStock - deductedQty;
 
@@ -283,6 +286,7 @@ export class HppService {
               if (top.ingredientId && top.amount) {
                 const ing = await this.database.ingredients.get(top.ingredientId);
                 if (ing && ing.id) {
+                  deductedIngredientIds.add(ing.id);
                   const deductedQty = top.amount * item.qty;
                   const newStock = ing.currentStock - deductedQty;
 
@@ -306,11 +310,16 @@ export class HppService {
           }
         }
 
-        // Check low stock alerts
-        const allIngredients = await this.database.ingredients.toArray();
-        for (const ing of allIngredients) {
-          if (ing.currentStock <= ing.minStock) {
-            alerts.push(`Stok ${ing.name} tersisa ${ing.currentStock} ${ing.unit} (<= ${ing.minStock})`);
+        // Check low stock alerts ONLY for ingredients deducted in this order
+        if (deductedIngredientIds.size > 0) {
+          const usedIngredients = await this.database.ingredients
+            .where('id')
+            .anyOf(Array.from(deductedIngredientIds))
+            .toArray();
+          for (const ing of usedIngredients) {
+            if (ing.currentStock <= ing.minStock) {
+              alerts.push(`Stok ${ing.name} tersisa ${ing.currentStock} ${ing.unit} (<= ${ing.minStock})`);
+            }
           }
         }
       }

@@ -46,7 +46,16 @@ public class NativeStoragePlugin extends Plugin {
                 ContentResolver resolver = context.getContentResolver();
                 Uri contentUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
 
-                // 1. Search if a file with this exact DISPLAY_NAME already exists in MediaStore.Downloads
+                // 1. Try physically deleting existing file if accessible on disk
+                File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File targetPhysicalFile = new File(downloadDir, fileName);
+                if (targetPhysicalFile.exists()) {
+                    try {
+                        targetPhysicalFile.delete();
+                    } catch (Exception ignored) {}
+                }
+
+                // 2. Search if an entry with this exact DISPLAY_NAME already exists in MediaStore.Downloads
                 String selection = MediaStore.MediaColumns.DISPLAY_NAME + "=?";
                 String[] selectionArgs = new String[]{fileName};
 
@@ -68,17 +77,34 @@ public class NativeStoragePlugin extends Plugin {
                     Log.w(TAG, "Notice querying existing backup file: " + e.getMessage());
                 }
 
-                // 2. If existing file was found, overwrite it directly in-place with "wt" (truncate)
+                // 3. Try to delete the existing entry so insert can take the exact clean name
+                if (targetUri != null) {
+                    try {
+                        int deleted = resolver.delete(targetUri, null, null);
+                        if (deleted > 0) {
+                            targetUri = null; // deleted cleanly, can insert fresh
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "Notice deleting existing MediaStore entry: " + e.getMessage());
+                    }
+                }
+
+                // 4. If targetUri still exists, attempt direct in-place overwrite with "rwt"
                 boolean writeSuccess = false;
                 if (targetUri != null) {
-                    try (OutputStream os = resolver.openOutputStream(targetUri, "wt")) {
+                    try (OutputStream os = resolver.openOutputStream(targetUri, "rwt")) {
                         if (os != null) {
                             os.write(content.getBytes(StandardCharsets.UTF_8));
                             os.flush();
                             writeSuccess = true;
+
+                            // Explicitly refresh DATE_MODIFIED in MediaStore so it jumps to top ("Just now") in file manager
+                            ContentValues updateValues = new ContentValues();
+                            updateValues.put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000);
+                            resolver.update(targetUri, updateValues, null, null);
                         }
                     } catch (Exception e) {
-                        Log.w(TAG, "Notice overwriting existing file URI, will recreate: " + e.getMessage());
+                        Log.w(TAG, "Direct overwrite failed, will insert fresh record: " + e.getMessage());
                         try {
                             resolver.delete(targetUri, null, null);
                         } catch (Exception ignored) {}
@@ -86,12 +112,14 @@ public class NativeStoragePlugin extends Plugin {
                     }
                 }
 
-                // 3. If file did not exist yet (or overwrite failed), insert brand new record
+                // 5. If file didn't exist or direct overwrite failed, insert brand new record
+                long savedId = -1;
                 if (!writeSuccess) {
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
                     values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
                     values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                    values.put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000);
 
                     targetUri = resolver.insert(contentUri, values);
                     if (targetUri == null) {
@@ -107,9 +135,25 @@ public class NativeStoragePlugin extends Plugin {
                     }
                 }
 
-                // 4. If saving the auto-backup file, automatically clean up legacy duplicate "(1).json", "(2).json"
+                if (targetUri != null) {
+                    try {
+                        savedId = ContentUris.parseId(targetUri);
+                    } catch (Exception ignored) {}
+                }
+
+                // 6. If saving the auto-backup file, clean up older legacy duplicates WITHOUT deleting the newly saved file
                 if ("TriwaraPOS_Backup_Terbaru.json".equalsIgnoreCase(fileName)) {
-                    cleanupDuplicateBackups(resolver, contentUri);
+                    cleanupDuplicateBackups(resolver, contentUri, savedId);
+                }
+
+                // 7. Trigger MediaScanner to ensure file manager UI immediately displays newest size & time
+                if (targetPhysicalFile.exists()) {
+                    MediaScannerConnection.scanFile(
+                        context,
+                        new String[]{targetPhysicalFile.getAbsolutePath()},
+                        new String[]{mimeType},
+                        null
+                    );
                 }
 
                 JSObject ret = new JSObject();
@@ -131,9 +175,14 @@ public class NativeStoragePlugin extends Plugin {
 
                 // Clean up physical duplicates if any
                 if ("TriwaraPOS_Backup_Terbaru.json".equalsIgnoreCase(fileName)) {
-                    File[] dupFiles = downloadDir.listFiles((dir, name) ->
-                        name.startsWith("TriwaraPOS_Backup_Terbaru (") && name.endsWith(".json")
-                    );
+                    File[] dupFiles = downloadDir.listFiles((dir, name) -> {
+                        String lower = name.toLowerCase();
+                        return (lower.startsWith("triwarapos_backup_terbaru (") ||
+                                lower.startsWith("triwara_backup_terbaru (") ||
+                                lower.equals("triwara_backup_terbaru.json")) &&
+                               lower.endsWith(".json") &&
+                               !name.equalsIgnoreCase(fileName);
+                    });
                     if (dupFiles != null) {
                         for (File dup : dupFiles) {
                             try { dup.delete(); } catch (Exception ignored) {}
@@ -161,18 +210,31 @@ public class NativeStoragePlugin extends Plugin {
     }
 
     /**
-     * Cleans up orphaned duplicate files matching "TriwaraPOS_Backup_Terbaru (*).json" from MediaStore.
+     * Cleans up orphaned duplicate files matching auto-backup patterns from MediaStore,
+     * while guaranteeing that the newly saved file (savedId) is NEVER deleted.
      */
-    private void cleanupDuplicateBackups(ContentResolver resolver, Uri contentUri) {
+    private void cleanupDuplicateBackups(ContentResolver resolver, Uri contentUri, long excludeSavedId) {
         try {
-            String selection = MediaStore.MediaColumns.DISPLAY_NAME + " LIKE 'TriwaraPOS_Backup_Terbaru (%.json'";
+            String selection = "(" +
+                MediaStore.MediaColumns.DISPLAY_NAME + " LIKE 'TriwaraPOS_Backup_Terbaru (%.json' OR " +
+                MediaStore.MediaColumns.DISPLAY_NAME + " LIKE 'triwara_backup_terbaru (%.json' OR " +
+                MediaStore.MediaColumns.DISPLAY_NAME + " LIKE 'triwara%backup%terbaru% (%.json' OR " +
+                MediaStore.MediaColumns.DISPLAY_NAME + " = 'triwara_backup_terbaru.json'" +
+            ")";
+
+            if (excludeSavedId > 0) {
+                selection += " AND " + MediaStore.MediaColumns._ID + " != " + excludeSavedId;
+            }
+
             try (Cursor cursor = resolver.query(contentUri, new String[]{MediaStore.MediaColumns._ID}, selection, null, null)) {
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
-                        try {
-                            resolver.delete(ContentUris.withAppendedId(contentUri, id), null, null);
-                        } catch (Exception ignored) {}
+                        if (id != excludeSavedId) {
+                            try {
+                                resolver.delete(ContentUris.withAppendedId(contentUri, id), null, null);
+                            } catch (Exception ignored) {}
+                        }
                     }
                 }
             }

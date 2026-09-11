@@ -7,6 +7,7 @@ import type { IShift, IShopConfig } from '../../types';
 import { pdfService } from '../../services/pdf.service';
 import { printerService } from '../../services/printer.service';
 import { shiftService, type IShiftCategorySales } from '../../services/shift.service';
+import { backupService } from '../../services/backup.service';
 import { DialogModal } from '../common/DialogModal';
 import { formatRupiah } from '../../utils/currency';
 import { formatDateIndonesian } from '../../utils/date';
@@ -26,6 +27,8 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
 }) => {
   const [isPrinted, setIsPrinted] = useState<boolean>(false);
   const [categorySales, setCategorySales] = useState<IShiftCategorySales[]>([]);
+  const [backupCopyStatus, setBackupCopyStatus] = useState<string>('');
+  const [isCopyingBackup, setIsCopyingBackup] = useState<boolean>(false);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -121,6 +124,19 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
         message: (err as Error).message,
         isDanger: true,
       });
+    }
+  };
+
+  const handleManualBackupCopy = async () => {
+    try {
+      setIsCopyingBackup(true);
+      const fileName = await backupService.saveLatestAutoBackup();
+      setBackupCopyStatus(`✓ Berhasil disimpan: ${fileName}`);
+      setTimeout(() => setBackupCopyStatus(''), 4000);
+    } catch (err) {
+      setBackupCopyStatus('Gagal: ' + (err as Error).message);
+    } finally {
+      setIsCopyingBackup(false);
     }
   };
 
@@ -404,6 +420,53 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
               ✓ Struk rekap shift berhasil dikirim ke printer thermal.
             </div>
           )}
+
+          {/* Auto-Backup Confirmation Card */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              backgroundColor: '#18181b',
+              border: '1px solid #27272a',
+              borderRadius: '8px',
+              marginTop: '4px',
+              flexShrink: 0,
+              gap: '10px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>📁</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#f4f4f5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Backup Otomatis: TriwaraPOS_Backup_Terbaru.json
+                </div>
+                <div style={{ fontSize: '10px', color: backupCopyStatus ? '#4ade80' : '#a1a1aa' }}>
+                  {backupCopyStatus || 'Tersimpan otomatis di folder Download perangkat'}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleManualBackupCopy}
+              disabled={isCopyingBackup}
+              style={{
+                fontSize: '10px',
+                padding: '5px 8px',
+                backgroundColor: '#27272a',
+                color: '#60a5fa',
+                border: '1px solid #3f3f46',
+                borderRadius: '6px',
+                cursor: isCopyingBackup ? 'not-allowed' : 'pointer',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {isCopyingBackup ? 'Menyimpan...' : '🔄 Backup Lagi'}
+            </button>
+          </div>
         </div>
 
         <div className="inv-modal-footer" style={{ flexShrink: 0 }}>

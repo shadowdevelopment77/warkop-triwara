@@ -217,4 +217,137 @@ describe('Scope 5: Atomic Inventory Transactions & Consistency Tests', () => {
     const sysLog = await testDb.logs.where('type').equals('restock').first();
     expect(sysLog?.description).toContain('Teh Hitam Earl Grey +300 gr');
   });
+
+  it('Only alerts on low stock for ingredients deducted in the current order, ignoring unrelated low-stock ingredients', async () => {
+    // 1. Create unrelated ingredient that is already LOW stock (Teh Melati)
+    const teaId = (await testDb.ingredients.add({
+      name: 'Teh Melati',
+      category: 'tea',
+      currentStock: 20, // 20gr
+      minStock: 50, // threshold 50gr -> LOW!
+      unit: 'gr',
+      costPerUnit: 100,
+      packageSize: 500,
+      packagePrice: 50000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as IIngredient)) as number;
+
+    // 2. Create coffee bean ingredient (Healthy stock)
+    const beanId = (await testDb.ingredients.add({
+      name: 'Arabica Specialty',
+      category: 'beans',
+      currentStock: 500, // 500gr
+      minStock: 100,
+      unit: 'gr',
+      costPerUnit: 250,
+      packageSize: 1000,
+      packagePrice: 250000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as IIngredient)) as number;
+
+    // 3. Create Americano product (uses ONLY Arabica beans)
+    const coffeeProdId = (await testDb.products.add({
+      name: 'Americano Hot',
+      description: 'Espresso + Water',
+      categoryId: 1,
+      price: 15000,
+      recipe: [{ ingredientId: beanId, amount: 15, unit: 'gr' }],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as IProduct)) as number;
+
+    // 4. Create Lychee Tea product (uses Teh Melati)
+    const teaProdId = (await testDb.products.add({
+      name: 'Lychee Tea Cold',
+      description: 'Teh melati + leci',
+      categoryId: 2,
+      price: 18000,
+      recipe: [{ ingredientId: teaId, amount: 10, unit: 'gr' }],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as IProduct)) as number;
+
+    // Test Case A: Order Americano (does NOT use tea)
+    const coffeeOrder: IOrder = {
+      orderNumber: 'TRW-COFFEE-ONLY',
+      sequenceNumber: 1,
+      processedBy: 'Barista 1',
+      customerName: 'Budi',
+      items: [
+        {
+          productId: coffeeProdId,
+          productName: 'Americano Hot',
+          price: 15000,
+          hpp: 3750,
+          qty: 1,
+          orderType: 'dine_in',
+          subtotal: 15000,
+          hppSubtotal: 3750,
+          toppings: [],
+          notes: '',
+        },
+      ],
+      subtotal: 15000,
+      discountPercent: 0,
+      discountAmount: 0,
+      total: 15000,
+      hppTotal: 3750,
+      profit: 11250,
+      paymentMethod: 'cash',
+      paymentAmount: 20000,
+      changeAmount: 5000,
+      status: 'completed',
+      createdAt: new Date(),
+    };
+
+    const coffeeAlerts = await hppService.deductInventoryForOrder(coffeeOrder);
+    // Coffee bean stock: 500 - 15 = 485 (> 100).
+    // Even though Teh Melati is 20 <= 50, coffeeAlerts must NOT include Teh Melati!
+    expect(coffeeAlerts).toEqual([]);
+
+    // Test Case B: Order Lychee Tea (uses Teh Melati)
+    const teaOrder: IOrder = {
+      orderNumber: 'TRW-TEA-ORDER',
+      sequenceNumber: 2,
+      processedBy: 'Barista 1',
+      customerName: 'Siti',
+      items: [
+        {
+          productId: teaProdId,
+          productName: 'Lychee Tea Cold',
+          price: 18000,
+          hpp: 1000,
+          qty: 1,
+          orderType: 'dine_in',
+          subtotal: 18000,
+          hppSubtotal: 1000,
+          toppings: [],
+          notes: '',
+        },
+      ],
+      subtotal: 18000,
+      discountPercent: 0,
+      discountAmount: 0,
+      total: 18000,
+      hppTotal: 1000,
+      profit: 17000,
+      paymentMethod: 'cash',
+      paymentAmount: 20000,
+      changeAmount: 2000,
+      status: 'completed',
+      createdAt: new Date(),
+    };
+
+    const teaAlerts = await hppService.deductInventoryForOrder(teaOrder);
+    // Teh Melati stock: 20 - 10 = 10 (<= 50).
+    // Now teaAlerts MUST contain the alert for Teh Melati!
+    expect(teaAlerts.length).toBe(1);
+    expect(teaAlerts[0]).toContain('Teh Melati');
+    expect(teaAlerts[0]).toContain('10 gr');
+  });
 });
+

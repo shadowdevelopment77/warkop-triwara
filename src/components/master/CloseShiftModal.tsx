@@ -34,6 +34,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitStatus, setSubmitStatus] = useState<string>('Menutup Toko...');
 
   // Sync actualCash when expected changes if user hasn't edited
   const [hasManuallyEditedActual, setHasManuallyEditedActual] = useState(false);
@@ -47,16 +48,23 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
   const diff = actualCash - expectedCash;
 
-  const handleAddExpense = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!descInput.trim() || !amountInput || Number(amountInput) <= 0) return;
-
+  const handleAddExpense = () => {
+    if (!descInput.trim()) {
+      setErrorMsg('Keterangan pengeluaran tidak boleh kosong');
+      return;
+    }
+    const num = Number(amountInput);
+    if (!num || num <= 0) {
+      setErrorMsg('Nominal pengeluaran harus lebih besar dari 0');
+      return;
+    }
+    setErrorMsg('');
     setExpenses([
       ...expenses,
       {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        id: 'exp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         description: descInput.trim(),
-        amount: Number(amountInput),
+        amount: num,
       },
     ]);
     setDescInput('');
@@ -78,6 +86,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
     try {
       setIsSubmitting(true);
+      setSubmitStatus('Menutup shift...');
       const closed = await shiftService.closeShift(
         shift.id!,
         actualCash,
@@ -85,9 +94,19 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
         expenses
       );
 
-      // Silent background tasks: auto-backup single file to Download folder & purge logs > 90 days
-      backupService.saveLatestAutoBackup().catch((e) => console.warn('Silent auto-backup notice:', e));
-      shiftService.purgeOldLogs(90).catch((e) => console.warn('Silent log purge notice:', e));
+      // Deterministically save single-file auto-backup to Download folder & purge logs > 90 days
+      setSubmitStatus('Menyimpan backup...');
+      try {
+        await backupService.saveLatestAutoBackup();
+      } catch (backupErr) {
+        console.warn('Auto-backup notice on close shift:', backupErr);
+      }
+
+      try {
+        await shiftService.purgeOldLogs(90);
+      } catch (purgeErr) {
+        console.warn('Silent log purge notice:', purgeErr);
+      }
 
       onClosed(closed);
     } catch (err) {
@@ -341,7 +360,7 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
               Batal
             </button>
             <button type="submit" className="shift-btn-danger" disabled={isSubmitting}>
-              {isSubmitting ? 'Menutup Toko...' : 'Selesaikan Tutup Toko'}
+              {isSubmitting ? submitStatus : 'Selesaikan Tutup Toko'}
             </button>
           </div>
         </form>
