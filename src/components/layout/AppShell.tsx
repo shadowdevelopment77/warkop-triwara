@@ -143,6 +143,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
 
   const [customizingProduct, setCustomizingProduct] = useState<IProduct | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [completedOrder, setCompletedOrder] = useState<IOrder | null>(null);
   const [heldOrders, setHeldOrders] = useState<IHeldOrder[]>([]);
   const [isSaveHeldOrderOpen, setIsSaveHeldOrderOpen] = useState(false);
@@ -311,6 +312,9 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
     paymentMethod: PaymentMethod,
     paymentAmount: number
   ) => {
+    if (isProcessingPayment) return;
+    if (cartItems.length === 0) return;
+
     if (!activeShift) {
       setDialogConfig({
         isOpen: true,
@@ -326,6 +330,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
     }
 
     try {
+      setIsProcessingPayment(true);
       const { order, lowStockAlerts } = await orderService.createOrder(
         cartItems,
         customerName,
@@ -373,6 +378,8 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
         title: 'Pembayaran Gagal',
         message: 'Gagal memproses pembayaran: ' + (err as Error).message,
       });
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
