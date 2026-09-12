@@ -78,7 +78,6 @@ export const ReportPanel: React.FC = () => {
         endDate,
         summary,
         topProducts,
-        [],
         config,
         chartData,
         (percent, message) => {

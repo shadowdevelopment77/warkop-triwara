@@ -43,7 +43,7 @@ describe('Phase 6: Stand-Alone Executive Sales Report & 1-Page Clean PDF', () =>
     const end = new Date('2026-09-01T23:59:59');
 
     await expect(
-      pdfService.exportSalesReport(start, end, mockSummary, mockTopProducts, [], mockConfig, null, onProgress)
+      pdfService.exportSalesReport(start, end, mockSummary, mockTopProducts, mockConfig, null, onProgress)
     ).resolves.not.toThrow();
 
     expect(onProgress).toHaveBeenCalledWith(10, expect.any(String));
@@ -70,7 +70,7 @@ describe('Phase 6: Stand-Alone Executive Sales Report & 1-Page Clean PDF', () =>
     const end = new Date('2026-09-01T23:59:59');
 
     await expect(
-      pdfService.exportSalesReport(start, end, emptySummary, [], [], mockConfig, null, onProgress)
+      pdfService.exportSalesReport(start, end, emptySummary, [], mockConfig, null, onProgress)
     ).resolves.not.toThrow();
 
     expect(onProgress).toHaveBeenCalledWith(100, 'Selesai!');

@@ -35,6 +35,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -154,6 +155,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg('');
 
     if (!name.trim()) {
@@ -221,6 +223,7 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
     }));
 
     try {
+      setIsSubmitting(true);
       if (isEditing && product?.id) {
         await productService.updateProduct(product.id, {
           categoryId,
@@ -258,6 +261,8 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
       onSaved();
     } catch (err) {
       setErrorMsg((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -289,11 +294,17 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-backdrop" onClick={() => !isSubmitting && onClose()}>
         <div className="menu-modal-card recipe-editor-card" onClick={(e) => e.stopPropagation()}>
           <div className="menu-modal-header">
             <h3 className="menu-modal-title">{isEditing ? `Edit Menu: ${product?.name}` : 'Tambah Menu Baru'}</h3>
-            <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            <button
+              type="button"
+              className="modal-close-btn-red"
+              onClick={onClose}
+              disabled={isSubmitting}
+              title="Tutup"
+            >
               ✕
             </button>
           </div>
@@ -565,15 +576,29 @@ export const RecipeEditor: React.FC<RecipeEditorProps> = ({ product, categories,
 
           <div className="menu-modal-footer">
             {isEditing && (
-              <button type="button" className="menu-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+              <button
+                type="button"
+                className="menu-btn-danger"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+                style={{ marginRight: 'auto' }}
+              >
                 Hapus Menu
               </button>
             )}
-            <button type="button" className="menu-btn-secondary" onClick={onClose}>
+            <button type="button" className="menu-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>
-            <button type="submit" className="menu-btn-primary">
-              {isEditing ? 'Simpan Perubahan' : 'Tambah Menu'}
+            <button
+              type="submit"
+              className="menu-btn-primary"
+              disabled={isSubmitting}
+              style={{
+                opacity: isSubmitting ? 0.75 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Tambah Menu'}
             </button>
           </div>
         </form>

@@ -30,6 +30,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
   const [purchasePrice, setPurchasePrice] = useState<number | ''>(ingredient ? ingredient.purchasePrice : '');
   const [purchaseQuantity, setPurchaseQuantity] = useState<number | ''>(ingredient ? ingredient.purchaseQuantity : '');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -63,6 +64,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg('');
 
     if (isEditing && ingredient?.id) {
@@ -71,6 +73,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
         return;
       }
       try {
+        setIsSubmitting(true);
         await ingredientService.updateIngredient(ingredient.id, {
           minStock: Number(minStock),
         });
@@ -83,6 +86,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
         onSaved();
       } catch (err) {
         setErrorMsg((err as Error).message);
+      } finally {
+        setIsSubmitting(false);
       }
       return;
     }
@@ -109,6 +114,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
     }
 
     try {
+      setIsSubmitting(true);
       await ingredientService.addIngredient({
         name: name.trim(),
         category,
@@ -128,6 +134,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
       onSaved();
     } catch (err) {
       setErrorMsg((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,7 +185,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-backdrop" onClick={() => !isSubmitting && onClose()}>
         <div className="inv-modal-card ingredient-modal-card" onClick={(e) => e.stopPropagation()}>
           <div className="inv-modal-header">
             <div>
@@ -188,7 +196,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
                 </p>
               )}
             </div>
-            <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+            <button
+              type="button"
+              className="modal-close-btn-red"
+              onClick={onClose}
+              disabled={isSubmitting}
+              title="Tutup"
+            >
               ✕
             </button>
           </div>
@@ -326,15 +340,29 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({ ingredient, on
 
             <div className="inv-modal-footer">
               {isEditing && (
-                <button type="button" className="inv-btn-danger" onClick={handleDelete} style={{ marginRight: 'auto' }}>
+                <button
+                  type="button"
+                  className="inv-btn-danger"
+                  onClick={handleDelete}
+                  disabled={isSubmitting}
+                  style={{ marginRight: 'auto' }}
+                >
                   Hapus Bahan
                 </button>
               )}
-              <button type="button" className="inv-btn-secondary" onClick={onClose}>
+              <button type="button" className="inv-btn-secondary" onClick={onClose} disabled={isSubmitting}>
                 {isEditing ? 'Tutup' : 'Batal'}
               </button>
-              <button type="submit" className="inv-btn-primary">
-                {isEditing ? 'Simpan Batas Alert' : '+ Tambah Bahan'}
+              <button
+                type="submit"
+                className="inv-btn-primary"
+                disabled={isSubmitting}
+                style={{
+                  opacity: isSubmitting ? 0.75 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSubmitting ? 'Menyimpan...' : isEditing ? 'Simpan Batas Alert' : '+ Tambah Bahan'}
               </button>
             </div>
           </form>

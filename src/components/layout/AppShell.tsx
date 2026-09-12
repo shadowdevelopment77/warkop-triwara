@@ -627,11 +627,7 @@ export const AppShell: React.FC<AppShellProps> = ({ currentUser, onLockApp }) =>
           />
         )}
 
-        {activeTab === 'shifts' && (
-          <ShiftHistoryPanel
-            onOpenNewShift={() => setIsOpenShiftModalOpen(true)}
-          />
-        )}
+        {activeTab === 'shifts' && <ShiftHistoryPanel />}
 
         {activeTab === 'inventory' && <InventoryPanel />}
         {activeTab === 'products' && <MenuPanel />}

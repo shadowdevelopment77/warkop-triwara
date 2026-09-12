@@ -15,7 +15,7 @@ interface VariantModalProps {
 export const VariantModal: React.FC<VariantModalProps> = ({ product, onClose, onAddToCart }) => {
   const [orderType, setOrderType] = useState<OrderType>('dine_in');
   const [temperature, setTemperature] = useState<TemperatureOption>('Iced');
-  const [sugarLevel, setSugarLevel] = useState<string>('normal');
+  const [sugarLevel, setSugarLevel] = useState<string>('Normal');
   const [selectedToppings, setSelectedToppings] = useState<
     { name: string; price: number; ingredientId?: number; amount?: number }[]
   >([]);

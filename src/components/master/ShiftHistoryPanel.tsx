@@ -11,11 +11,7 @@ import { formatRupiah } from '../../utils/currency';
 import { PaginationBar } from '../common/PaginationBar';
 import { ShiftReceiptModal } from './ShiftReceiptModal';
 
-interface ShiftHistoryPanelProps {
-  onOpenNewShift?: () => void;
-}
-
-export const ShiftHistoryPanel: React.FC<ShiftHistoryPanelProps> = () => {
+export const ShiftHistoryPanel: React.FC = () => {
   const [shifts, setShifts] = useState<IShift[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [activeShift, setActiveShift] = useState<IShift | null>(null);

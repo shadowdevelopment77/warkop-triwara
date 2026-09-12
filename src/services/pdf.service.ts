@@ -54,7 +54,6 @@ export class PdfService {
     endDate: Date,
     summary: ISalesSummary,
     topProducts: ITopProduct[],
-    _orders?: IOrder[],
     config?: IShopConfig,
     chartData?: ISalesChartResult | null,
     onProgress?: (percent: number, message: string) => void

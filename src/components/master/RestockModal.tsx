@@ -19,6 +19,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
   const [addedQty, setAddedQty] = useState<number>(ingredient.purchaseQuantity || 1000);
   const [purchasePrice, setPurchasePrice] = useState<number>(ingredient.purchasePrice || 100000);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const batchCostPerUnit = addedQty > 0 ? purchasePrice / addedQty : 0;
   const currentTotalVal = ingredient.currentStock * ingredient.costPerUnit;
@@ -28,6 +29,8 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setErrorMsg('');
 
     if (addedQty <= 0) {
@@ -40,6 +43,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
     }
 
     try {
+      setIsSubmitting(true);
       // Pass addedQty as both added quantity and purchase quantity
       await ingredientService.restockIngredient(ingredient.id!, addedQty, purchasePrice, addedQty);
       await notificationService.addNotification(
@@ -51,15 +55,17 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
       onRestocked();
     } catch (err) {
       setErrorMsg((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={() => !isSubmitting && onClose()}>
       <div className="inv-modal-card restock-modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="inv-modal-header">
           <h3 className="inv-modal-title">Restock Bahan: {ingredient.name}</h3>
-          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+          <button type="button" className="modal-close-btn-red" onClick={onClose} disabled={isSubmitting} title="Tutup">
             ✕
           </button>
         </div>
@@ -126,11 +132,19 @@ export const RestockModal: React.FC<RestockModalProps> = ({ ingredient, onClose,
           </div>
 
           <div className="inv-modal-footer">
-            <button type="button" className="inv-btn-secondary" onClick={onClose}>
+            <button type="button" className="inv-btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Batal
             </button>
-            <button type="submit" className="inv-btn-primary">
-              Simpan Restock (+{addedQty} {ingredient.unit})
+            <button
+              type="submit"
+              className="inv-btn-primary"
+              disabled={isSubmitting}
+              style={{
+                opacity: isSubmitting ? 0.75 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Menyimpan Restock...' : `Simpan Restock (+${addedQty} ${ingredient.unit})`}
             </button>
           </div>
         </form>

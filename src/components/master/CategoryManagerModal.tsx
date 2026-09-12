@@ -17,6 +17,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
   const [newCatName, setNewCatName] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
     const cats = await productService.getCategories();
@@ -31,6 +32,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg('');
     setSuccessMsg('');
 
@@ -40,6 +42,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
     }
 
     try {
+      setIsSubmitting(true);
       await productService.addCategory(newCatName.trim());
       setNewCatName('');
       setSuccessMsg('Kategori berhasil ditambahkan!');
@@ -47,11 +50,13 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
       onChanged();
     } catch (err) {
       setErrorMsg((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteCategory = async (cat: ICategory) => {
-    if (!cat.id) return;
+    if (!cat.id || isSubmitting) return;
     setErrorMsg('');
     setSuccessMsg('');
 
@@ -62,17 +67,20 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
     }
 
     try {
+      setIsSubmitting(true);
       await productService.deleteCategory(cat.id);
       setSuccessMsg(`Kategori "${cat.name}" berhasil dihapus.`);
       await loadData();
       onChanged();
     } catch (err) {
       setErrorMsg((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={() => !isSubmitting && onClose()}>
       <div
         className="menu-modal-card"
         style={{ maxWidth: '460px', width: '90%' }}
@@ -80,7 +88,13 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
       >
         <div className="menu-modal-header">
           <h3 className="menu-modal-title">Kelola Kategori Menu</h3>
-          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+          <button
+            type="button"
+            className="modal-close-btn-red"
+            onClick={onClose}
+            disabled={isSubmitting}
+            title="Tutup"
+          >
             ✕
           </button>
         </div>
@@ -111,10 +125,20 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
               placeholder="Nama kategori baru..."
               value={newCatName}
               onChange={(e) => setNewCatName(e.target.value)}
+              disabled={isSubmitting}
               style={{ flex: 1 }}
             />
-            <button type="submit" className="menu-btn-primary" style={{ whiteSpace: 'nowrap' }}>
-              + Tambah
+            <button
+              type="submit"
+              className="menu-btn-primary"
+              disabled={isSubmitting}
+              style={{
+                whiteSpace: 'nowrap',
+                opacity: isSubmitting ? 0.75 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Menambah...' : '+ Tambah'}
             </button>
           </form>
 
@@ -153,12 +177,12 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ onCl
                   <button
                     type="button"
                     onClick={() => handleDeleteCategory(cat)}
-                    disabled={usageCount > 0}
+                    disabled={usageCount > 0 || isSubmitting}
                     style={{
                       background: 'none',
                       border: 'none',
-                      cursor: usageCount > 0 ? 'not-allowed' : 'pointer',
-                      opacity: usageCount > 0 ? 0.35 : 1,
+                      cursor: usageCount > 0 || isSubmitting ? 'not-allowed' : 'pointer',
+                      opacity: usageCount > 0 || isSubmitting ? 0.35 : 1,
                       fontSize: '16px',
                       padding: '4px 8px',
                       borderRadius: '4px',

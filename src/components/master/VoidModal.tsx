@@ -9,24 +9,34 @@ import { formatRupiah } from '../../utils/currency';
 interface VoidModalProps {
   order: IOrder;
   onClose: () => void;
-  onConfirmVoid: (reason: string) => void;
+  onConfirmVoid: (reason: string) => Promise<void> | void;
 }
 
 export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmVoid }) => {
   const [reason, setReason] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (!reason.trim()) {
       setErrorMsg('Harap masukkan alasan pembatalan transaksi');
       return;
     }
-    onConfirmVoid(reason.trim());
+
+    try {
+      setIsSubmitting(true);
+      await onConfirmVoid(reason.trim());
+    } catch (err) {
+      setErrorMsg((err as Error).message);
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-backdrop" onClick={() => !isSubmitting && onClose()} style={{ zIndex: 9999 }}>
       <div
         className="report-void-card"
         style={{ maxWidth: '440px', width: '90%' }}
@@ -36,7 +46,13 @@ export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmV
           <h3 className="report-void-title">
             🚫 Batalkan Transaksi #{order.orderNumber}
           </h3>
-          <button type="button" className="modal-close-btn-red" onClick={onClose} title="Tutup">
+          <button
+            type="button"
+            className="modal-close-btn-red"
+            onClick={onClose}
+            disabled={isSubmitting}
+            title="Tutup"
+          >
             ✕
           </button>
         </div>
@@ -76,6 +92,7 @@ export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmV
                 placeholder="contoh: Salah input menu, pelanggan cancel..."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                disabled={isSubmitting}
                 autoFocus
                 required
               />
@@ -83,11 +100,24 @@ export const VoidModal: React.FC<VoidModalProps> = ({ order, onClose, onConfirmV
           </div>
 
           <div className="report-void-footer">
-            <button type="button" className="report-void-btn-cancel" onClick={onClose}>
+            <button
+              type="button"
+              className="report-void-btn-cancel"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Batal
             </button>
-            <button type="submit" className="report-void-btn-danger">
-              Konfirmasi Void Transaksi
+            <button
+              type="submit"
+              className="report-void-btn-danger"
+              disabled={isSubmitting}
+              style={{
+                opacity: isSubmitting ? 0.75 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Memproses Void...' : 'Konfirmasi Void Transaksi'}
             </button>
           </div>
         </form>
