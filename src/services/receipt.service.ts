@@ -60,13 +60,13 @@ export class ReceiptService {
     if (type === 'customer') {
       // ════════════ CUSTOMER RECEIPT ════════════
       lines.push(this.lineDivider('='));
-      config.receiptHeaderLines.forEach((header) => {
+      (config.receiptHeaderLines || []).forEach((header) => {
         if (header.trim()) lines.push(this.centerLine(header.trim()));
       });
       lines.push(this.lineDivider('='));
       lines.push(`No  : ${order.orderNumber}`);
       lines.push(`Tgl : ${formatDateIndonesian(order.createdAt)}`);
-      lines.push(`Pel : ${order.customerName}`);
+      lines.push(`Pel : ${order.customerName || 'Umum'}`);
       lines.push(this.lineDivider('='));
 
       order.items.forEach((item) => {
@@ -110,7 +110,7 @@ export class ReceiptService {
       }
       lines.push(this.lineDivider('='));
 
-      config.receiptFooterLines.forEach((footer) => {
+      (config.receiptFooterLines || []).forEach((footer) => {
         if (footer.trim()) lines.push(this.centerLine(footer.trim()));
       });
       lines.push(this.lineDivider('='));
@@ -119,7 +119,7 @@ export class ReceiptService {
       lines.push(this.lineDivider('='));
       lines.push(this.centerLine(`ORDER BAR — #${order.orderNumber}`));
       lines.push(this.centerLine(formatDateIndonesian(order.createdAt)));
-      lines.push(`Pelanggan: ${order.customerName}`);
+      lines.push(`Pelanggan: ${order.customerName || 'Umum'}`);
       lines.push(this.lineDivider('='));
 
       order.items.forEach((item) => {
@@ -147,7 +147,7 @@ export class ReceiptService {
       lines.push(this.lineDivider('='));
       lines.push(this.centerLine(`ORDER DAPUR — #${order.orderNumber}`));
       lines.push(this.centerLine(formatDateIndonesian(order.createdAt)));
-      lines.push(`Pelanggan: ${order.customerName}`);
+      lines.push(`Pelanggan: ${order.customerName || 'Umum'}`);
       lines.push(this.lineDivider('='));
 
       order.items.forEach((item) => {

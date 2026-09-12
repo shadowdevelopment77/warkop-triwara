@@ -44,7 +44,7 @@ export const PinLock: React.FC<PinLockProps> = ({ appName, appLogo, onUnlocked }
             };
             onUnlocked(fallbackOwner);
           } else {
-            triggerError('PIN Salah. Coba lagi (Owner: 0000 | Kasir: 1234)');
+            triggerError('PIN Salah. Silakan coba lagi.');
           }
         } catch {
           triggerError('Gagal memverifikasi PIN');
