@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
 import { TriwaraDatabase } from '../database/db';
 import { OrderService } from '../services/order.service';
-import { exportOrdersToExcel } from '../utils/excel';
+import { exportOrdersToExcel, buildOrdersCsvContent } from '../utils/excel';
 import type { IOrder } from '../types';
 
 describe('Phase 7: Clean Orders Older Than 1 Year with Excel Backup', () => {
@@ -153,7 +153,7 @@ describe('Phase 7: Clean Orders Older Than 1 Year with Excel Backup', () => {
     expect(logs[0].description).toContain('2 transaksi berumur >= 1 tahun dibersihkan');
   });
 
-  it('generates Excel CSV backup with UTF-8 BOM and tabular structure', () => {
+  it('generates Excel CSV backup with UTF-8 BOM and tabular structure', async () => {
     const dummyOrders: IOrder[] = [
       {
         id: 1,
@@ -167,11 +167,17 @@ describe('Phase 7: Clean Orders Older Than 1 Year with Excel Backup', () => {
         subtotal: 35000,
         paymentMethod: 'cash',
         status: 'completed',
-        items: [{ productId: 1, productName: 'Kopi Susu', price: 18000, quantity: 2, subtotal: 36000 }],
+        items: [{ productId: 1, productName: 'Kopi Susu', price: 18000, qty: 2, subtotal: 36000 } as any],
       } as unknown as IOrder,
     ];
 
-    expect(() => exportOrdersToExcel(dummyOrders, 'test_export.csv')).not.toThrow();
+    const csv = buildOrdersCsvContent(dummyOrders);
+    expect(csv).toContain('\uFEFF');
+    expect(csv).toContain('No Pesanan');
+    expect(csv).toContain('TRX-001');
+    expect(csv).toContain('Kopi Susu x2');
+
+    await expect(exportOrdersToExcel(dummyOrders, 'test_export.csv')).resolves.not.toThrow();
   });
 
   it('generates old orders strictly older than 1 year (> 400 days) and cleans them', async () => {

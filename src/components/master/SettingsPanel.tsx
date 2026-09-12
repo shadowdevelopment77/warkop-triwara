@@ -386,7 +386,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             try {
               // 1. Download Excel/CSV first
               const todayStr = new Date().toISOString().split('T')[0];
-              exportOrdersToExcel(oldOrders, `Arsip_Transaksi_Triwara_1Tahun_${todayStr}.csv`);
+              await exportOrdersToExcel(oldOrders, `Arsip_Transaksi_Triwara_1Tahun_${todayStr}.csv`);
 
               // 2. Perform backend cleanup
               const result = await orderService.cleanOrdersOlderThanOneYear();

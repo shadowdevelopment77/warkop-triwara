@@ -4,6 +4,10 @@
 
 import type { IOrder } from '../types';
 import { formatDateIndonesian } from './date';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { NativeStorage } from '../services/backup.service';
 
 /**
  * Escapes a cell value for CSV/Excel format
@@ -41,8 +45,9 @@ export const buildOrdersCsvContent = (orders: IOrder[]): string => {
     const itemsSummary = o.items
       ? o.items
           .map((i) => {
+            const qty = i.qty ?? (i as unknown as { quantity?: number }).quantity ?? 1;
             const addStr = i.toppings && i.toppings.length > 0 ? ` +(${i.toppings.map((a) => a.name).join(', ')})` : '';
-            return `${i.productName} x${i.qty}${addStr}`;
+            return `${i.productName} x${qty}${addStr}`;
           })
           .join('; ')
       : '-';
@@ -73,11 +78,57 @@ export const buildOrdersCsvContent = (orders: IOrder[]): string => {
 };
 
 /**
- * Exports a list of orders to an Excel-compatible CSV file with UTF-8 BOM
+ * Exports a list of orders to an Excel-compatible CSV file with UTF-8 BOM.
+ * 
+ * Multi-Platform support:
+ * 1. Native Android (Capacitor):
+ *    - Saves directly to the public Download folder using NativeStorage plugin
+ *    - Saves to app Documents folder via Filesystem plugin
+ *    - Opens native Share dialog so user can open in Excel/Sheets or send via WhatsApp/Drive
+ * 2. Web / Browser:
+ *    - Uses Blob URL + <a download> click
  */
-export const exportOrdersToExcel = (orders: IOrder[], filename: string): void => {
+export const exportOrdersToExcel = async (orders: IOrder[], filename: string): Promise<void> => {
   const csvContent = buildOrdersCsvContent(orders);
+  const finalFilename = filename.endsWith('.csv') ? filename : `${filename}.csv`;
 
+  if (Capacitor.isNativePlatform()) {
+    // 1. Save directly into device's public Download folder (accessible via file manager)
+    try {
+      await NativeStorage.saveToDownloads({
+        fileName: finalFilename,
+        content: csvContent,
+        mimeType: 'text/csv',
+      });
+    } catch (nativeErr) {
+      console.warn('NativeStorage saveToDownloads fallback to Filesystem:', nativeErr);
+    }
+
+    // 2. Write to Documents and trigger Android Share sheet
+    try {
+      const written = await Filesystem.writeFile({
+        path: finalFilename,
+        data: csvContent,
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+        recursive: true,
+      });
+
+      try {
+        await Share.share({
+          title: finalFilename,
+          url: written.uri,
+        });
+      } catch {
+        // User may dismiss the share dialog — file is already safely persisted
+      }
+    } catch (fsErr) {
+      console.warn('Filesystem / Share error:', fsErr);
+    }
+    return;
+  }
+
+  // Web fallback
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return;
   }
@@ -86,7 +137,7 @@ export const exportOrdersToExcel = (orders: IOrder[], filename: string): void =>
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', filename.endsWith('.csv') ? filename : `${filename}.csv`);
+  link.setAttribute('download', finalFilename);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
