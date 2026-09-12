@@ -2,7 +2,7 @@
 // Triwara POS — Post-Close Store Modal (Thermal Receipt Preview & PDF)
 // ═══════════════════════════════════════════════
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { IShift, IShopConfig } from '../../types';
 import { pdfService } from '../../services/pdf.service';
 import { printerService } from '../../services/printer.service';
@@ -29,6 +29,7 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
   const [categorySales, setCategorySales] = useState<IShiftCategorySales[]>([]);
   const [backupCopyStatus, setBackupCopyStatus] = useState<string>('');
   const [isCopyingBackup, setIsCopyingBackup] = useState<boolean>(false);
+  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -41,7 +42,27 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
     message: '',
   });
 
-  if (!isOpen) return null;
+  const backupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (backupTimerRef.current) {
+        clearTimeout(backupTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (isOpen && shift.id) {
+      shiftService.getShiftProductSalesByCategory(shift.id).then((sales) => {
+        if (isMounted) setCategorySales(sales);
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, shift.id]);
 
   const config = shopConfig || {
     appName: 'Triwara POS',
@@ -67,18 +88,6 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
       : shift.totalQrisSales > 0
         ? 1
         : 0;
-
-  useEffect(() => {
-    let isMounted = true;
-    if (isOpen && shift.id) {
-      shiftService.getShiftProductSalesByCategory(shift.id).then((sales) => {
-        if (isMounted) setCategorySales(sales);
-      });
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen, shift.id]);
 
   const handlePrintReceipt = async () => {
     if (!config.printerMacAddress || config.printerMacAddress.trim() === '') {
@@ -106,8 +115,6 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
     }
   };
 
-  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
-
   const handleDownloadPdf = async () => {
     setPdfProgress({ isOpen: true, percent: 5, message: 'Memulai proses export...' });
     try {
@@ -132,13 +139,16 @@ export const PostCloseStoreModal: React.FC<PostCloseStoreModalProps> = ({
       setIsCopyingBackup(true);
       const fileName = await backupService.saveLatestAutoBackup();
       setBackupCopyStatus(`✓ Berhasil disimpan: ${fileName}`);
-      setTimeout(() => setBackupCopyStatus(''), 4000);
+      if (backupTimerRef.current) clearTimeout(backupTimerRef.current);
+      backupTimerRef.current = setTimeout(() => setBackupCopyStatus(''), 4000);
     } catch (err) {
       setBackupCopyStatus('Gagal: ' + (err as Error).message);
     } finally {
       setIsCopyingBackup(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-backdrop" style={{ zIndex: 9999 }}>

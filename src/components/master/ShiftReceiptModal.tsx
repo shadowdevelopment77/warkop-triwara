@@ -24,6 +24,7 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
 }) => {
   const [isPrinted, setIsPrinted] = useState<boolean>(false);
   const [categorySales, setCategorySales] = useState<IShiftCategorySales[]>([]);
+  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
   const [dialogConfig, setDialogConfig] = useState<{
     isOpen: boolean;
     type?: 'alert' | 'confirm';
@@ -98,8 +99,6 @@ export const ShiftReceiptModal: React.FC<ShiftReceiptModalProps> = ({
       });
     }
   };
-
-  const [pdfProgress, setPdfProgress] = useState<{ isOpen: boolean; percent: number; message: string } | null>(null);
 
   const handleDownloadPdf = async () => {
     setPdfProgress({ isOpen: true, percent: 5, message: 'Memulai proses export...' });

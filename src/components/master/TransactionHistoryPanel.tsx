@@ -162,7 +162,7 @@ const TransactionRow = React.memo<TransactionRowProps>(({ order, isExpanded, onT
             <div className="tx-items-wrap-container">
               <div className="tx-items-header-bar">
                 <span className="tx-items-header-title">
-                  🛒 Rincian Menu Terjual ({order.items.reduce((s, it) => s + it.qty, 0)} item):
+                  🛒 Rincian Menu Terjual ({(order.items || []).reduce((s, it) => s + it.qty, 0)} item):
                 </span>
                 {order.discountAmount > 0 && (
                   <div className="tx-item-discount-badge">
@@ -171,7 +171,7 @@ const TransactionRow = React.memo<TransactionRowProps>(({ order, isExpanded, onT
                 )}
               </div>
               <div className="tx-items-cards-grid">
-                {order.items.map((item, idx) => {
+                {(order.items || []).map((item, idx) => {
                   const modifiers = [
                     item.temperature,
                     item.sugarLevel,
