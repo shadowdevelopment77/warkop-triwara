@@ -199,4 +199,112 @@ describe('Phase 7: Clean Orders Older Than 1 Year with Excel Backup', () => {
     const remainingOld = await orderService.getOrdersOlderThanOneYear();
     expect(remainingOld.length).toBe(0);
   });
+
+  it('SIMULASI LIVE PRODUCTION: Sales sedang berjalan hari ini TIDAK BOLEH tersentuh saat arsip 1 tahun dibersihkan', async () => {
+    // 1. Simulasikan shift kasir yang sedang AKTIF berjalan
+    await testDb.shifts.add({
+      id: 1,
+      shiftNumber: 'SHF-20260912-001',
+      cashierId: 1,
+      cashierName: 'Kasir Aktif',
+      openedAt: new Date(),
+      startingCash: 100000,
+      totalCashSales: 25000,
+      totalQrisSales: 50000,
+      totalTransactions: 2,
+      totalVoided: 0,
+      status: 'open',
+    });
+
+    // 2. Simulasikan 2 transaksi AKTIF HARI INI (sales sedang berjalan di toko client)
+    const today = new Date();
+    const activeOrders: IOrder[] = [
+      {
+        id: 501,
+        orderNumber: 'TRW-TODAY-001',
+        sequenceNumber: 1,
+        customerName: 'Pelanggan Pagi',
+        processedBy: 'Kasir Aktif',
+        createdAt: today,
+        updatedAt: today,
+        total: 25000,
+        subtotal: 25000,
+        paymentMethod: 'cash',
+        status: 'completed',
+        items: [{ productId: 1, productName: 'Kopi Susu', price: 25000, qty: 1, subtotal: 25000 } as any],
+      } as unknown as IOrder,
+      {
+        id: 502,
+        orderNumber: 'TRW-TODAY-002',
+        sequenceNumber: 2,
+        customerName: 'Pelanggan Siang',
+        processedBy: 'Kasir Aktif',
+        createdAt: today,
+        updatedAt: today,
+        total: 50000,
+        subtotal: 50000,
+        paymentMethod: 'qris',
+        status: 'completed',
+        items: [{ productId: 2, productName: 'Matcha Latte', price: 25000, qty: 2, subtotal: 50000 } as any],
+      } as unknown as IOrder,
+    ];
+    await testDb.orders.bulkAdd(activeOrders);
+
+    // 3. Simulasikan dailySummaries hari ini (omset live = 75.000)
+    const todayDateStr = today.toISOString().split('T')[0];
+    await testDb.dailySummaries.add({
+      date: todayDateStr,
+      totalOmset: 75000,
+      totalProfit: 40000,
+      totalCash: 25000,
+      totalQris: 50000,
+      completedCount: 2,
+      voidedCount: 0,
+      totalItemsSold: 3,
+      topProductName: 'Matcha Latte',
+      topProductPercentage: 66,
+      productSales: {},
+      createdAt: today,
+      updatedAt: today,
+    });
+
+    // 4. Masukkan 5 transaksi lama berumur 420 hari (>= 1 tahun)
+    await orderService.generateOldOrdersForTesting(5);
+
+    // Total orders saat ini: 2 transaksi hari ini + 5 transaksi lama = 7
+    expect(await testDb.orders.count()).toBe(7);
+
+    // 5. Jalankan deteksi transaksi lama
+    const eligibleOld = await orderService.getOrdersOlderThanOneYear();
+    expect(eligibleOld.length).toBe(5);
+
+    // Pastikan TIDAK ADA transaksi hari ini yang masuk daftar arsip
+    for (const old of eligibleOld) {
+      expect(old.orderNumber).not.toContain('TODAY');
+      expect(old.createdAt.getTime()).toBeLessThan(Date.now() - 365 * 24 * 3600 * 1000);
+    }
+
+    // 6. Jalankan ekspor Excel & pembersihan database
+    await exportOrdersToExcel(eligibleOld, 'Arsip_Uji_Simulasi.csv');
+    const cleanResult = await orderService.cleanOrdersOlderThanOneYear();
+    expect(cleanResult.count).toBe(5);
+
+    // 7. VERIFIKASI KEAMANAN DATA SALES AKTIF:
+    // a. Sisa transaksi di database tepat 2 (hanya transaksi HARI INI yang tertinggal)
+    const remainingOrders = await testDb.orders.toArray();
+    expect(remainingOrders.length).toBe(2);
+    expect(remainingOrders.map((o) => o.orderNumber)).toEqual(['TRW-TODAY-001', 'TRW-TODAY-002']);
+
+    // b. DailySummaries hari ini TETAP 75.000 (tidak berkurang atau terhapus)
+    const summaryToday = await testDb.dailySummaries.where('date').equals(todayDateStr).first();
+    expect(summaryToday).toBeDefined();
+    expect(summaryToday?.totalOmset).toBe(75000);
+    expect(summaryToday?.completedCount).toBe(2);
+
+    // c. Shift kasir yang sedang aktif TETAP open dan tidak terganggu
+    const currentShift = await testDb.shifts.get(1);
+    expect(currentShift).toBeDefined();
+    expect(currentShift?.status).toBe('open');
+    expect(currentShift?.cashierName).toBe('Kasir Aktif');
+  });
 });
